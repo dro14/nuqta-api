@@ -204,10 +204,10 @@ func main() {
 
 	http.HandleFunc("/", Root)
 	http.HandleFunc("/auth", firebaseAuth.AuthMiddleware(Auth))
-	http.HandleFunc("/create_user", firebaseAuth.AuthMiddleware(CreateUser))
-	http.HandleFunc("/follow_user", firebaseAuth.AuthMiddleware(FollowUser))
-	http.HandleFunc("/create_post", firebaseAuth.AuthMiddleware(CreatePost))
-	http.HandleFunc("/get_feed", firebaseAuth.AuthMiddleware(GetFeed))
+	http.HandleFunc("/create_user", CreateUser)
+	http.HandleFunc("/follow_user", FollowUser)
+	http.HandleFunc("/create_post", CreatePost)
+	http.HandleFunc("/get_feed", GetFeed)
 
 	port, ok := os.LookupEnv("PORT")
 	if !ok {
