@@ -197,7 +197,7 @@ func main() {
 		log.Fatal("Error initializing Firebase: ", err)
 	}
 
-	err = database.Init("bolt://localhost:7687", "neo4j", os.Getenv("NEO4J_PASSWORD"))
+	err = database.Init(os.Getenv("NEO4J_URI"), "neo4j", os.Getenv("NEO4J_PASSWORD"))
 	if err != nil {
 		log.Fatal("Failed to connect to Neo4j: ", err)
 	}

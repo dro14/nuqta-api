@@ -12,7 +12,12 @@ terminate() {
                 kill -KILL "$PID"
         fi
 
-        rm "$(cat binary_name.txt)"
+        if [ -f "binary_name.txt" ]; then
+          BINARY=$(cat binary_name.txt)
+          if [ -n "$BINARY" ] && [ -f "$BINARY" ]; then
+            rm "$BINARY"
+          fi
+        fi
         mv new_binary_name.txt binary_name.txt
         exit 0
 }
