@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/dro14/nuqta-service/database"
+	"github.com/dro14/nuqta-service/database/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 

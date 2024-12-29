@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 
 	"firebase.google.com/go/v4/auth"
-	"github.com/dro14/nuqta-service/database"
+	"github.com/dro14/nuqta-service/handler"
 	"github.com/dro14/nuqta-service/repository"
 	"github.com/joho/godotenv"
 )
@@ -192,27 +191,33 @@ func main() {
 		log.Fatal("can't load .env file: ", err)
 	}
 
-	firebaseAuth, err := NewFirebaseAuth("service_account_key.json")
+	h := handler.New()
+	err = h.Run("8000")
 	if err != nil {
-		log.Fatal("Error initializing Firebase: ", err)
+		log.Fatal("Error running handler: ", err)
 	}
 
-	err = database.Init(os.Getenv("NEO4J_URI"), "neo4j", os.Getenv("NEO4J_PASSWORD"))
-	if err != nil {
-		log.Fatal("Failed to connect to Neo4j: ", err)
-	}
+	// firebaseAuth, err := NewFirebaseAuth("service_account_key.json")
+	// if err != nil {
+	// 	log.Fatal("Error initializing Firebase: ", err)
+	// }
 
-	http.HandleFunc("/", Root)
-	http.HandleFunc("/auth", firebaseAuth.AuthMiddleware(Auth))
-	http.HandleFunc("/create_user", CreateUser)
-	http.HandleFunc("/follow_user", FollowUser)
-	http.HandleFunc("/create_post", CreatePost)
-	http.HandleFunc("/get_feed", GetFeed)
+	// err = database.Init(os.Getenv("NEO4J_URI"), "neo4j", os.Getenv("NEO4J_PASSWORD"))
+	// if err != nil {
+	// 	log.Fatal("Failed to connect to Neo4j: ", err)
+	// }
 
-	port, ok := os.LookupEnv("PORT")
-	if !ok {
-		port = "8000"
-	}
+	// http.HandleFunc("/", Root)
+	// http.HandleFunc("/auth", firebaseAuth.AuthMiddleware(Auth))
+	// http.HandleFunc("/create_user", CreateUser)
+	// http.HandleFunc("/follow_user", FollowUser)
+	// http.HandleFunc("/create_post", CreatePost)
+	// http.HandleFunc("/get_feed", GetFeed)
 
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	// port, ok := os.LookupEnv("PORT")
+	// if !ok {
+	// 	port = "8000"
+	// }
+
+	// log.Fatal(http.ListenAndServe(":"+port, nil))
 }
