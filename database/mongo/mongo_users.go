@@ -24,17 +24,23 @@ func (m *Mongo) UpdateUser(ctx context.Context, user *models.User) error {
 	update := bson.M{"$set": user}
 	filter := bson.M{"_id": user.ID}
 	result, err := m.users.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
 	if result.MatchedCount == 0 {
 		return mongo.ErrNoDocuments
 	}
-	return err
+	return nil
 }
 
 func (m *Mongo) DeleteUser(ctx context.Context, id string) error {
 	filter := bson.M{"_id": id}
 	result, err := m.users.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
 	if result.DeletedCount == 0 {
 		return mongo.ErrNoDocuments
 	}
-	return err
+	return nil
 }
