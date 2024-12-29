@@ -34,8 +34,8 @@ while true; do
         wait $PID
         echo "Application crashed with exit code $?. Restarting..." >&2
 
-        # # Move log files after crash
-        # mv gin.log gin-crashed.log
-        # mv yordamchi.log yordamchi-crashed.log
+        # Move log files after crash
+        mv gin.log gin-crashed.log
+        mv nuqta-service.log nuqta-service-crashed.log
         sleep 5
 done
