@@ -18,6 +18,7 @@ func (h *Handler) Run(port string) error {
 	h.engine.PUT("/user", h.PutUser)
 	h.engine.PATCH("/user", h.PatchUser)
 	h.engine.DELETE("/user", h.DeleteUser)
+	h.engine.GET("/search", h.SearchUser)
 	return h.engine.Run(":" + port)
 }
 
@@ -125,4 +126,22 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, nil)
+}
+
+func (h *Handler) SearchUser(c *gin.Context) {
+	query := c.Query("query")
+	if query == "" {
+		c.JSON(http.StatusBadRequest, failure(errNoQuery))
+		return
+	}
+	ctx := context.WithValue(c.Request.Context(), "query", query)
+
+	ids, err := h.elastic.SearchUser(ctx, query)
+	if err != nil {
+		log.Print("can't search user")
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"ids": ids})
 }

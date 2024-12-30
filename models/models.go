@@ -1,6 +1,9 @@
 package models
 
+type ID string
+
 type User struct {
+	ID        ID       `json:"_id,omitempty" bson:"_id,omitempty"`
 	Name      string   `json:"name,omitempty" bson:"name,omitempty"`
 	Username  string   `json:"username,omitempty" bson:"username,omitempty"`
 	Bio       string   `json:"bio,omitempty" bson:"bio,omitempty"`
@@ -9,7 +12,6 @@ type User struct {
 	Banner    string   `json:"banner,omitempty" bson:"banner,omitempty"`
 	Avatars   []string `json:"avatars,omitempty" bson:"avatars,omitempty"`
 
-	ID              string `json:"_id,omitempty" bson:"_id,omitempty"`
 	Email           string `json:"email,omitempty" bson:"email,omitempty"`
 	IsEmailVerified bool   `json:"is_email_verified" bson:"is_email_verified"`
 	IsAnonymous     bool   `json:"is_anonymous" bson:"is_anonymous"`

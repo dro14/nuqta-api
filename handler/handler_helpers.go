@@ -6,7 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var errNoID = errors.New("id is not specified")
+var (
+	errNoID    = errors.New("id is not specified")
+	errNoQuery = errors.New("query is not specified")
+)
 
 func failure(err error) gin.H {
 	return gin.H{"error": err.Error()}

@@ -14,7 +14,7 @@ func (e *Elastic) CreateUser(ctx context.Context, user *models.User) error {
 		username = "@" + username
 	}
 
-	request := User{
+	request := Doc{
 		Name:     name,
 		Username: username,
 		HitCount: 0,
@@ -27,4 +27,21 @@ func (e *Elastic) CreateUser(ctx context.Context, user *models.User) error {
 	}
 
 	return nil
+}
+
+func (e *Elastic) SearchUser(ctx context.Context, query string) ([]models.ID, error) {
+	request := searchRequest(query)
+	endpoint := "/users/_search"
+
+	response, err := e.makeRequest(ctx, request, endpoint, http.MethodGet)
+	if err != nil {
+		return nil, err
+	}
+
+	ids, err := searchResponse(response)
+	if err != nil {
+		return nil, err
+	}
+
+	return ids, nil
 }
