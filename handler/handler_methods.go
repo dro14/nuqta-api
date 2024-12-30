@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net/http"
@@ -33,21 +34,22 @@ func (h *Handler) PostUser(c *gin.Context) {
 		return
 	}
 
-	err = h.mongo.CreateUser(c.Request.Context(), user)
-	if mongo.IsDuplicateKeyError(err) {
-		err = h.mongo.UpdateUser(c.Request.Context(), user)
-		if err != nil {
-			log.Print("can't update user: ", err)
-			c.JSON(http.StatusInternalServerError, failure(err))
-		} else {
-			c.JSON(http.StatusNoContent, nil)
-		}
-	} else if err != nil {
-		log.Print("can't create user: ", err)
+	ctx := context.WithValue(c.Request.Context(), "id", user.ID)
+	err = h.mongo.CreateUser(ctx, user)
+	if err != nil {
+		log.Print("can't create user in mongo")
 		c.JSON(http.StatusInternalServerError, failure(err))
-	} else {
-		c.JSON(http.StatusCreated, nil)
+		return
 	}
+
+	err = h.elastic.CreateUser(ctx, user)
+	if err != nil {
+		log.Print("can't create user in elastic")
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusCreated, nil)
 }
 
 func (h *Handler) GetUser(c *gin.Context) {
@@ -57,7 +59,8 @@ func (h *Handler) GetUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.mongo.ReadUser(c.Request.Context(), id)
+	ctx := context.WithValue(c.Request.Context(), "id", id)
+	user, err := h.mongo.ReadUser(ctx)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		log.Print("can't find user: ", err)
 		c.JSON(http.StatusNotFound, failure(err))
@@ -78,7 +81,8 @@ func (h *Handler) PutUser(c *gin.Context) {
 		return
 	}
 
-	err = h.mongo.UpdateUser(c.Request.Context(), user)
+	ctx := context.WithValue(c.Request.Context(), "id", user.ID)
+	err = h.mongo.UpdateUser(ctx, user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		log.Print("can't find user: ", err)
 		c.JSON(http.StatusNotFound, failure(err))
@@ -101,7 +105,8 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err := h.mongo.DeleteUser(c.Request.Context(), id)
+	ctx := context.WithValue(c.Request.Context(), "id", id)
+	err := h.mongo.DeleteUser(ctx)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		log.Print("can't find user: ", err)
 		c.JSON(http.StatusNotFound, failure(err))
