@@ -14,7 +14,7 @@ type Mongo struct {
 }
 
 func New() *Mongo {
-	uri, ok := os.LookupEnv("MONGODB_URI")
+	uri, ok := os.LookupEnv("MONGO_URI")
 	if !ok {
 		log.Fatal("mongodb uri is not specified")
 	}
