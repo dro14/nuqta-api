@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/dro14/nuqta-service/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -10,9 +11,12 @@ import (
 )
 
 func (m *Mongo) CreateUser(ctx context.Context, user *models.User) error {
+	user.CreatedAt = time.Now().Unix()
 	_, err := m.users.InsertOne(ctx, user)
-	if err != nil && !mongo.IsDuplicateKeyError(err) {
-		log.Printf("user %s: can't create user: %s", id(ctx), err)
+	if err != nil {
+		if !mongo.IsDuplicateKeyError(err) {
+			log.Printf("user %s: can't create user: %s", id(ctx), err)
+		}
 		return err
 	}
 	return nil

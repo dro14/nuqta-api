@@ -33,10 +33,13 @@ func (h *Handler) PostUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
-
 	ctx := context.WithValue(c.Request.Context(), "id", user.ID)
+
 	err = h.mongo.CreateUser(ctx, user)
-	if err != nil {
+	if mongo.IsDuplicateKeyError(err) {
+		c.JSON(http.StatusCreated, nil)
+		return
+	} else if err != nil {
 		log.Print("can't create user in mongo")
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -58,18 +61,20 @@ func (h *Handler) GetUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, failure(errNoID))
 		return
 	}
-
 	ctx := context.WithValue(c.Request.Context(), "id", id)
+
 	user, err := h.mongo.ReadUser(ctx)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		log.Print("can't find user: ", err)
-		c.JSON(http.StatusNotFound, failure(err))
+		log.Print("can't find user")
+		c.JSON(http.StatusNotFound, nil)
+		return
 	} else if err != nil {
-		log.Print("can't read user: ", err)
+		log.Print("can't read user")
 		c.JSON(http.StatusInternalServerError, failure(err))
-	} else {
-		c.JSON(http.StatusOK, gin.H{"user": user})
+		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
 func (h *Handler) PutUser(c *gin.Context) {
@@ -80,18 +85,20 @@ func (h *Handler) PutUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
-
 	ctx := context.WithValue(c.Request.Context(), "id", user.ID)
+
 	err = h.mongo.UpdateUser(ctx, user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		log.Print("can't find user: ", err)
-		c.JSON(http.StatusNotFound, failure(err))
+		log.Print("can't find user")
+		c.JSON(http.StatusNotFound, nil)
+		return
 	} else if err != nil {
-		log.Print("can't update user: ", err)
+		log.Print("can't update user")
 		c.JSON(http.StatusInternalServerError, failure(err))
-	} else {
-		c.JSON(http.StatusNoContent, nil)
+		return
 	}
+
+	c.JSON(http.StatusNoContent, nil)
 }
 
 func (h *Handler) PatchUser(c *gin.Context) {
@@ -104,16 +111,18 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, failure(errNoID))
 		return
 	}
-
 	ctx := context.WithValue(c.Request.Context(), "id", id)
+
 	err := h.mongo.DeleteUser(ctx)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		log.Print("can't find user: ", err)
-		c.JSON(http.StatusNotFound, failure(err))
+		log.Print("can't find user")
+		c.JSON(http.StatusNotFound, nil)
+		return
 	} else if err != nil {
-		log.Print("can't delete user: ", err)
+		log.Print("can't delete user")
 		c.JSON(http.StatusInternalServerError, failure(err))
-	} else {
-		c.JSON(http.StatusNoContent, nil)
+		return
 	}
+
+	c.JSON(http.StatusNoContent, nil)
 }

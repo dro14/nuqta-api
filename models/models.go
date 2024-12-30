@@ -4,8 +4,8 @@ type User struct {
 	Name      string   `json:"name,omitempty" bson:"name,omitempty"`
 	Username  string   `json:"username,omitempty" bson:"username,omitempty"`
 	Bio       string   `json:"bio,omitempty" bson:"bio,omitempty"`
-	Birthday  int      `json:"birthday,omitempty" bson:"birthday,omitempty"`
-	CreatedAt int      `json:"created_at,omitempty" bson:"created_at,omitempty"`
+	Birthday  int64    `json:"birthday,omitempty" bson:"birthday,omitempty"`
+	CreatedAt int64    `json:"created_at,omitempty" bson:"created_at,omitempty"`
 	Banner    string   `json:"banner,omitempty" bson:"banner,omitempty"`
 	Avatars   []string `json:"avatars,omitempty" bson:"avatars,omitempty"`
 
