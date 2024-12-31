@@ -8,17 +8,17 @@ import (
 )
 
 type Handler struct {
-	engine    *gin.Engine
-	dgraph    *dgraph.Dgraph
-	elastic   *elastic.Elastic
-	memcached *memcached.Memcached
+	engine *gin.Engine
+	db     *dgraph.Dgraph
+	search *elastic.Elastic
+	cache  *memcached.Memcached
 }
 
 func New() *Handler {
 	return &Handler{
-		engine:    gin.Default(),
-		elastic:   elastic.New(),
-		dgraph:    dgraph.New(),
-		memcached: memcached.New(),
+		engine: gin.Default(),
+		db:     dgraph.New(),
+		search: elastic.New(),
+		cache:  memcached.New(),
 	}
 }

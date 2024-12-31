@@ -22,7 +22,7 @@ func New() *Dgraph {
 
 	conn, err := grpc.NewClient(uri, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatal("While trying to dial gRPC")
+		log.Fatal("can't connect to dgraph")
 	}
 
 	return &Dgraph{

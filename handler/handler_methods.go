@@ -22,11 +22,39 @@ func (h *Handler) Root(c *gin.Context) {
 }
 
 func (h *Handler) PostUser(c *gin.Context) {
+	pong, err := h.cache.Ping()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
 
+	schema, err := h.db.GetSchema()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"pong":   pong,
+		"schema": schema,
+	})
 }
 
 func (h *Handler) GetUser(c *gin.Context) {
+	pong, err := h.cache.Ping()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
 
+	person, err := h.db.SetObject()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"pong":   pong,
+		"person": person,
+	})
 }
 
 func (h *Handler) PutUser(c *gin.Context) {
