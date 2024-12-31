@@ -29,7 +29,7 @@ func (h *Handler) Root(c *gin.Context) {
 
 func (h *Handler) GetSchema(c *gin.Context) {
 	ctx := c.Request.Context()
-	schema, err := h.db.GetSchema(ctx)
+	schema, err := h.db.ReadSchema(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -40,7 +40,7 @@ func (h *Handler) GetSchema(c *gin.Context) {
 
 func (h *Handler) SetSchema(c *gin.Context) {
 	ctx := c.Request.Context()
-	err := h.db.SetSchema(ctx)
+	err := h.db.UpdateSchema(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

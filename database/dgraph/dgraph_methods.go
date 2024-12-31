@@ -8,7 +8,7 @@ import (
 	"github.com/dro14/nuqta-service/models"
 )
 
-func (d *Dgraph) GetSchema(ctx context.Context) (string, error) {
+func (d *Dgraph) ReadSchema(ctx context.Context) (string, error) {
 	query := `schema {}`
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
@@ -18,8 +18,18 @@ func (d *Dgraph) GetSchema(ctx context.Context) (string, error) {
 	return string(resp.Json), nil
 }
 
-func (d *Dgraph) SetSchema(ctx context.Context) error {
+func (d *Dgraph) UpdateSchema(ctx context.Context) error {
 	operation := &api.Operation{Schema: schema}
+	err := d.client.Alter(ctx, operation)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Dgraph) DeleteSchema(ctx context.Context) error {
+	operation := &api.Operation{DropAll: true}
 	err := d.client.Alter(ctx, operation)
 	if err != nil {
 		return err
