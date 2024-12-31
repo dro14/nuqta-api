@@ -12,6 +12,7 @@ func (h *Handler) Run(port string) error {
 
 	h.engine.GET("/schema", h.GetSchema)
 	h.engine.PUT("/schema", h.SetSchema)
+	h.engine.DELETE("/schema", h.DeleteSchema)
 
 	h.engine.POST("/user", h.PostUser)
 	h.engine.GET("/user", h.GetUser)
@@ -35,12 +36,23 @@ func (h *Handler) GetSchema(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, schema)
+	c.String(http.StatusOK, schema)
 }
 
 func (h *Handler) SetSchema(c *gin.Context) {
 	ctx := c.Request.Context()
 	err := h.db.UpdateSchema(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
+func (h *Handler) DeleteSchema(c *gin.Context) {
+	ctx := c.Request.Context()
+	err := h.db.DeleteSchema(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
