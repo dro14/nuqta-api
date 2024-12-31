@@ -1,7 +1,5 @@
 package elastic
 
-import "github.com/dro14/nuqta-service/models"
-
 type Doc struct {
 	Name     string `json:"name"`
 	Username string `json:"username"`
@@ -54,8 +52,8 @@ type Total struct {
 }
 
 type Hit struct {
-	Index  string    `json:"_index"`
-	ID     models.ID `json:"_id"`
-	Score  float64   `json:"_score"`
-	Source Doc       `json:"_source"`
+	Index  string  `json:"_index"`
+	ID     string  `json:"_id"`
+	Score  float64 `json:"_score"`
+	Source Doc     `json:"_source"`
 }

@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-
-	"github.com/dro14/nuqta-service/models"
 )
 
 func id(ctx context.Context) string {
@@ -35,14 +33,14 @@ func searchRequest(query string) Request {
 	}
 }
 
-func searchResponse(response *http.Response) ([]models.ID, error) {
+func searchResponse(response *http.Response) ([]string, error) {
 	var result Result
 	err := json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
 
-	var ids []models.ID
+	var ids []string
 	for _, hit := range result.Hits.Hits {
 		ids = append(ids, hit.ID)
 	}

@@ -29,7 +29,7 @@ func (e *Elastic) CreateUser(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (e *Elastic) SearchUser(ctx context.Context, query string) ([]models.ID, error) {
+func (e *Elastic) SearchUser(ctx context.Context, query string) ([]string, error) {
 	request := searchRequest(query)
 	endpoint := "/users/_search"
 
