@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/dro14/nuqta-service/models"
@@ -80,7 +81,15 @@ func (h *Handler) GetUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	c.JSON(http.StatusOK, user)
+
+	switch user := user.(type) {
+	case *models.User:
+		c.JSON(http.StatusOK, user)
+	case string:
+		c.String(http.StatusOK, user)
+	default:
+		c.JSON(http.StatusInternalServerError, failure(errors.New("unknown user type")))
+	}
 }
 
 func (h *Handler) PutUser(c *gin.Context) {}

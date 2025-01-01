@@ -58,7 +58,7 @@ func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User, error) {
+func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (any, error) {
 	query := fmt.Sprintf(`
 {
 	user(func: eq(firebase_uid, "%s")) {
@@ -79,9 +79,9 @@ func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User
 	}
 
 	if len(response.Data.User) > 0 {
-		return &response.Data.User[0], nil
+		return response.Data.User[0], nil
 	} else {
-		return nil, nil
+		return string(resp.Json), nil
 	}
 }
 
@@ -90,6 +90,6 @@ type Response struct {
 }
 
 type Data struct {
-	User []models.User `json:"user"`
-	Post []models.Post `json:"post"`
+	User []*models.User `json:"user"`
+	Post []*models.Post `json:"post"`
 }
