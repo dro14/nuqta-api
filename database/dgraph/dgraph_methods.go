@@ -39,6 +39,7 @@ func (d *Dgraph) DeleteSchema(ctx context.Context) error {
 }
 
 func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) error {
+	user.DType = []string{"User"}
 	user.UID = "_:user"
 	bytes, err := json.Marshal(user)
 	if err != nil {

@@ -9,17 +9,20 @@ type User struct {
 	Banner   string   `json:"banner,omitempty"`
 	Avatars  []string `json:"avatars,omitempty"`
 
-	Email           string `json:"email,omitempty"`
-	IsEmailVerified bool   `json:"is_email_verified"`
-	IsAnonymous     bool   `json:"is_anonymous"`
-	PhoneNumber     string `json:"phone_number,omitempty"`
-	ProviderID      string `json:"provider_id,omitempty"`
-	ProviderUID     string `json:"provider_uid,omitempty"`
-	FirebaseUID     string `json:"firebase_uid,omitempty"`
-	UID             string `json:"uid,omitempty"`
+	Email           string   `json:"email,omitempty"`
+	IsEmailVerified bool     `json:"is_email_verified"`
+	IsAnonymous     bool     `json:"is_anonymous"`
+	PhoneNumber     string   `json:"phone_number,omitempty"`
+	ProviderID      string   `json:"provider_id,omitempty"`
+	ProviderUID     string   `json:"provider_uid,omitempty"`
+	FirebaseUID     string   `json:"firebase_uid,omitempty"`
+	UID             string   `json:"uid,omitempty"`
+	DType           []string `json:"dgraph.type,omitempty"`
 }
 
 type Post struct {
-	CreatedAt int64  `json:"created_at,omitempty"`
-	Text      string `json:"text,omitempty"`
+	CreatedAt int64    `json:"created_at,omitempty"`
+	Text      string   `json:"text,omitempty"`
+	UID       string   `json:"uid,omitempty"`
+	DType     []string `json:"dgraph.type,omitempty"`
 }
