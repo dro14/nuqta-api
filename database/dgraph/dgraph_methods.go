@@ -37,6 +37,15 @@ func (d *Dgraph) DeleteSchema(ctx context.Context) error {
 }
 
 func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) error {
+	existingUser, err := d.ReadUser(ctx, user.FirebaseUID)
+	if err != nil {
+		return err
+	}
+
+	if existingUser != nil {
+		return nil
+	}
+
 	user.DType = []string{"User"}
 	user.UID = "_:user"
 	bytes, err := json.Marshal(user)
@@ -58,7 +67,7 @@ func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (any, error) {
+func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User, error) {
 	query := fmt.Sprintf(`
 {
 	user(func: eq(firebase_uid, "%s")) {
@@ -72,20 +81,15 @@ func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (any, error) 
 		return nil, err
 	}
 
-	response := &Response{}
-	err = json.Unmarshal(resp.Json, response)
+	var response map[string][]models.User
+	err = json.Unmarshal(resp.Json, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(response.User) > 0 {
-		return response.User[0], nil
+	if len(response["user"]) > 0 {
+		return &response["user"][0], nil
 	} else {
-		return string(resp.Json), nil
+		return nil, nil
 	}
-}
-
-type Response struct {
-	User []*models.User `json:"user"`
-	Post []*models.Post `json:"post"`
 }

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/dro14/nuqta-service/models"
@@ -74,22 +73,19 @@ func (h *Handler) PostUser(c *gin.Context) {
 }
 
 func (h *Handler) GetUser(c *gin.Context) {
-	ctx := c.Request.Context()
 	firebaseUid := c.Query("firebase_uid")
-	user, err := h.db.ReadUser(ctx, firebaseUid)
+	if firebaseUid == "" {
+		c.JSON(http.StatusBadRequest, failure(errNoID))
+		return
+	}
+
+	user, err := h.db.ReadUser(c.Request.Context(), firebaseUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	switch user := user.(type) {
-	case *models.User:
-		c.JSON(http.StatusOK, user)
-	case string:
-		c.String(http.StatusOK, user)
-	default:
-		c.JSON(http.StatusInternalServerError, failure(errors.New("unknown user type")))
-	}
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) PutUser(c *gin.Context) {}
