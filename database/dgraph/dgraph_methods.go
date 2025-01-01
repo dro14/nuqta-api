@@ -85,9 +85,9 @@ func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User
 	}
 }
 
-func (d *Dgraph) DeleteUser(ctx context.Context, firebaseUid string) error {
+func (d *Dgraph) DeleteUser(ctx context.Context, uid string) error {
 	mutation := &api.Mutation{
-		DeleteJson: []byte(fmt.Sprintf(`{"firebase_uid": "%s"}`, firebaseUid)),
+		DeleteJson: []byte(fmt.Sprintf(`{"uid": "%s"}`, uid)),
 		CommitNow:  true,
 	}
 

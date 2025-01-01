@@ -109,13 +109,13 @@ func (h *Handler) PutUser(c *gin.Context) {}
 func (h *Handler) PatchUser(c *gin.Context) {}
 
 func (h *Handler) DeleteUser(c *gin.Context) {
-	firebaseUid := c.Query("firebase_uid")
-	if firebaseUid == "" {
+	uid := c.Query("uid")
+	if uid == "" {
 		c.JSON(http.StatusBadRequest, failure(ErrNoUID))
 		return
 	}
 
-	err := h.db.DeleteUser(c.Request.Context(), firebaseUid)
+	err := h.db.DeleteUser(c.Request.Context(), uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
