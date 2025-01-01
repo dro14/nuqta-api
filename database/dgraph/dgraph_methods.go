@@ -3,6 +3,7 @@ package dgraph
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
 	"github.com/dro14/nuqta-service/models"
@@ -14,7 +15,6 @@ func (d *Dgraph) ReadSchema(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return string(resp.Json), nil
 }
 
@@ -24,7 +24,6 @@ func (d *Dgraph) UpdateSchema(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -34,7 +33,6 @@ func (d *Dgraph) DeleteSchema(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -47,8 +45,8 @@ func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) error {
 	}
 
 	mutation := &api.Mutation{
-		CommitNow: true,
 		SetJson:   bytes,
+		CommitNow: true,
 	}
 
 	assigned, err := d.client.NewTxn().Mutate(ctx, mutation)
@@ -58,4 +56,25 @@ func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) error {
 
 	user.UID = assigned.Uids["user"]
 	return nil
+}
+
+func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User, error) {
+	query := fmt.Sprintf(`{
+	user(func: eq(firebase_uid, "%s")) {
+		uid
+		expand(_all_)
+	}
+}`, firebaseUid)
+
+	resp, err := d.client.NewTxn().Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	user := &models.User{}
+	err = json.Unmarshal(resp.GetJson(), user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

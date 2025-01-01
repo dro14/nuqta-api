@@ -29,35 +29,29 @@ func (h *Handler) Root(c *gin.Context) {
 }
 
 func (h *Handler) GetSchema(c *gin.Context) {
-	ctx := c.Request.Context()
-	schema, err := h.db.ReadSchema(ctx)
+	schema, err := h.db.ReadSchema(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-
 	c.String(http.StatusOK, schema)
 }
 
 func (h *Handler) SetSchema(c *gin.Context) {
-	ctx := c.Request.Context()
-	err := h.db.UpdateSchema(ctx)
+	err := h.db.UpdateSchema(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-
 	c.JSON(http.StatusNoContent, nil)
 }
 
 func (h *Handler) DeleteSchema(c *gin.Context) {
-	ctx := c.Request.Context()
-	err := h.db.DeleteSchema(ctx)
+	err := h.db.DeleteSchema(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-
 	c.JSON(http.StatusNoContent, nil)
 }
 
@@ -78,7 +72,16 @@ func (h *Handler) PostUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, nil)
 }
 
-func (h *Handler) GetUser(c *gin.Context) {}
+func (h *Handler) GetUser(c *gin.Context) {
+	ctx := c.Request.Context()
+	firebaseUid := c.Query("firebase_uid")
+	user, err := h.db.ReadUser(ctx, firebaseUid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+	c.JSON(http.StatusOK, user)
+}
 
 func (h *Handler) PutUser(c *gin.Context) {}
 
