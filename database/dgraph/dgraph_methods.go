@@ -78,18 +78,14 @@ func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (any, error) 
 		return nil, err
 	}
 
-	if len(response.Data.User) > 0 {
-		return response.Data.User[0], nil
+	if len(response.User) > 0 {
+		return response.User[0], nil
 	} else {
 		return string(resp.Json), nil
 	}
 }
 
 type Response struct {
-	Data Data `json:"data"`
-}
-
-type Data struct {
 	User []*models.User `json:"user"`
 	Post []*models.Post `json:"post"`
 }
