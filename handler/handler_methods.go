@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/dro14/nuqta-service/database/dgraph"
 	"github.com/dro14/nuqta-service/models"
 	"github.com/gin-gonic/gin"
 )
@@ -63,6 +65,17 @@ func (h *Handler) PostUser(c *gin.Context) {
 		return
 	}
 
+	exists, err := h.db.DoesUserExist(c.Request.Context(), user.FirebaseUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	if exists {
+		c.JSON(http.StatusConflict, nil)
+		return
+	}
+
 	err = h.db.CreateUser(c.Request.Context(), user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
@@ -75,12 +88,15 @@ func (h *Handler) PostUser(c *gin.Context) {
 func (h *Handler) GetUser(c *gin.Context) {
 	firebaseUid := c.Query("firebase_uid")
 	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(errNoID))
+		c.JSON(http.StatusBadRequest, failure(ErrNoUID))
 		return
 	}
 
 	user, err := h.db.ReadUser(c.Request.Context(), firebaseUid)
-	if err != nil {
+	if errors.Is(err, dgraph.ErrNotFound) {
+		c.JSON(http.StatusNotFound, nil)
+		return
+	} else if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
@@ -92,6 +108,20 @@ func (h *Handler) PutUser(c *gin.Context) {}
 
 func (h *Handler) PatchUser(c *gin.Context) {}
 
-func (h *Handler) DeleteUser(c *gin.Context) {}
+func (h *Handler) DeleteUser(c *gin.Context) {
+	firebaseUid := c.Query("firebase_uid")
+	if firebaseUid == "" {
+		c.JSON(http.StatusBadRequest, failure(ErrNoUID))
+		return
+	}
+
+	err := h.db.DeleteUser(c.Request.Context(), firebaseUid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
 
 func (h *Handler) SearchUser(c *gin.Context) {}

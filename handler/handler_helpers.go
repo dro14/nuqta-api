@@ -7,8 +7,7 @@ import (
 )
 
 var (
-	errNoID    = errors.New("id is not specified")
-	errNoQuery = errors.New("query is not specified")
+	ErrNoUID = errors.New("uid is not specified")
 )
 
 func failure(err error) gin.H {

@@ -10,8 +10,8 @@ type User struct {
 	Avatars  []string `json:"avatars,omitempty"`
 
 	Email           string   `json:"email,omitempty"`
-	IsEmailVerified bool     `json:"is_email_verified"`
-	IsAnonymous     bool     `json:"is_anonymous"`
+	IsEmailVerified bool     `json:"is_email_verified,omitempty"`
+	IsAnonymous     bool     `json:"is_anonymous,omitempty"`
 	PhoneNumber     string   `json:"phone_number,omitempty"`
 	ProviderID      string   `json:"provider_id,omitempty"`
 	ProviderUID     string   `json:"provider_uid,omitempty"`

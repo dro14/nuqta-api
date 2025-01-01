@@ -37,15 +37,6 @@ func (d *Dgraph) DeleteSchema(ctx context.Context) error {
 }
 
 func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) error {
-	existingUser, err := d.ReadUser(ctx, user.FirebaseUID)
-	if err != nil {
-		return err
-	}
-
-	if existingUser != nil {
-		return nil
-	}
-
 	user.DType = []string{"User"}
 	user.UID = "_:user"
 	bytes, err := json.Marshal(user)
@@ -90,6 +81,42 @@ func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User
 	if len(response["user"]) > 0 {
 		return &response["user"][0], nil
 	} else {
-		return nil, nil
+		return nil, ErrNotFound
 	}
+}
+
+func (d *Dgraph) DeleteUser(ctx context.Context, firebaseUid string) error {
+	mutation := &api.Mutation{
+		DeleteJson: []byte(fmt.Sprintf(`{"firebase_uid": "%s"}`, firebaseUid)),
+		CommitNow:  true,
+	}
+
+	_, err := d.client.NewTxn().Mutate(ctx, mutation)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Dgraph) DoesUserExist(ctx context.Context, firebaseUid string) (bool, error) {
+	query := fmt.Sprintf(`
+{
+	user(func: eq(firebase_uid, "%s")) {
+		uid
+	}
+}`, firebaseUid)
+
+	resp, err := d.client.NewTxn().Query(ctx, query)
+	if err != nil {
+		return false, err
+	}
+
+	var response map[string][]any
+	err = json.Unmarshal(resp.Json, &response)
+	if err != nil {
+		return false, err
+	}
+
+	return len(response["user"]) > 0, nil
 }
