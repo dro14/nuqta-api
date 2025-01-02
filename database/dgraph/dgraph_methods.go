@@ -39,7 +39,7 @@ func (d *Dgraph) DeleteSchema(ctx context.Context) error {
 
 func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
 	user.DType = []string{"User"}
-	user.UID = "_:user"
+	user.Uid = "_:user"
 	bytes, err := json.Marshal(user)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) (*models.Use
 		return nil, err
 	}
 
-	user.UID = assigned.Uids["user"]
+	user.Uid = assigned.Uids["user"]
 	return user, nil
 }
 
@@ -65,6 +65,9 @@ func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User
 	user(func: eq(firebase_uid, "%s")) {
 		uid
 		expand(_all_)
+		posts: count(posted)
+		following: count(following)
+		followers: count(~following)
 	}
 }`, firebaseUid)
 

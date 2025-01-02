@@ -45,7 +45,7 @@ func (h *Handler) SetSchema(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	c.JSON(http.StatusNoContent, nil)
+	c.Status(http.StatusOK)
 }
 
 func (h *Handler) DeleteSchema(c *gin.Context) {
@@ -54,7 +54,7 @@ func (h *Handler) DeleteSchema(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	c.JSON(http.StatusNoContent, nil)
+	c.Status(http.StatusOK)
 }
 
 func (h *Handler) PostUser(c *gin.Context) {
@@ -65,14 +65,14 @@ func (h *Handler) PostUser(c *gin.Context) {
 		return
 	}
 
-	existingUser, err := h.db.ReadUser(c.Request.Context(), user.FirebaseUID)
+	existingUser, err := h.db.ReadUser(c.Request.Context(), user.FirebaseUid)
 	if err != nil && !errors.Is(err, e.ErrNotFound) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
 	if existingUser != nil {
-		c.JSON(http.StatusConflict, existingUser)
+		c.JSON(http.StatusOK, existingUser)
 		return
 	}
 
@@ -82,21 +82,18 @@ func (h *Handler) PostUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, user)
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) GetUser(c *gin.Context) {
 	firebaseUid := c.Query("firebase_uid")
 	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoUID))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoId))
 		return
 	}
 
 	user, err := h.db.ReadUser(c.Request.Context(), firebaseUid)
-	if errors.Is(err, e.ErrNotFound) {
-		c.JSON(http.StatusNotFound, nil)
-		return
-	} else if err != nil {
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
@@ -111,7 +108,7 @@ func (h *Handler) PatchUser(c *gin.Context) {}
 func (h *Handler) DeleteUser(c *gin.Context) {
 	uid := c.Query("uid")
 	if uid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoUID))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoId))
 		return
 	}
 
@@ -121,7 +118,7 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusNoContent, nil)
+	c.Status(http.StatusOK)
 }
 
 func (h *Handler) SearchUser(c *gin.Context) {}
