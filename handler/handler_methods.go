@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/dro14/nuqta-service/database/dgraph"
+	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
 	"github.com/gin-gonic/gin"
 )
@@ -65,35 +65,35 @@ func (h *Handler) PostUser(c *gin.Context) {
 		return
 	}
 
-	exists, err := h.db.DoesUserExist(c.Request.Context(), user.FirebaseUID)
+	existingUser, err := h.db.ReadUser(c.Request.Context(), user.FirebaseUID)
+	if err != nil && !errors.Is(err, e.ErrNotFound) {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	if existingUser != nil {
+		c.JSON(http.StatusConflict, existingUser)
+		return
+	}
+
+	user, err = h.db.CreateUser(c.Request.Context(), user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	if exists {
-		c.JSON(http.StatusConflict, nil)
-		return
-	}
-
-	err = h.db.CreateUser(c.Request.Context(), user)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	c.JSON(http.StatusCreated, nil)
+	c.JSON(http.StatusCreated, user)
 }
 
 func (h *Handler) GetUser(c *gin.Context) {
 	firebaseUid := c.Query("firebase_uid")
 	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(ErrNoUID))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoUID))
 		return
 	}
 
 	user, err := h.db.ReadUser(c.Request.Context(), firebaseUid)
-	if errors.Is(err, dgraph.ErrNotFound) {
+	if errors.Is(err, e.ErrNotFound) {
 		c.JSON(http.StatusNotFound, nil)
 		return
 	} else if err != nil {
@@ -111,7 +111,7 @@ func (h *Handler) PatchUser(c *gin.Context) {}
 func (h *Handler) DeleteUser(c *gin.Context) {
 	uid := c.Query("uid")
 	if uid == "" {
-		c.JSON(http.StatusBadRequest, failure(ErrNoUID))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoUID))
 		return
 	}
 

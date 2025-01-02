@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
+	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
 )
 
@@ -36,12 +37,12 @@ func (d *Dgraph) DeleteSchema(ctx context.Context) error {
 	return nil
 }
 
-func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) error {
+func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
 	user.DType = []string{"User"}
 	user.UID = "_:user"
 	bytes, err := json.Marshal(user)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	mutation := &api.Mutation{
@@ -51,11 +52,11 @@ func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) error {
 
 	assigned, err := d.client.NewTxn().Mutate(ctx, mutation)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	user.UID = assigned.Uids["user"]
-	return nil
+	return user, nil
 }
 
 func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User, error) {
@@ -81,7 +82,7 @@ func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User
 	if len(response["user"]) > 0 {
 		return &response["user"][0], nil
 	} else {
-		return nil, ErrNotFound
+		return nil, e.ErrNotFound
 	}
 }
 
@@ -97,26 +98,4 @@ func (d *Dgraph) DeleteUser(ctx context.Context, uid string) error {
 	}
 
 	return nil
-}
-
-func (d *Dgraph) DoesUserExist(ctx context.Context, firebaseUid string) (bool, error) {
-	query := fmt.Sprintf(`
-{
-	user(func: eq(firebase_uid, "%s")) {
-		uid
-	}
-}`, firebaseUid)
-
-	resp, err := d.client.NewTxn().Query(ctx, query)
-	if err != nil {
-		return false, err
-	}
-
-	var response map[string][]any
-	err = json.Unmarshal(resp.Json, &response)
-	if err != nil {
-		return false, err
-	}
-
-	return len(response["user"]) > 0, nil
 }
