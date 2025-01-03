@@ -22,7 +22,7 @@ jobs:
         run: go build -o ${{ github.sha }} .
 
       - name: Install SSH Client
-        run: sudo apt-get install -y ssh
+        run: sudo apt install -y ssh
 
       - name: Set up SSH key
         run: |
@@ -62,14 +62,14 @@ jobs:
             done
             echo $NEW_PORT > new_port.txt
           
-            PORT=$(cat port.txt 2>/dev/null || echo 8000)
+            PORT=$(cat port.txt 2>/dev/null || echo 5000)
             sed -i "s/PORT=$PORT/PORT=$NEW_PORT/" .env
           
             nohup ./starter.sh ${{ github.sha }} &>> app.log &
             echo $! > pid.txt
           '
 
-      - name: Switch Nginx to new version
+      - name: Switch Caddy to new version
         env:
           VM_HOST: ${{ secrets.VM_HOST }}
           VM_USER: ${{ secrets.VM_USER }}
@@ -77,10 +77,10 @@ jobs:
           ssh -o StrictHostKeyChecking=no $VM_USER@$VM_HOST '
             cd ~/nuqta-service
           
-            PORT=$(cat port.txt 2>/dev/null || echo 8000)
+            PORT=$(cat port.txt 2>/dev/null || echo 5000)
             NEW_PORT=$(cat new_port.txt)
           
-            sudo sed -i "s/127.0.0.1:$PORT/127.0.0.1:$NEW_PORT/" /etc/nginx/sites-available/nuqta-service.chuqurtech.uz
-            sudo systemctl reload nginx
+            sudo sed -i "s/localhost:$PORT/localhost:$NEW_PORT/" /etc/caddy/Caddyfile
+            sudo systemctl reload caddy
             mv new_port.txt port.txt
           '

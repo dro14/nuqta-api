@@ -53,18 +53,18 @@ func main() {
 		log.Fatal("can't load .env file: ", err)
 	}
 
-	file, err := os.Create("nuqta-service.log")
+	file, err := os.Create("gin.log")
+	if err != nil {
+		log.Fatal("can't open gin.log: ", err)
+	}
+	gin.DefaultWriter = file
+
+	file, err = os.Create("nuqta-service.log")
 	if err != nil {
 		log.Fatal("can't open yordamchi.log: ", err)
 	}
 	log.SetOutput(file)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
-	file, err = os.Create("gin.log")
-	if err != nil {
-		log.Fatal("can't open gin.log: ", err)
-	}
-	gin.DefaultWriter = file
 
 	// _, err = NewFirebaseAuth("service_account_key.json")
 	// if err != nil {
@@ -73,7 +73,7 @@ func main() {
 
 	port, ok := os.LookupEnv("PORT")
 	if !ok {
-		port = "8000"
+		port = "5000"
 	}
 
 	h := handler.New()
