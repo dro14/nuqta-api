@@ -1,10 +1,5 @@
 package elastic
 
-import (
-	"log"
-	"os"
-)
-
 type Elastic struct {
 	baseURI  string
 	username string
@@ -12,19 +7,19 @@ type Elastic struct {
 }
 
 func New() *Elastic {
-	uri, ok := os.LookupEnv("ELASTIC_URI")
-	if !ok {
-		log.Fatal("elastic uri is not specified")
-	}
-
-	password, ok := os.LookupEnv("ELASTIC_PASSWORD")
-	if !ok {
-		log.Fatal("elastic password is not specified")
-	}
+	// uri, ok := os.LookupEnv("ELASTIC_URI")
+	// if !ok {
+	//     log.Fatal("elastic uri is not specified")
+	// }
+	//
+	// password, ok := os.LookupEnv("ELASTIC_PASSWORD")
+	// if !ok {
+	// 	log.Fatal("elastic password is not specified")
+	// }
 
 	return &Elastic{
-		baseURI:  uri,
-		username: "elastic",
-		password: password,
+		//	baseURI:  uri,
+		//	username: "elastic",
+		//	password: password,
 	}
 }
