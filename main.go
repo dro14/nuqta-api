@@ -73,7 +73,7 @@ func main() {
 
 	port, ok := os.LookupEnv("PORT")
 	if !ok {
-		port = "5000"
+		port = "8000"
 	}
 
 	h := handler.New()

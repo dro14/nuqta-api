@@ -62,14 +62,14 @@ jobs:
             done
             echo $NEW_PORT > new_port.txt
           
-            PORT=$(cat port.txt 2>/dev/null || echo 5000)
+            PORT=$(cat port.txt 2>/dev/null || echo 8000)
             sed -i "s/PORT=$PORT/PORT=$NEW_PORT/" .env
           
             nohup ./starter.sh ${{ github.sha }} &>> app.log &
             echo $! > pid.txt
           '
 
-      - name: Switch Caddy to new version
+      - name: Switch Nginx to new version
         env:
           VM_HOST: ${{ secrets.VM_HOST }}
           VM_USER: ${{ secrets.VM_USER }}
@@ -77,10 +77,10 @@ jobs:
           ssh -o StrictHostKeyChecking=no $VM_USER@$VM_HOST '
             cd ~/nuqta-service
           
-            PORT=$(cat port.txt 2>/dev/null || echo 5000)
+            PORT=$(cat port.txt 2>/dev/null || echo 8000)
             NEW_PORT=$(cat new_port.txt)
           
-            sudo sed -i "s/localhost:$PORT/localhost:$NEW_PORT/" /etc/caddy/Caddyfile
-            sudo systemctl reload caddy
+            sudo sed -i "s/127.0.0.1:$PORT/127.0.0.1:$NEW_PORT/" /etc/nginx/nginx.conf
+            sudo systemctl reload nginx
             mv new_port.txt port.txt
           '
