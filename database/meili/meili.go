@@ -24,7 +24,7 @@ func New() *Meili {
 
 	client := meilisearch.New(uri, meilisearch.WithAPIKey(masterKey))
 	index := client.Index("users")
-	index.UpdateSortableAttributes(&[]string{"hits"})
+	// index.UpdateSortableAttributes(&[]string{"hits"})
 	return &Meili{
 		index: index,
 	}
