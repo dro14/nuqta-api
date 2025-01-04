@@ -1,7 +1,7 @@
 package dgraph
 
-const userByUid = `{
-	user(func: uid(%s)) {
+const usersByUid = `{
+	users(func: uid(%s)) {
 		uid
 		expand(_all_)
 		posts: count(posted)
@@ -10,8 +10,8 @@ const userByUid = `{
 	}
 }`
 
-const userByFirebaseUid = `{
-	user(func: eq(firebase_uid, "%s")) {
+const usersByFirebaseUid = `{
+	users(func: eq(firebase_uid, "%s")) {
 		uid
 		expand(_all_)
 		posts: count(posted)
@@ -20,8 +20,8 @@ const userByFirebaseUid = `{
 	}
 }`
 
-const userByUsername = `{
-	user(func: eq(username, "%s")) {
+const usersByUsername = `{
+	users(func: eq(username, "%s")) {
 		uid
 		expand(_all_)
 		posts: count(posted)

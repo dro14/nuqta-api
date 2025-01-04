@@ -63,11 +63,11 @@ func (d *Dgraph) GetUser(ctx context.Context, by, value string) (*models.User, e
 	var query string
 	switch by {
 	case "uid":
-		query = userByUid
+		query = usersByUid
 	case "firebase_uid":
-		query = userByFirebaseUid
+		query = usersByFirebaseUid
 	case "username":
-		query = userByUsername
+		query = usersByUsername
 	default:
 		return nil, e.ErrUnknownParam
 	}
@@ -83,18 +83,18 @@ func (d *Dgraph) GetUser(ctx context.Context, by, value string) (*models.User, e
 		return nil, err
 	}
 
-	if len(response["user"]) > 0 {
-		return &response["user"][0], nil
+	if len(response["users"]) > 0 {
+		return &response["users"][0], nil
 	} else {
 		return nil, e.ErrNotFound
 	}
 }
 
-func (d *Dgraph) UpdateUser(ctx context.Context, user *models.User) (*models.User, error) {
+func (d *Dgraph) UpdateUser(ctx context.Context, user *models.User) error {
 	user.DType = []string{"User"}
 	bytes, err := json.Marshal(user)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	mutation := &api.Mutation{
@@ -104,10 +104,10 @@ func (d *Dgraph) UpdateUser(ctx context.Context, user *models.User) (*models.Use
 
 	_, err = d.client.NewTxn().Mutate(ctx, mutation)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return user, nil
+	return nil
 }
 
 func (d *Dgraph) DeleteUser(ctx context.Context, uid string) error {

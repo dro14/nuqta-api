@@ -70,13 +70,13 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	user, err = h.db.UpdateUser(ctx, user)
+	err = h.db.UpdateUser(ctx, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.Status(http.StatusOK)
 }
 
 func (h *Handler) DeleteUser(c *gin.Context) {

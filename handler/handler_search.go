@@ -14,13 +14,22 @@ func (h *Handler) SearchUser(c *gin.Context) {
 		return
 	}
 
-	hits, err := h.search.SearchUser(query)
+	users, err := h.search.SearchUser(query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	c.JSON(http.StatusOK, hits)
+	ctx := c.Request.Context()
+	for i := range users {
+		user, err := h.db.GetUser(ctx, "uid", users[i].Uid)
+		if err != nil {
+			continue
+		}
+		users[i] = user
+	}
+
+	c.JSON(http.StatusOK, users)
 }
 
 func (h *Handler) IncrementHits(c *gin.Context) {
