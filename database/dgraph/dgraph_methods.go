@@ -10,7 +10,7 @@ import (
 	"github.com/dro14/nuqta-service/models"
 )
 
-func (d *Dgraph) ReadSchema(ctx context.Context) (string, error) {
+func (d *Dgraph) GetSchema(ctx context.Context) (string, error) {
 	query := `schema {}`
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
@@ -59,48 +59,20 @@ func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) (*models.Use
 	return user, nil
 }
 
-func (d *Dgraph) ReadUserByUid(ctx context.Context, uid string) (*models.User, error) {
-	query := fmt.Sprintf(`
-{
-	user(func: uid(%s)) {
-		expand(_all_)
-		posts: count(posted)
-		following: count(following)
-		followers: count(~following)
-	}
-}`, uid)
-
-	resp, err := d.client.NewTxn().Query(ctx, query)
-	if err != nil {
-		return nil, err
+func (d *Dgraph) GetUser(ctx context.Context, by, value string) (*models.User, error) {
+	var query string
+	switch by {
+	case "uid":
+		query = userByUid
+	case "firebase_uid":
+		query = userByFirebaseUid
+	case "username":
+		query = userByUsername
+	default:
+		return nil, e.ErrUnknownParam
 	}
 
-	var response map[string][]models.User
-	err = json.Unmarshal(resp.Json, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(response["user"]) > 0 {
-		return &response["user"][0], nil
-	} else {
-		return nil, e.ErrNotFound
-	}
-}
-
-func (d *Dgraph) ReadUserByFirebaseUid(ctx context.Context, firebaseUid string) (*models.User, error) {
-	query := fmt.Sprintf(`
-{
-	user(func: eq(firebase_uid, "%s")) {
-		uid
-		expand(_all_)
-		posts: count(posted)
-		following: count(following)
-		followers: count(~following)
-	}
-}`, firebaseUid)
-
-	resp, err := d.client.NewTxn().Query(ctx, query)
+	resp, err := d.client.NewTxn().Query(ctx, fmt.Sprintf(query, value))
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +91,7 @@ func (d *Dgraph) ReadUserByFirebaseUid(ctx context.Context, firebaseUid string) 
 }
 
 func (d *Dgraph) UpdateUser(ctx context.Context, user *models.User) (*models.User, error) {
+	user.DType = []string{"User"}
 	bytes, err := json.Marshal(user)
 	if err != nil {
 		return nil, err

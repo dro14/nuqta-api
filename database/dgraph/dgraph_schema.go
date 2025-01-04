@@ -3,7 +3,7 @@ package dgraph
 const schema = `
 # User predicates
 name: string .
-username: string .
+username: string @index(hash) .
 bio: string .
 birthday: int .
 joined_at: int .

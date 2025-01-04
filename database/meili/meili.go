@@ -8,7 +8,7 @@ import (
 )
 
 type Meili struct {
-	client meilisearch.ServiceManager
+	index meilisearch.IndexManager
 }
 
 func New() *Meili {
@@ -22,10 +22,8 @@ func New() *Meili {
 		log.Fatal("meili master key is not specified")
 	}
 
+	client := meilisearch.New(uri, meilisearch.WithAPIKey(masterKey))
 	return &Meili{
-		client: meilisearch.New(
-			uri,
-			meilisearch.WithAPIKey(masterKey),
-		),
+		index: client.Index("users"),
 	}
 }

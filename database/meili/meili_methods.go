@@ -5,34 +5,57 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 )
 
-func (m *Meili) Ping() error {
-	_, err := m.client.Health()
-	return err
-}
-
 func (m *Meili) AddUser(user *models.User) error {
 	username := user.Username
 	if username != "" {
 		username = "@" + username
 	}
-	documents := []map[string]string{{
+	documents := []map[string]any{{
 		"id":       user.Uid,
 		"name":     user.Name,
 		"username": username,
+		"hits":     0,
 	}}
-	_, err := m.client.Index("users").AddDocuments(documents)
+	_, err := m.index.AddDocuments(documents)
 	return err
 }
 
-func (m *Meili) SearchUser(query string) ([]any, error) {
-	results, err := m.client.Index("users").Search(
+func (m *Meili) SearchUser(query string) ([]models.User, error) {
+	results, err := m.index.Search(
 		query,
 		&meilisearch.SearchRequest{Limit: 10},
 	)
-	return results.Hits, err
+	var hits []models.User
+	for i := range results.Hits {
+		hit := results.Hits[i].(map[string]any)
+		hits = append(hits, models.User{
+			Uid:      hit["id"].(string),
+			Name:     hit["name"].(string),
+			Username: hit["username"].(string),
+		})
+	}
+	return hits, err
+}
+
+func (m *Meili) IncrementUserHits(uid string) error {
+	var doc map[string]any
+	err := m.index.GetDocument(
+		uid,
+		&meilisearch.DocumentQuery{},
+		&doc,
+	)
+	if err != nil {
+		return err
+	}
+	doc["hits"] = doc["hits"].(int) + 1
+	_, err = m.index.UpdateDocuments(
+		[]map[string]any{doc},
+		uid,
+	)
+	return err
 }
 
 func (m *Meili) DeleteUser(uid string) error {
-	_, err := m.client.Index("users").DeleteDocument(uid)
+	_, err := m.index.DeleteDocument(uid)
 	return err
 }

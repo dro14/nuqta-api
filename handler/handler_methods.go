@@ -18,10 +18,10 @@ func (h *Handler) Run(port string) error {
 	h.engine.DELETE("/schema", h.DeleteSchema)
 
 	h.engine.POST("/user", h.PostUser)
-	h.engine.GET("/user", h.GetUser)
+	h.engine.GET("/user/:by/:value", h.GetUser)
 	h.engine.PUT("/user", h.PutUser)
 	h.engine.PATCH("/user", h.PatchUser)
-	h.engine.DELETE("/user", h.DeleteUser)
+	h.engine.DELETE("/user/:uid", h.DeleteUser)
 
 	h.engine.GET("/search", h.SearchUser)
 	return h.engine.Run(":" + port)
@@ -32,7 +32,7 @@ func (h *Handler) Root(c *gin.Context) {
 }
 
 func (h *Handler) GetSchema(c *gin.Context) {
-	schema, err := h.db.ReadSchema(c.Request.Context())
+	schema, err := h.db.GetSchema(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -67,7 +67,7 @@ func (h *Handler) PostUser(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	existingUser, err := h.db.ReadUserByFirebaseUid(ctx, user.FirebaseUid)
+	existingUser, err := h.db.GetUser(ctx, "firebase_uid", user.FirebaseUid)
 	if err != nil && !errors.Is(err, e.ErrNotFound) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -94,18 +94,14 @@ func (h *Handler) PostUser(c *gin.Context) {
 
 func (h *Handler) GetUser(c *gin.Context) {
 	ctx := c.Request.Context()
-	var user *models.User
-	var err error
-	switch {
-	case c.Query("uid") != "":
-		user, err = h.db.ReadUserByUid(ctx, c.Query("uid"))
-	case c.Query("firebase_uid") != "":
-		user, err = h.db.ReadUserByFirebaseUid(ctx, c.Query("firebase_uid"))
-	default:
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+	user, err := h.db.GetUser(ctx, c.Param("by"), c.Query("value"))
+	if errors.Is(err, e.ErrUnknownParam) {
+		c.Status(http.StatusBadRequest)
 		return
-	}
-	if err != nil {
+	} else if errors.Is(err, e.ErrNotFound) {
+		c.Status(http.StatusNotFound)
+		return
+	} else if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
@@ -134,9 +130,9 @@ func (h *Handler) PutUser(c *gin.Context) {
 func (h *Handler) PatchUser(c *gin.Context) {}
 
 func (h *Handler) DeleteUser(c *gin.Context) {
-	uid := c.Query("uid")
+	uid := c.Param("uid")
 	if uid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParam))
 		return
 	}
 
@@ -156,9 +152,9 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 }
 
 func (h *Handler) SearchUser(c *gin.Context) {
-	query := c.Query("query")
+	query := c.Query("q")
 	if query == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoQuery))
 		return
 	}
 
