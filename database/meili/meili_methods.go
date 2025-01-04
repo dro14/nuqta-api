@@ -1,8 +1,6 @@
 package meili
 
 import (
-	"log"
-
 	"github.com/dro14/nuqta-service/models"
 	"github.com/meilisearch/meilisearch-go"
 )
@@ -49,12 +47,12 @@ func (m *Meili) IncrementUserHits(uid string) error {
 	if err != nil {
 		return err
 	}
-	doc["hits"] = doc["hits"].(float64) + 1
 	_, err = m.index.UpdateDocuments(
-		[]map[string]any{doc},
+		[]map[string]any{
+			{"hits": doc["hits"].(float64) + 1},
+		},
 		uid,
 	)
-	log.Print(doc)
 	return err
 }
 
