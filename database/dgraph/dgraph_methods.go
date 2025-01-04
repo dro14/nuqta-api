@@ -3,6 +3,7 @@ package dgraph
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
@@ -86,7 +87,7 @@ func (d *Dgraph) GetUser(ctx context.Context, by, value string) (*models.User, e
 	if len(response["user"]) > 0 {
 		return &response["user"][0], nil
 	} else {
-		return nil, e.ErrNotFound
+		return nil, errors.New(string(resp.Json))
 	}
 }
 
