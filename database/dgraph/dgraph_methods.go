@@ -77,14 +77,14 @@ func (d *Dgraph) GetUser(ctx context.Context, by, value string) (*models.User, e
 		return nil, err
 	}
 
-	var response map[string][]models.User
+	var response map[string][]*models.User
 	err = json.Unmarshal(resp.Json, &response)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(response["users"]) > 0 {
-		return &response["users"][0], nil
+		return response["users"][0], nil
 	} else {
 		return nil, e.ErrNotFound
 	}

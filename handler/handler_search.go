@@ -22,11 +22,10 @@ func (h *Handler) SearchUser(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	for i := range users {
-		user, err := h.db.GetUser(ctx, "uid", users[i].Uid)
-		if err != nil {
-			continue
+		user, _ := h.db.GetUser(ctx, "uid", users[i].Uid)
+		if user != nil && user.FirebaseUid != "" {
+			users[i] = user
 		}
-		users[i] = *user
 	}
 
 	c.JSON(http.StatusOK, users)
