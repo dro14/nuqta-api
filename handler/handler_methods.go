@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/dro14/nuqta-service/e"
@@ -83,6 +84,11 @@ func (h *Handler) PostUser(c *gin.Context) {
 		return
 	}
 
+	err = h.search.AddUser(user)
+	if err != nil {
+		log.Printf("user %s: can't add user to search index: %s", user.Uid, err)
+	}
+
 	c.JSON(http.StatusOK, user)
 }
 
@@ -141,7 +147,26 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 		return
 	}
 
+	err = h.search.DeleteUser(uid)
+	if err != nil {
+		log.Printf("user %s: can't delete user from search index: %s", uid, err)
+	}
+
 	c.Status(http.StatusOK)
 }
 
-func (h *Handler) SearchUser(c *gin.Context) {}
+func (h *Handler) SearchUser(c *gin.Context) {
+	query := c.Query("query")
+	if query == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	hits, err := h.search.SearchUser(query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, hits)
+}
