@@ -47,12 +47,8 @@ func (m *Meili) IncrementUserHits(uid string) error {
 	if err != nil {
 		return err
 	}
-	_, err = m.index.UpdateDocuments(
-		[]map[string]any{
-			{"hits": doc["hits"].(float64) + 1},
-		},
-		uid,
-	)
+	docs := []map[string]any{{"hits": doc["hits"].(float64) + 1}}
+	_, err = m.index.UpdateDocuments(docs, uid)
 	return err
 }
 
