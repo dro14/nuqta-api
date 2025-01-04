@@ -65,7 +65,8 @@ func (h *Handler) PostUser(c *gin.Context) {
 		return
 	}
 
-	existingUser, err := h.db.ReadUser(c.Request.Context(), user.FirebaseUid)
+	ctx := c.Request.Context()
+	existingUser, err := h.db.ReadUserByFirebaseUid(ctx, user.FirebaseUid)
 	if err != nil && !errors.Is(err, e.ErrNotFound) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -76,7 +77,7 @@ func (h *Handler) PostUser(c *gin.Context) {
 		return
 	}
 
-	user, err = h.db.CreateUser(c.Request.Context(), user)
+	user, err = h.db.CreateUser(ctx, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -86,13 +87,18 @@ func (h *Handler) PostUser(c *gin.Context) {
 }
 
 func (h *Handler) GetUser(c *gin.Context) {
-	firebaseUid := c.Query("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoId))
+	ctx := c.Request.Context()
+	var user *models.User
+	var err error
+	switch {
+	case c.Query("uid") != "":
+		user, err = h.db.ReadUserByUid(ctx, c.Query("uid"))
+	case c.Query("firebase_uid") != "":
+		user, err = h.db.ReadUserByFirebaseUid(ctx, c.Query("firebase_uid"))
+	default:
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
-
-	user, err := h.db.ReadUser(c.Request.Context(), firebaseUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -101,18 +107,35 @@ func (h *Handler) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) PutUser(c *gin.Context) {}
+func (h *Handler) PutUser(c *gin.Context) {
+	user := &models.User{}
+	err := c.ShouldBindJSON(user)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	ctx := c.Request.Context()
+	user, err = h.db.UpdateUser(ctx, user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
 
 func (h *Handler) PatchUser(c *gin.Context) {}
 
 func (h *Handler) DeleteUser(c *gin.Context) {
 	uid := c.Query("uid")
 	if uid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoId))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
-	err := h.db.DeleteUser(c.Request.Context(), uid)
+	ctx := c.Request.Context()
+	err := h.db.DeleteUser(ctx, uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

@@ -3,6 +3,6 @@ package e
 import "errors"
 
 var (
-	ErrNoId     = errors.New("id is not specified")
+	ErrNoParams = errors.New("params are not specified")
 	ErrNotFound = errors.New("not found")
 )

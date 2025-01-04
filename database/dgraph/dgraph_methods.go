@@ -59,7 +59,36 @@ func (d *Dgraph) CreateUser(ctx context.Context, user *models.User) (*models.Use
 	return user, nil
 }
 
-func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User, error) {
+func (d *Dgraph) ReadUserByUid(ctx context.Context, uid string) (*models.User, error) {
+	query := fmt.Sprintf(`
+{
+	user(func: uid(%s)) {
+		expand(_all_)
+		posts: count(posted)
+		following: count(following)
+		followers: count(~following)
+	}
+}`, uid)
+
+	resp, err := d.client.NewTxn().Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]models.User
+	err = json.Unmarshal(resp.Json, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(response["user"]) > 0 {
+		return &response["user"][0], nil
+	} else {
+		return nil, e.ErrNotFound
+	}
+}
+
+func (d *Dgraph) ReadUserByFirebaseUid(ctx context.Context, firebaseUid string) (*models.User, error) {
 	query := fmt.Sprintf(`
 {
 	user(func: eq(firebase_uid, "%s")) {
@@ -87,6 +116,25 @@ func (d *Dgraph) ReadUser(ctx context.Context, firebaseUid string) (*models.User
 	} else {
 		return nil, e.ErrNotFound
 	}
+}
+
+func (d *Dgraph) UpdateUser(ctx context.Context, user *models.User) (*models.User, error) {
+	bytes, err := json.Marshal(user)
+	if err != nil {
+		return nil, err
+	}
+
+	mutation := &api.Mutation{
+		SetJson:   bytes,
+		CommitNow: true,
+	}
+
+	_, err = d.client.NewTxn().Mutate(ctx, mutation)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (d *Dgraph) DeleteUser(ctx context.Context, uid string) error {
