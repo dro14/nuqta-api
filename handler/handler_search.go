@@ -26,7 +26,7 @@ func (h *Handler) SearchUser(c *gin.Context) {
 		if err != nil {
 			continue
 		}
-		users[i] = user
+		users[i] = *user
 	}
 
 	c.JSON(http.StatusOK, users)

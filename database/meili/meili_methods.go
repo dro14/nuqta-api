@@ -20,15 +20,15 @@ func (m *Meili) AddUser(user *models.User) error {
 	return err
 }
 
-func (m *Meili) SearchUser(query string) ([]*models.User, error) {
+func (m *Meili) SearchUser(query string) ([]models.User, error) {
 	results, err := m.index.Search(
 		query,
 		&meilisearch.SearchRequest{Limit: 10},
 	)
-	var users []*models.User
+	var users []models.User
 	for i := range results.Hits {
 		hit := results.Hits[i].(map[string]any)
-		users = append(users, &models.User{
+		users = append(users, models.User{
 			Uid:      hit["id"].(string),
 			Name:     hit["name"].(string),
 			Username: hit["username"].(string),
