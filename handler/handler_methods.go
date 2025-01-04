@@ -94,14 +94,12 @@ func (h *Handler) CreateUser(c *gin.Context) {
 
 func (h *Handler) GetUser(c *gin.Context) {
 	ctx := c.Request.Context()
-	specErr := errors.New(c.Param("by") + " is not a valid param, " +
-		c.Param("value") + " is not a valid value")
 	user, err := h.db.GetUser(ctx, c.Param("by"), c.Query("value"))
 	if errors.Is(err, e.ErrUnknownParam) {
-		c.JSON(http.StatusBadRequest, failure(specErr))
+		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	} else if errors.Is(err, e.ErrNotFound) {
-		c.JSON(http.StatusNotFound, failure(specErr))
+		c.JSON(http.StatusNotFound, failure(err))
 		return
 	} else if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
