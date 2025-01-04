@@ -1,6 +1,9 @@
 package memcached
 
 import (
+	"log"
+	"os"
+
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
@@ -9,12 +12,12 @@ type Memcached struct {
 }
 
 func New() *Memcached {
-	// uri, ok := os.LookupEnv("MEMCACHED_URI")
-	// if !ok {
-	// 	log.Fatal("memcached uri is not specified")
-	// }
+	uri, ok := os.LookupEnv("MEMCACHED_URI")
+	if !ok {
+		log.Fatal("memcached uri is not specified")
+	}
 
 	return &Memcached{
-		// client: memcache.New(uri),
+		client: memcache.New(uri),
 	}
 }
