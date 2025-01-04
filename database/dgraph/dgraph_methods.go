@@ -87,7 +87,7 @@ func (d *Dgraph) GetUser(ctx context.Context, by, value string) (*models.User, e
 	if len(response["user"]) > 0 {
 		return &response["user"][0], nil
 	} else {
-		return nil, errors.New(string(resp.Json))
+		return nil, errors.New(by + ":" + value)
 	}
 }
 
