@@ -17,13 +17,13 @@ func (h *Handler) Run(port string) error {
 	h.engine.PUT("/schema", h.SetSchema)
 	h.engine.DELETE("/schema", h.DeleteSchema)
 
-	h.engine.POST("/user", h.PostUser)
+	h.engine.POST("/user", h.CreateUser)
 	h.engine.GET("/user/:by/:value", h.GetUser)
-	h.engine.PUT("/user", h.PutUser)
-	h.engine.PATCH("/user", h.PatchUser)
+	h.engine.PUT("/user", h.UpdateUser)
 	h.engine.DELETE("/user/:uid", h.DeleteUser)
 
 	h.engine.GET("/search", h.SearchUser)
+	h.engine.PATCH("/increment_hits/:uid", h.IncrementHits)
 	return h.engine.Run(":" + port)
 }
 
@@ -58,7 +58,7 @@ func (h *Handler) DeleteSchema(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func (h *Handler) PostUser(c *gin.Context) {
+func (h *Handler) CreateUser(c *gin.Context) {
 	user := &models.User{}
 	err := c.ShouldBindJSON(user)
 	if err != nil {
@@ -109,7 +109,7 @@ func (h *Handler) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) PutUser(c *gin.Context) {
+func (h *Handler) UpdateUser(c *gin.Context) {
 	user := &models.User{}
 	err := c.ShouldBindJSON(user)
 	if err != nil {
@@ -126,8 +126,6 @@ func (h *Handler) PutUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 }
-
-func (h *Handler) PatchUser(c *gin.Context) {}
 
 func (h *Handler) DeleteUser(c *gin.Context) {
 	uid := c.Param("uid")
@@ -149,20 +147,4 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
-}
-
-func (h *Handler) SearchUser(c *gin.Context) {
-	query := c.Query("q")
-	if query == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoQuery))
-		return
-	}
-
-	hits, err := h.search.SearchUser(query)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	c.JSON(http.StatusOK, hits)
 }
