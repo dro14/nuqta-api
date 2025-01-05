@@ -29,7 +29,7 @@ func (h *Handler) Run(port string) error {
 	group.GET("/search", h.search)
 	group.PATCH("/increment/:uid", h.increment)
 
-	group = h.engine.Group("/upload")
+	group = h.engine.Group("/storage")
 	group.POST("", h.upload)
 
 	return h.engine.Run(":" + port)

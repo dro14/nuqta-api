@@ -8,13 +8,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/dro14/nuqta-service/e"
 	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) upload(c *gin.Context) {
 	filename := c.GetHeader("X-Filename")
 	if filename == "" {
-		c.JSON(http.StatusBadRequest, failure(fmt.Errorf("filename not provided in X-Filename header")))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoFilename))
 		return
 	}
 
@@ -24,13 +25,16 @@ func (h *Handler) upload(c *gin.Context) {
 		return
 	}
 
-	timestamp := time.Now().UnixNano()
 	randomStr := make([]byte, 8)
 	rand.Read(randomStr)
-	extension := filepath.Ext(filename)
-	filename = fmt.Sprintf("%d_%x%s", timestamp, randomStr, extension)
+	filename = fmt.Sprintf(
+		"%d_%x%s",
+		time.Now().UnixNano(),
+		randomStr,
+		filepath.Ext(filename),
+	)
 
-	err = os.WriteFile("uploads/"+filename, body, 0644)
+	err = os.WriteFile("storage/"+filename, body, 0644)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
