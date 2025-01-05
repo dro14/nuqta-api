@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -11,7 +12,13 @@ import (
 )
 
 func (h *Handler) upload(c *gin.Context) {
-	file, err := c.FormFile("upload")
+	filename := c.GetHeader("X-Filename")
+	if filename == "" {
+		c.JSON(http.StatusBadRequest, failure(fmt.Errorf("filename not provided in X-Filename header")))
+		return
+	}
+
+	body, err := c.GetRawData()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
@@ -20,10 +27,10 @@ func (h *Handler) upload(c *gin.Context) {
 	timestamp := time.Now().UnixNano()
 	randomStr := make([]byte, 8)
 	rand.Read(randomStr)
-	extension := filepath.Ext(file.Filename)
-	filename := fmt.Sprintf("%d_%x%s", timestamp, randomStr, extension)
+	extension := filepath.Ext(filename)
+	filename = fmt.Sprintf("%d_%x%s", timestamp, randomStr, extension)
 
-	err = c.SaveUploadedFile(file, "uploads/"+filename)
+	err = os.WriteFile("uploads/"+filename, body, 0644)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
