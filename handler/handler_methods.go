@@ -22,9 +22,15 @@ func (h *Handler) Run(port string) error {
 	group.PATCH("/unfollow/:follower_uid/:followee_uid", h.unfollowUser)
 	group.DELETE("/:uid", h.deleteUser)
 
+	// group = h.engine.Group("/post")
+	// TODO: add post methods
+
 	group = h.engine.Group("/index")
 	group.GET("/search", h.search)
 	group.PATCH("/increment/:uid", h.increment)
+
+	group = h.engine.Group("/upload")
+	group.POST("", h.upload)
 
 	return h.engine.Run(":" + port)
 }
