@@ -8,7 +8,7 @@ import (
 )
 
 type Meili struct {
-	index meilisearch.IndexManager
+	users meilisearch.IndexManager
 }
 
 func New() *Meili {
@@ -23,9 +23,8 @@ func New() *Meili {
 	}
 
 	client := meilisearch.New(uri, meilisearch.WithAPIKey(masterKey))
-	index := client.Index("users")
-	// index.UpdateSortableAttributes(&[]string{"hits"})
+	users := client.Index("users")
 	return &Meili{
-		index: index,
+		users: users,
 	}
 }

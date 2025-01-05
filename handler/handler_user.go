@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) CreateUser(c *gin.Context) {
+func (h *Handler) createUser(c *gin.Context) {
 	user := &models.User{}
 	err := c.ShouldBindJSON(user)
 	if err != nil {
@@ -36,7 +36,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	err = h.search.AddUser(user)
+	err = h.index.AddUser(user)
 	if err != nil {
 		log.Printf("user %s: can't add user to search index: %s", user.Uid, err)
 	}
@@ -44,7 +44,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) GetUser(c *gin.Context) {
+func (h *Handler) getUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	user, err := h.db.GetUser(ctx, c.Param("by"), c.Param("value"))
 	if errors.Is(err, e.ErrUnknownParam) {
@@ -61,7 +61,7 @@ func (h *Handler) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) UpdateUser(c *gin.Context) {
+func (h *Handler) updateUser(c *gin.Context) {
 	user := &models.User{}
 	err := c.ShouldBindJSON(user)
 	if err != nil {
@@ -76,10 +76,51 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		return
 	}
 
+	err = h.index.UpdateUser(user)
+	if err != nil {
+		log.Printf("user %s: can't update user in search index: %s", user.Uid, err)
+	}
+
 	c.Status(http.StatusOK)
 }
 
-func (h *Handler) DeleteUser(c *gin.Context) {
+func (h *Handler) followUser(c *gin.Context) {
+	followerUid := c.Param("follower_uid")
+	followeeUid := c.Param("followee_uid")
+	if followerUid == "" || followeeUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParam))
+		return
+	}
+
+	ctx := c.Request.Context()
+	err := h.db.FollowUser(ctx, followerUid, followeeUid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *Handler) unfollowUser(c *gin.Context) {
+	followerUid := c.Param("follower_uid")
+	followeeUid := c.Param("followee_uid")
+	if followerUid == "" || followeeUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParam))
+		return
+	}
+
+	ctx := c.Request.Context()
+	err := h.db.UnfollowUser(ctx, followerUid, followeeUid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func (h *Handler) deleteUser(c *gin.Context) {
 	uid := c.Param("uid")
 	if uid == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParam))
@@ -93,7 +134,7 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err = h.search.DeleteUser(uid)
+	err = h.index.DeleteUser(uid)
 	if err != nil {
 		log.Printf("user %s: can't delete user from search index: %s", uid, err)
 	}

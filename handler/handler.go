@@ -10,7 +10,7 @@ import (
 type Handler struct {
 	engine *gin.Engine
 	db     *dgraph.Dgraph
-	search *meili.Meili
+	index  *meili.Meili
 	cache  *memcached.Memcached
 }
 
@@ -18,7 +18,7 @@ func New() *Handler {
 	return &Handler{
 		engine: gin.Default(),
 		db:     dgraph.New(),
-		search: meili.New(),
+		index:  meili.New(),
 		cache:  memcached.New(),
 	}
 }

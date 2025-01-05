@@ -83,7 +83,7 @@ func (d *Dgraph) GetUser(ctx context.Context, by, value string) (*models.User, e
 		return nil, err
 	}
 
-	if len(response["users"]) > 0 {
+	if len(response["users"]) > 0 && response["users"][0].Email != "" {
 		return response["users"][0], nil
 	} else {
 		return nil, e.ErrNotFound
@@ -110,11 +110,33 @@ func (d *Dgraph) UpdateUser(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (d *Dgraph) DeleteUser(ctx context.Context, uid string) error {
-	mutation := &api.Mutation{
-		DeleteJson: []byte(fmt.Sprintf(`{"uid": "%s"}`, uid)),
-		CommitNow:  true,
+func (d *Dgraph) FollowUser(ctx context.Context, followerUid string, followeeUid string) error {
+	json := fmt.Sprintf(`{"uid": "%s", "following": "%s"}`, followerUid, followeeUid)
+	mutation := &api.Mutation{SetJson: []byte(json), CommitNow: true}
+
+	_, err := d.client.NewTxn().Mutate(ctx, mutation)
+	if err != nil {
+		return err
 	}
+
+	return nil
+}
+
+func (d *Dgraph) UnfollowUser(ctx context.Context, followerUid string, followeeUid string) error {
+	json := fmt.Sprintf(`{"uid": "%s", "following": "%s"}`, followerUid, followeeUid)
+	mutation := &api.Mutation{DeleteJson: []byte(json), CommitNow: true}
+
+	_, err := d.client.NewTxn().Mutate(ctx, mutation)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Dgraph) DeleteUser(ctx context.Context, uid string) error {
+	json := fmt.Sprintf(`{"uid": "%s"}`, uid)
+	mutation := &api.Mutation{DeleteJson: []byte(json), CommitNow: true}
 
 	_, err := d.client.NewTxn().Mutate(ctx, mutation)
 	if err != nil {

@@ -7,49 +7,28 @@ import (
 )
 
 func (h *Handler) Run(port string) error {
-	h.engine.GET("/", h.Root)
+	h.engine.GET("/", h.root)
 
-	h.engine.GET("/schema", h.GetSchema)
-	h.engine.PUT("/schema", h.SetSchema)
-	h.engine.DELETE("/schema", h.DeleteSchema)
+	group := h.engine.Group("/schema")
+	group.GET("", h.getSchema)
+	group.PUT("", h.updateSchema)
+	group.DELETE("", h.deleteSchema)
 
-	h.engine.POST("/user", h.CreateUser)
-	h.engine.GET("/user/:by/:value", h.GetUser)
-	h.engine.PUT("/user", h.UpdateUser)
-	h.engine.DELETE("/user/:uid", h.DeleteUser)
+	group = h.engine.Group("/user")
+	group.POST("", h.createUser)
+	group.GET("/:by/:value", h.getUser)
+	group.PUT("", h.updateUser)
+	group.PATCH("/follow/:follower_uid/:followee_uid", h.followUser)
+	group.PATCH("/unfollow/:follower_uid/:followee_uid", h.unfollowUser)
+	group.DELETE("/:uid", h.deleteUser)
 
-	h.engine.GET("/search", h.SearchUser)
-	h.engine.PATCH("/increment_hits/:uid", h.IncrementHits)
+	group = h.engine.Group("/index")
+	group.GET("/search", h.search)
+	group.PATCH("/increment/:uid", h.increment)
+
 	return h.engine.Run(":" + port)
 }
 
-func (h *Handler) Root(c *gin.Context) {
+func (h *Handler) root(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})
-}
-
-func (h *Handler) GetSchema(c *gin.Context) {
-	schema, err := h.db.GetSchema(c.Request.Context())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-	c.String(http.StatusOK, schema)
-}
-
-func (h *Handler) SetSchema(c *gin.Context) {
-	err := h.db.UpdateSchema(c.Request.Context())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-	c.Status(http.StatusOK)
-}
-
-func (h *Handler) DeleteSchema(c *gin.Context) {
-	err := h.db.DeleteSchema(c.Request.Context())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-	c.Status(http.StatusOK)
 }

@@ -10,22 +10,22 @@ func (m *Meili) AddUser(user *models.User) error {
 	if username != "" {
 		username = "@" + username
 	}
-	documents := []map[string]any{{
+	_, err := m.users.AddDocuments([]map[string]any{{
 		"id":       user.Uid,
 		"name":     user.Name,
 		"username": username,
 		"hits":     0,
-	}}
-	_, err := m.index.AddDocuments(documents)
+	}})
 	return err
 }
 
 func (m *Meili) SearchUser(query string) ([]*models.User, error) {
-	results, err := m.index.Search(
-		query,
-		&meilisearch.SearchRequest{Limit: 10},
-	)
-	var users []*models.User
+	request := &meilisearch.SearchRequest{Limit: 10}
+	results, err := m.users.Search(query, request)
+	if err != nil {
+		return nil, err
+	}
+	users := make([]*models.User, 0, len(results.Hits))
 	for i := range results.Hits {
 		hit := results.Hits[i].(map[string]any)
 		users = append(users, &models.User{
@@ -34,25 +34,44 @@ func (m *Meili) SearchUser(query string) ([]*models.User, error) {
 			Username: hit["username"].(string),
 		})
 	}
-	return users, err
+	return users, nil
+}
+
+func (m *Meili) UpdateUser(user *models.User) error {
+	request := &meilisearch.DocumentQuery{}
+	var doc map[string]any
+	err := m.users.GetDocument(user.Uid, request, &doc)
+	if err != nil {
+		return err
+	}
+	doUpdate := false
+	if doc["name"] != user.Name {
+		doc["name"] = user.Name
+		doUpdate = true
+	}
+	if doc["username"] != user.Username {
+		doc["username"] = user.Username
+		doUpdate = true
+	}
+	if doUpdate {
+		_, err = m.users.UpdateDocuments(doc)
+	}
+	return err
 }
 
 func (m *Meili) IncrementUserHits(uid string) error {
+	request := &meilisearch.DocumentQuery{}
 	var doc map[string]any
-	err := m.index.GetDocument(
-		uid,
-		&meilisearch.DocumentQuery{},
-		&doc,
-	)
+	err := m.users.GetDocument(uid, request, &doc)
 	if err != nil {
 		return err
 	}
 	doc["hits"] = doc["hits"].(float64) + 1
-	_, err = m.index.UpdateDocuments(doc)
+	_, err = m.users.UpdateDocuments(doc)
 	return err
 }
 
 func (m *Meili) DeleteUser(uid string) error {
-	_, err := m.index.DeleteDocument(uid)
+	_, err := m.users.DeleteDocument(uid)
 	return err
 }

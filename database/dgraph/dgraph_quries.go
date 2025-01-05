@@ -2,6 +2,7 @@ package dgraph
 
 const usersByUid = `{
 	users(func: uid(%s)) {
+		uid
 		expand(_all_)
 		posts: count(posted)
 		following: count(following)
