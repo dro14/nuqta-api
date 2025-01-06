@@ -8,9 +8,9 @@ import (
 )
 
 func (h *Handler) search(c *gin.Context) {
-	query := c.Query("q")
+	query := c.Param("query")
 	if query == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoQuery))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
@@ -32,14 +32,14 @@ func (h *Handler) search(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-func (h *Handler) increment(c *gin.Context) {
+func (h *Handler) hit(c *gin.Context) {
 	uid := c.Param("uid")
 	if uid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParam))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
-	err := h.index.IncrementUserHits(uid)
+	err := h.index.IncrementHits(uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

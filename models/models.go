@@ -1,6 +1,8 @@
 package models
 
 type User struct {
+	DType           []string `json:"dgraph.type,omitempty"`
+	Uid             string   `json:"uid,omitempty"`
 	Name            string   `json:"name,omitempty"`
 	Username        string   `json:"username,omitempty"`
 	Bio             string   `json:"bio,omitempty"`
@@ -18,13 +20,20 @@ type User struct {
 	ProviderId      string   `json:"provider_id,omitempty"`
 	ProviderUid     string   `json:"provider_uid,omitempty"`
 	FirebaseUid     string   `json:"firebase_uid,omitempty"`
-	Uid             string   `json:"uid,omitempty"`
-	DType           []string `json:"dgraph.type,omitempty"`
 }
 
 type Post struct {
-	CreatedAt int64    `json:"created_at,omitempty"`
-	Text      string   `json:"text,omitempty"`
-	UID       string   `json:"uid,omitempty"`
-	DType     []string `json:"dgraph.type,omitempty"`
+	DType        []string `json:"dgraph.type,omitempty"`
+	Uid          string   `json:"uid,omitempty"`
+	Text         string   `json:"text,omitempty"`
+	PostedAt     int      `json:"posted_at,omitempty"`
+	AuthorUid    string   `json:"author_uid,omitempty"`
+	InReplyToUid string   `json:"in_reply_to_uid,omitempty"`
+	Author       *User    `json:"author,omitempty"`
+	InReplyTo    *Post    `json:"in_reply_to,omitempty"`
+	Views        int      `json:"views,omitempty"`
+	Likes        int      `json:"likes,omitempty"`
+	Reposts      int      `json:"reposts,omitempty"`
+	Replies      int      `json:"replies,omitempty"`
+	Clicks       int      `json:"clicks,omitempty"`
 }

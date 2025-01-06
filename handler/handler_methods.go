@@ -18,16 +18,19 @@ func (h *Handler) Run(port string) error {
 	group.POST("", h.createUser)
 	group.GET("/:by/:value", h.getUser)
 	group.PUT("", h.updateUser)
-	group.PATCH("/follow/:follower_uid/:followee_uid", h.followUser)
-	group.PATCH("/unfollow/:follower_uid/:followee_uid", h.unfollowUser)
 	group.DELETE("/:uid", h.deleteUser)
 
-	// group = h.engine.Group("/post")
-	// TODO: add post methods
+	group = h.engine.Group("/post")
+	group.POST("", h.createPost)
+	group.GET("/:uid", h.getPost)
+
+	group = h.engine.Group("/edge")
+	group.POST("/:node1/:edge/:node2", h.createEdge)
+	group.DELETE("/:node1/:edge/:node2", h.deleteEdge)
 
 	group = h.engine.Group("/index")
-	group.GET("/search", h.search)
-	group.PATCH("/increment/:uid", h.increment)
+	group.GET("/search/:query", h.search)
+	group.PATCH("/hit/:uid", h.hit)
 
 	group = h.engine.Group("/storage")
 	group.POST("", h.upload)

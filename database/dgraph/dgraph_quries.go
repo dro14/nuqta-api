@@ -1,31 +1,56 @@
 package dgraph
 
-const usersByUid = `{
-	users(func: uid(%s)) {
+var functions = map[string]string{
+	"uid":          `uid(%s)`,
+	"firebase_uid": `eq(firebase_uid, "%s")`,
+	"username":     `eq(username, "%s")`,
+}
+
+const usersQuery = `{
+	users(func: %s) {
 		uid
-		expand(_all_)
-		posts: count(posted)
-		following: count(following)
-		followers: count(~following)
+		name
+		username
+		bio
+		birthday
+		joined_at
+		banner
+		avatars
+		posts: count(~author)
+		following: count(follow)
+		followers: count(~follow)
 	}
 }`
 
-const usersByFirebaseUid = `{
-	users(func: eq(firebase_uid, "%s")) {
+const postsQuery = `{
+	posts(func: %s) {
 		uid
-		expand(_all_)
-		posts: count(posted)
-		following: count(following)
-		followers: count(~following)
-	}
-}`
-
-const usersByUsername = `{
-	users(func: eq(username, "%s")) {
-		uid
-		expand(_all_)
-		posts: count(posted)
-		following: count(following)
-		followers: count(~following)
+		text
+		posted_at
+		author: author_uid {
+			uid
+			name
+			username
+			avatars
+		}
+		in_reply_to: in_reply_to_uid {
+			uid
+			text
+			posted_at
+			author: author_uid {
+				uid
+				name
+				username
+				avatars
+			}
+			views: count(viewed_by)
+			likes: count(~like)
+			reposts: count(~repost)
+			replies: count(~in_reply_to)			
+		}
+		views: count(viewed_by)
+		likes: count(~like)
+		reposts: count(~repost)
+		replies: count(~in_reply_to)
 	}
 }`

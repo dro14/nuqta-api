@@ -84,46 +84,10 @@ func (h *Handler) updateUser(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func (h *Handler) followUser(c *gin.Context) {
-	followerUid := c.Param("follower_uid")
-	followeeUid := c.Param("followee_uid")
-	if followerUid == "" || followeeUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParam))
-		return
-	}
-
-	ctx := c.Request.Context()
-	err := h.db.FollowUser(ctx, followerUid, followeeUid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	c.Status(http.StatusOK)
-}
-
-func (h *Handler) unfollowUser(c *gin.Context) {
-	followerUid := c.Param("follower_uid")
-	followeeUid := c.Param("followee_uid")
-	if followerUid == "" || followeeUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParam))
-		return
-	}
-
-	ctx := c.Request.Context()
-	err := h.db.UnfollowUser(ctx, followerUid, followeeUid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	c.Status(http.StatusOK)
-}
-
 func (h *Handler) deleteUser(c *gin.Context) {
 	uid := c.Param("uid")
 	if uid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParam))
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 

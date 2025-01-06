@@ -59,7 +59,7 @@ func (m *Meili) UpdateUser(user *models.User) error {
 	return err
 }
 
-func (m *Meili) IncrementUserHits(uid string) error {
+func (m *Meili) IncrementHits(uid string) error {
 	request := &meilisearch.DocumentQuery{}
 	var doc map[string]any
 	err := m.users.GetDocument(uid, request, &doc)
