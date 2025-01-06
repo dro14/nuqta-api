@@ -54,3 +54,9 @@ const postsQuery = `{
 		replies: count(~in_reply_to)
 	}
 }`
+
+const edgesQuery = `{
+	edges(func: %s) {
+		%s @filter(uid(%s))
+	}
+}`

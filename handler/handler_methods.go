@@ -25,8 +25,8 @@ func (h *Handler) Run(port string) error {
 	group.GET("/:uid", h.getPost)
 
 	group = h.engine.Group("/edge")
-	group.POST("/:node1/:edge/:node2", h.createEdge)
-	group.DELETE("/:node1/:edge/:node2", h.deleteEdge)
+	group.POST("/:source/:edge/:target", h.createEdge)
+	group.DELETE("/:source/:edge/:target", h.deleteEdge)
 
 	group = h.engine.Group("/index")
 	group.GET("/search/:query", h.search)

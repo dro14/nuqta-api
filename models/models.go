@@ -13,6 +13,7 @@ type User struct {
 	Posts           int      `json:"posts,omitempty"`
 	Following       int      `json:"following,omitempty"`
 	Followers       int      `json:"followers,omitempty"`
+	IsFollowed      bool     `json:"is_followed,omitempty"`
 	Email           string   `json:"email,omitempty"`
 	IsEmailVerified bool     `json:"is_email_verified,omitempty"`
 	IsAnonymous     bool     `json:"is_anonymous,omitempty"`
@@ -36,4 +37,6 @@ type Post struct {
 	Reposts      int      `json:"reposts,omitempty"`
 	Replies      int      `json:"replies,omitempty"`
 	Clicks       int      `json:"clicks,omitempty"`
+	IsLiked      bool     `json:"is_liked,omitempty"`
+	IsReposted   bool     `json:"is_reposted,omitempty"`
 }
