@@ -61,9 +61,17 @@ const edgesQuery = `{
 	}
 }`
 
-const postsOfUserQuery = `{
+const userPostsQuery = `{
 	users(func: %s) {
 		posts: ~author(orderdesc: posted_at) {
+			uid
+		}
+	}
+}`
+
+const postRepliesQuery = `{
+	posts(func: %s) {
+		replies: ~in_reply_to(orderdesc: posted_at) {
 			uid
 		}
 	}
