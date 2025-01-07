@@ -60,3 +60,11 @@ const edgesQuery = `{
 		%s @filter(uid(%s))
 	}
 }`
+
+const postsOfUserQuery = `{
+	users(func: %s) {
+		posts: ~author(orderdesc: posted_at) {
+			uid
+		}
+	}
+}`

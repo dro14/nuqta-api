@@ -47,3 +47,24 @@ func (d *Dgraph) GetPost(ctx context.Context, uid string) (*models.Post, error) 
 		return nil, e.ErrNotFound
 	}
 }
+
+func (d *Dgraph) GetPostsOfUser(ctx context.Context, uid string) ([]string, error) {
+	query := fmt.Sprintf(postsOfUserQuery, fmt.Sprintf(functions["uid"], uid))
+	resp, err := d.client.NewTxn().Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]map[string][]map[string]string
+	err = json.Unmarshal(resp.Json, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var posts []string
+	for _, post := range response["users"][0]["posts"] {
+		posts = append(posts, post["uid"])
+	}
+
+	return posts, nil
+}
