@@ -23,7 +23,7 @@ const usersQuery = `{
 }`
 
 const postsQuery = `{
-	posts(func: %s) {
+	posts(func: uid(%s)) {
 		uid
 		text
 		posted_at
@@ -56,23 +56,19 @@ const postsQuery = `{
 }`
 
 const edgesQuery = `{
-	edges(func: %s) {
+	edges(func: eq(firebase_uid, "%s")) {
 		%s @filter(uid(%s))
 	}
 }`
 
 const userPostsQuery = `{
-	users(func: %s) {
-		posts: ~author(orderdesc: posted_at) {
-			uid
-		}
+	posts(func: type(Post), orderdesc: posted_at) @filter(eq(author_uid, %s)) {
+		uid
 	}
 }`
 
 const postRepliesQuery = `{
-	posts(func: %s) {
-		replies: ~in_reply_to(orderdesc: posted_at) {
-			uid
-		}
+	replies(func: type(Post), orderdesc: posted_at) @filter(eq(in_reply_to_uid, %s)) {
+		uid
 	}
 }`

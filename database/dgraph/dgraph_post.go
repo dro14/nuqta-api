@@ -29,7 +29,7 @@ func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Pos
 }
 
 func (d *Dgraph) GetPost(ctx context.Context, uid string) (*models.Post, error) {
-	query := fmt.Sprintf(postsQuery, fmt.Sprintf(functions["uid"], uid))
+	query := fmt.Sprintf(postsQuery, uid)
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -49,42 +49,42 @@ func (d *Dgraph) GetPost(ctx context.Context, uid string) (*models.Post, error) 
 }
 
 func (d *Dgraph) GetUserPosts(ctx context.Context, uid string) ([]string, error) {
-	query := fmt.Sprintf(userPostsQuery, fmt.Sprintf(functions["uid"], uid))
+	query := fmt.Sprintf(userPostsQuery, uid)
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
-	var response map[string][]map[string][]map[string]string
+	var response map[string][]*models.Post
 	err = json.Unmarshal(resp.Json, &response)
 	if err != nil {
 		return nil, err
 	}
 
 	var posts []string
-	for _, post := range response["users"][0]["posts"] {
-		posts = append(posts, post["uid"])
+	for _, post := range response["posts"] {
+		posts = append(posts, post.Uid)
 	}
 
 	return posts, nil
 }
 
 func (d *Dgraph) GetPostReplies(ctx context.Context, uid string) ([]string, error) {
-	query := fmt.Sprintf(postRepliesQuery, fmt.Sprintf(functions["uid"], uid))
+	query := fmt.Sprintf(postRepliesQuery, uid)
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
-	var response map[string][]map[string][]map[string]string
+	var response map[string][]*models.Post
 	err = json.Unmarshal(resp.Json, &response)
 	if err != nil {
 		return nil, err
 	}
 
 	var replies []string
-	for _, reply := range response["posts"][0]["replies"] {
-		replies = append(replies, reply["uid"])
+	for _, reply := range response["replies"] {
+		replies = append(replies, reply.Uid)
 	}
 
 	return replies, nil

@@ -30,8 +30,7 @@ func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target string) er
 }
 
 func (d *Dgraph) DoesEdgeExist(ctx context.Context, source, edge, target string) (bool, error) {
-	function := fmt.Sprintf(functions["firebase_uid"], source)
-	query := fmt.Sprintf(edgesQuery, function, edge, target)
+	query := fmt.Sprintf(edgesQuery, source, edge, target)
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return false, err
