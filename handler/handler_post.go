@@ -57,3 +57,20 @@ func (h *Handler) getPost(c *gin.Context) {
 
 	c.JSON(http.StatusOK, post)
 }
+
+func (h *Handler) getUserPosts(c *gin.Context) {
+	uid := c.Param("uid")
+	if uid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	ctx := c.Request.Context()
+	posts, err := h.db.GetUserPosts(ctx, uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, posts)
+}

@@ -23,6 +23,7 @@ func (h *Handler) Run(port string) error {
 	group = h.engine.Group("/post")
 	group.POST("", h.createPost)
 	group.GET("/:uid", h.getPost)
+	group.GET("/user/:uid", h.getUserPosts)
 
 	group = h.engine.Group("/edge")
 	group.POST("/:source/:edge/:target", h.createEdge)

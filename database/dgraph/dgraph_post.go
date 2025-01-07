@@ -48,7 +48,7 @@ func (d *Dgraph) GetPost(ctx context.Context, uid string) (*models.Post, error) 
 	}
 }
 
-func (d *Dgraph) GetPostsOfUser(ctx context.Context, uid string) ([]string, error) {
+func (d *Dgraph) GetUserPosts(ctx context.Context, uid string) ([]string, error) {
 	query := fmt.Sprintf(postsOfUserQuery, fmt.Sprintf(functions["uid"], uid))
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
