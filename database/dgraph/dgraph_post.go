@@ -18,14 +18,14 @@ func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Pos
 		return nil, err
 	}
 
-	nquads := fmt.Sprintf("<_:post> <author_uid> <%s> .", post.Author.Uid)
-	post.Author = nil
-	if post.InReplyTo != nil {
-		nquads += fmt.Sprintf("\n<_:post> <in_reply_to_uid> <%s> .", post.InReplyTo.Uid)
-		post.InReplyTo = nil
-	}
+	// nquads := fmt.Sprintf("<_:post> <author_uid> <%s> .", post.Author.Uid)
+	// post.Author = nil
+	// if post.InReplyTo != nil {
+	// 	nquads += fmt.Sprintf("\n<_:post> <in_reply_to_uid> <%s> .", post.InReplyTo.Uid)
+	// 	post.InReplyTo = nil
+	// }
 
-	mutation := &api.Mutation{SetJson: json, SetNquads: []byte(nquads), CommitNow: true}
+	mutation := &api.Mutation{SetJson: json, CommitNow: true}
 	assigned, err := d.client.NewTxn().Mutate(ctx, mutation)
 	if err != nil {
 		return nil, err

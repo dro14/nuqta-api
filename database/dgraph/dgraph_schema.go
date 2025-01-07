@@ -55,8 +55,8 @@ click: [uid] @count @reverse .
 
 text: string .
 posted_at: int @index(int) .
-author_uid: uid @count @reverse .
-in_reply_to_uid: uid @count @reverse .
+author: uid @count @reverse .
+in_reply_to: uid @count @reverse .
 viewed_by: [uid] @count .
 
 type User {
@@ -83,7 +83,7 @@ type User {
 type Post {
 	text
 	posted_at
-	author_uid
-	in_reply_to_uid
+	author
+	in_reply_to
 	viewed_by
 }`

@@ -27,17 +27,17 @@ const postQuery = `{
 		uid
 		text
 		posted_at
-		author: author_uid {
+		author {
 			uid
 			name
 			username
 			avatars
 		}
-		in_reply_to: in_reply_to_uid {
+		in_reply_to {
 			uid
 			text
 			posted_at
-			author: author_uid {
+			author {
 				uid
 				name
 				username
@@ -62,13 +62,13 @@ const edgesQuery = `{
 }`
 
 const userPostsQuery = `{
-	posts(func: type(Post), orderdesc: posted_at) @filter(eq(author_uid, %s)) {
+	posts(func: type(Post), orderdesc: posted_at) @filter(eq(author, %s)) {
 		uid
 	}
 }`
 
 const postRepliesQuery = `{
-	replies(func: type(Post), orderdesc: posted_at) @filter(eq(in_reply_to_uid, %s)) {
+	replies(func: type(Post), orderdesc: posted_at) @filter(eq(in_reply_to, %s)) {
 		uid
 	}
 }`
