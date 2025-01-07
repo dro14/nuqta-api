@@ -18,13 +18,6 @@ func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Pos
 		return nil, err
 	}
 
-	// nquads := fmt.Sprintf("<_:post> <author_uid> <%s> .", post.Author.Uid)
-	// post.Author = nil
-	// if post.InReplyTo != nil {
-	// 	nquads += fmt.Sprintf("\n<_:post> <in_reply_to_uid> <%s> .", post.InReplyTo.Uid)
-	// 	post.InReplyTo = nil
-	// }
-
 	mutation := &api.Mutation{SetJson: json, CommitNow: true}
 	assigned, err := d.client.NewTxn().Mutate(ctx, mutation)
 	if err != nil {
@@ -48,7 +41,7 @@ func (d *Dgraph) GetPosts(ctx context.Context) ([]string, error) {
 	}
 
 	var posts []string
-	for _, post := range response["posts"] {
+	for _, post := range response["all_posts"] {
 		posts = append(posts, post.Uid)
 	}
 
@@ -82,14 +75,14 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, uid string) ([]string, error)
 		return nil, err
 	}
 
-	var response map[string][]*models.Post
+	var response map[string][]map[string][]*models.Post
 	err = json.Unmarshal(resp.Json, &response)
 	if err != nil {
 		return nil, err
 	}
 
 	var posts []string
-	for _, post := range response["posts"] {
+	for _, post := range response["users"][0]["posts"] {
 		posts = append(posts, post.Uid)
 	}
 
@@ -103,14 +96,14 @@ func (d *Dgraph) GetPostReplies(ctx context.Context, uid string) ([]string, erro
 		return nil, err
 	}
 
-	var response map[string][]*models.Post
+	var response map[string][]map[string][]*models.Post
 	err = json.Unmarshal(resp.Json, &response)
 	if err != nil {
 		return nil, err
 	}
 
 	var replies []string
-	for _, reply := range response["replies"] {
+	for _, reply := range response["posts"][0]["replies"] {
 		replies = append(replies, reply.Uid)
 	}
 

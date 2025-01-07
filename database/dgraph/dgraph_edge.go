@@ -23,7 +23,7 @@ func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target string) er
 	if !slices.Contains(edges, edge) {
 		return e.ErrUnknownEdge
 	}
-	nquads := []byte(fmt.Sprintf(`<%s> <%s> <%s> (timestamp="%d") .`, source, edge, target, time.Now().Unix()))
+	nquads := []byte(fmt.Sprintf("<%s> <%s> <%s> (timestamp=%d) .", source, edge, target, time.Now().Unix()))
 	mutation := &api.Mutation{SetNquads: nquads, CommitNow: true}
 	_, err := d.client.NewTxn().Mutate(ctx, mutation)
 	return err
@@ -36,13 +36,13 @@ func (d *Dgraph) DoesEdgeExist(ctx context.Context, source, edge, target string)
 		return false, err
 	}
 
-	var response map[string][]any
+	var response map[string][]map[string][]map[string]string
 	err = json.Unmarshal(resp.Json, &response)
 	if err != nil {
 		return false, err
 	}
 
-	return len(response["edges"]) > 0, nil
+	return len(response["edges"][0][edge]) > 0, nil
 }
 
 func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) error {
