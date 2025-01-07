@@ -6,7 +6,7 @@ var functions = map[string]string{
 	"username":     `eq(username, "%s")`,
 }
 
-const usersQuery = `{
+const userQuery = `{
 	users(func: %s) {
 		uid
 		name
@@ -22,7 +22,7 @@ const usersQuery = `{
 	}
 }`
 
-const postsQuery = `{
+const postQuery = `{
 	posts(func: uid(%s)) {
 		uid
 		text
@@ -69,6 +69,12 @@ const userPostsQuery = `{
 
 const postRepliesQuery = `{
 	replies(func: type(Post), orderdesc: posted_at) @filter(eq(in_reply_to_uid, %s)) {
+		uid
+	}
+}`
+
+const postsQuery = `{
+	posts(func: type(Post), orderdesc: posted_at) {
 		uid
 	}
 }`

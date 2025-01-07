@@ -26,6 +26,17 @@ func (h *Handler) createPost(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+func (h *Handler) getPosts(c *gin.Context) {
+	ctx := c.Request.Context()
+	posts, err := h.db.GetPosts(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, posts)
+}
+
 func (h *Handler) getPost(c *gin.Context) {
 	uid := c.Param("uid")
 	if uid == "" {

@@ -28,8 +28,28 @@ func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Pos
 	return post, nil
 }
 
+func (d *Dgraph) GetPosts(ctx context.Context) ([]string, error) {
+	resp, err := d.client.NewTxn().Query(ctx, postsQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]*models.Post
+	err = json.Unmarshal(resp.Json, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var posts []string
+	for _, post := range response["posts"] {
+		posts = append(posts, post.Uid)
+	}
+
+	return posts, nil
+}
+
 func (d *Dgraph) GetPost(ctx context.Context, uid string) (*models.Post, error) {
-	query := fmt.Sprintf(postsQuery, uid)
+	query := fmt.Sprintf(postQuery, uid)
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return nil, err

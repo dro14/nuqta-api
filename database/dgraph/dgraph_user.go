@@ -34,7 +34,7 @@ func (d *Dgraph) GetUser(ctx context.Context, by, value string) (*models.User, e
 		return nil, e.ErrUnknownParam
 	}
 
-	query := fmt.Sprintf(usersQuery, fmt.Sprintf(function, value))
+	query := fmt.Sprintf(userQuery, fmt.Sprintf(function, value))
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return nil, err

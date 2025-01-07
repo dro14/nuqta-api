@@ -22,6 +22,7 @@ func (h *Handler) Run(port string) error {
 
 	group = h.engine.Group("/post")
 	group.POST("", h.createPost)
+	group.GET("", h.getPosts)
 	group.GET("/:uid", h.getPost)
 	group.GET("/user/:uid", h.getUserPosts)
 	group.GET("/reply/:uid", h.getPostReplies)
