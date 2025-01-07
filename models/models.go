@@ -24,19 +24,17 @@ type User struct {
 }
 
 type Post struct {
-	DType        []string `json:"dgraph.type,omitempty"`
-	Uid          string   `json:"uid,omitempty"`
-	Text         string   `json:"text,omitempty"`
-	PostedAt     int      `json:"posted_at,omitempty"`
-	AuthorUid    string   `json:"author_uid,omitempty"`
-	InReplyToUid string   `json:"in_reply_to_uid,omitempty"`
-	Author       *User    `json:"author,omitempty"`
-	InReplyTo    *Post    `json:"in_reply_to,omitempty"`
-	Views        int      `json:"views,omitempty"`
-	Likes        int      `json:"likes,omitempty"`
-	Reposts      int      `json:"reposts,omitempty"`
-	Replies      int      `json:"replies,omitempty"`
-	Clicks       int      `json:"clicks,omitempty"`
-	IsLiked      bool     `json:"is_liked,omitempty"`
-	IsReposted   bool     `json:"is_reposted,omitempty"`
+	DType      []string `json:"dgraph.type,omitempty"`
+	Uid        string   `json:"uid,omitempty"`
+	Text       string   `json:"text,omitempty"`
+	PostedAt   int      `json:"posted_at,omitempty"`
+	Author     *User    `json:"author,omitempty"`
+	InReplyTo  *Post    `json:"in_reply_to,omitempty"`
+	Views      int      `json:"views,omitempty"`
+	Likes      int      `json:"likes,omitempty"`
+	Reposts    int      `json:"reposts,omitempty"`
+	Replies    int      `json:"replies,omitempty"`
+	Clicks     int      `json:"clicks,omitempty"`
+	IsLiked    bool     `json:"is_liked,omitempty"`
+	IsReposted bool     `json:"is_reposted,omitempty"`
 }
