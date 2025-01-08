@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/dro14/nuqta-service/e"
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,7 +53,7 @@ func (h *Handler) root(c *gin.Context) {
 func (h *Handler) authMiddleware(c *gin.Context) {
 	header := c.GetHeader("Authorization")
 	if header == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "no authorization header"})
+		c.JSON(http.StatusUnauthorized, failure(e.ErrNoAuthHeader))
 		c.Abort()
 		return
 	}
@@ -61,7 +62,7 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 
 	uid, err := h.auth.VerifyIdToken(idToken)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		c.JSON(http.StatusUnauthorized, failure(err))
 		c.Abort()
 		return
 	}
