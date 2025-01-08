@@ -58,8 +58,8 @@ func (h *Handler) getUser(c *gin.Context) {
 		return
 	}
 
-	firebaseUid, ok := ctx.Value("firebase_uid").(string)
-	if ok {
+	firebaseUid := c.GetString("firebase_uid")
+	if firebaseUid != "" {
 		user.IsFollowed, err = h.db.DoesEdgeExist(ctx, firebaseUid, "follow", user.Uid)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))

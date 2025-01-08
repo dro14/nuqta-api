@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,28 +15,31 @@ func (h *Handler) Run(port string) error {
 	group.PUT("", h.updateSchema)
 	group.DELETE("", h.deleteSchema)
 
-	group = h.engine.Group("/user")
+	authorized := h.engine.Group("")
+	authorized.Use(h.authMiddleware)
+
+	group = authorized.Group("/user")
 	group.POST("", h.createUser)
 	group.GET("/:by/:value", h.getUser)
 	group.PUT("", h.updateUser)
 	group.DELETE("/:uid", h.deleteUser)
 
-	group = h.engine.Group("/post")
+	group = authorized.Group("/post")
 	group.POST("", h.createPost)
 	group.GET("", h.getPosts)
 	group.GET("/:uid", h.getPost)
 	group.GET("/user/:uid", h.getUserPosts)
 	group.GET("/reply/:uid", h.getPostReplies)
 
-	group = h.engine.Group("/edge")
+	group = authorized.Group("/edge")
 	group.POST("/:source/:edge/:target", h.createEdge)
 	group.DELETE("/:source/:edge/:target", h.deleteEdge)
 
-	group = h.engine.Group("/index")
+	group = authorized.Group("/index")
 	group.GET("/search/:query", h.search)
 	group.PATCH("/hit/:uid", h.hit)
 
-	group = h.engine.Group("/storage")
+	group = authorized.Group("/storage")
 	group.POST("", h.upload)
 
 	return h.engine.Run(":" + port)
@@ -43,4 +47,24 @@ func (h *Handler) Run(port string) error {
 
 func (h *Handler) root(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})
+}
+
+func (h *Handler) authMiddleware(c *gin.Context) {
+	header := c.GetHeader("Authorization")
+	if header == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "no authorization header"})
+		c.Abort()
+		return
+	}
+
+	idToken := strings.TrimPrefix(header, "Bearer ")
+
+	uid, err := h.auth.VerifyIdToken(idToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		c.Abort()
+		return
+	}
+
+	c.Set("firebase_uid", uid)
 }

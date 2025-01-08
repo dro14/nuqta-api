@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/dro14/nuqta-service/auth"
 	"github.com/dro14/nuqta-service/database/dgraph"
 	"github.com/dro14/nuqta-service/database/meili"
 	"github.com/dro14/nuqta-service/database/memcached"
@@ -12,6 +13,7 @@ type Handler struct {
 	db     *dgraph.Dgraph
 	index  *meili.Meili
 	cache  *memcached.Memcached
+	auth   *auth.Auth
 }
 
 func New() *Handler {
@@ -20,5 +22,6 @@ func New() *Handler {
 		db:     dgraph.New(),
 		index:  meili.New(),
 		cache:  memcached.New(),
+		auth:   auth.New(),
 	}
 }

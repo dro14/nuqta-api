@@ -51,8 +51,8 @@ func (h *Handler) getPost(c *gin.Context) {
 		return
 	}
 
-	firebaseUid, ok := ctx.Value("firebase_uid").(string)
-	if ok {
+	firebaseUid := c.GetString("firebase_uid")
+	if firebaseUid != "" {
 		post.IsLiked, err = h.db.DoesEdgeExist(ctx, firebaseUid, "like", uid)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
