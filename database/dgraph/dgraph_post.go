@@ -82,8 +82,10 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, uid string) ([]string, error)
 	}
 
 	var posts []string
-	for _, post := range response["users"][0]["posts"] {
-		posts = append(posts, post.Uid)
+	for _, user := range response["users"] {
+		for _, post := range user["posts"] {
+			posts = append(posts, post.Uid)
+		}
 	}
 
 	return posts, nil
@@ -103,8 +105,10 @@ func (d *Dgraph) GetPostReplies(ctx context.Context, uid string) ([]string, erro
 	}
 
 	var replies []string
-	for _, reply := range response["posts"][0]["replies"] {
-		replies = append(replies, reply.Uid)
+	for _, post := range response["posts"] {
+		for _, reply := range post["replies"] {
+			replies = append(replies, reply.Uid)
+		}
 	}
 
 	return replies, nil
