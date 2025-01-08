@@ -60,7 +60,7 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 
 	idToken := strings.TrimPrefix(header, "Bearer ")
 
-	uid, err := h.auth.VerifyIdToken(idToken)
+	uid, err := h.auth.VerifyIdToken(c.Request.Context(), idToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, failure(err))
 		c.Abort()
