@@ -4,5 +4,8 @@ import "context"
 
 func (a *Auth) VerifyIdToken(idToken string) (string, error) {
 	token, err := a.client.VerifyIDToken(context.Background(), idToken)
-	return token.UID, err
+	if err != nil {
+		return "", err
+	}
+	return token.UID, nil
 }
