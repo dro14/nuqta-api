@@ -89,8 +89,23 @@ func (h *Handler) updateUser(c *gin.Context) {
 	if err != nil {
 		log.Printf("user %s: can't update user in search index: %s", user.Uid, err)
 	}
+}
 
-	c.Status(http.StatusOK)
+func (h *Handler) deleteUserPredicate(c *gin.Context) {
+	uid := c.Param("uid")
+	predicate := c.Param("predicate")
+	value := c.Param("value")
+	if uid == "" || predicate == "" || value == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	ctx := c.Request.Context()
+	err := h.db.DeleteUserPredicate(ctx, uid, predicate, value)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
 }
 
 func (h *Handler) deleteUser(c *gin.Context) {
@@ -111,6 +126,4 @@ func (h *Handler) deleteUser(c *gin.Context) {
 	if err != nil {
 		log.Printf("user %s: can't delete user from search index: %s", uid, err)
 	}
-
-	c.Status(http.StatusOK)
 }

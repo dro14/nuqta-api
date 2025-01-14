@@ -23,6 +23,7 @@ func (h *Handler) Run(port string) error {
 	group.POST("", h.createUser)
 	group.GET("/:by/:value", h.getUser)
 	group.PUT("", h.updateUser)
+	group.DELETE("/:uid/:predicate/:value", h.deleteUserPredicate)
 	group.DELETE("/:uid", h.deleteUser)
 
 	group = authorized.Group("/post")

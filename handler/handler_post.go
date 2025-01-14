@@ -22,8 +22,6 @@ func (h *Handler) createPost(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-
-	c.Status(http.StatusOK)
 }
 
 func (h *Handler) getPosts(c *gin.Context) {

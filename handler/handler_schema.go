@@ -22,7 +22,6 @@ func (h *Handler) updateSchema(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	c.Status(http.StatusOK)
 }
 
 func (h *Handler) deleteSchema(c *gin.Context) {
@@ -31,5 +30,4 @@ func (h *Handler) deleteSchema(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	c.Status(http.StatusOK)
 }
