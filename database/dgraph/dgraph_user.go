@@ -83,7 +83,7 @@ func (d *Dgraph) DeleteUserPredicate(ctx context.Context, uid, predicate, value 
 		return e.ErrUnknownPredicate
 	}
 	if predicate != "birthday" {
-		value = fmt.Sprintf("\"%s\"", value)
+		value = fmt.Sprintf("%q", value)
 	}
 	nquads := []byte(fmt.Sprintf("<%s> <%s> <%s> .", uid, predicate, value))
 	mutation := &api.Mutation{DelNquads: nquads, CommitNow: true}
