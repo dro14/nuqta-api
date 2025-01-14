@@ -8,7 +8,7 @@ import (
 )
 
 func (h *Handler) search(c *gin.Context) {
-	query := c.Param("query")
+	query := c.Query("query")
 	if query == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return

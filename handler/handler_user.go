@@ -46,7 +46,7 @@ func (h *Handler) createUser(c *gin.Context) {
 
 func (h *Handler) getUser(c *gin.Context) {
 	ctx := c.Request.Context()
-	user, err := h.db.GetUser(ctx, c.Param("by"), c.Param("value"))
+	user, err := h.db.GetUser(ctx, c.Param("by"), c.Query("value"))
 	if errors.Is(err, e.ErrUnknownParam) {
 		c.Status(http.StatusBadRequest)
 		return
@@ -94,7 +94,7 @@ func (h *Handler) updateUser(c *gin.Context) {
 func (h *Handler) deleteUserPredicate(c *gin.Context) {
 	uid := c.Param("uid")
 	predicate := c.Param("predicate")
-	value := c.Param("value")
+	value := c.Query("value")
 	if uid == "" || predicate == "" || value == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return

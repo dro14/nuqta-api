@@ -21,9 +21,9 @@ func (h *Handler) Run(port string) error {
 
 	group = authorized.Group("/user")
 	group.POST("", h.createUser)
-	group.GET("/:by/:value", h.getUser)
+	group.GET("/:by", h.getUser)
 	group.PUT("", h.updateUser)
-	group.DELETE("/:uid/:predicate/:value", h.deleteUserPredicate)
+	group.DELETE("/:uid/:predicate", h.deleteUserPredicate)
 	group.DELETE("/:uid", h.deleteUser)
 
 	group = authorized.Group("/post")
@@ -38,7 +38,7 @@ func (h *Handler) Run(port string) error {
 	group.DELETE("/:source/:edge/:target", h.deleteEdge)
 
 	group = authorized.Group("/index")
-	group.GET("/search/:query", h.search)
+	group.GET("/search", h.search)
 	group.PATCH("/hit/:uid", h.hit)
 
 	group = authorized.Group("/storage")
