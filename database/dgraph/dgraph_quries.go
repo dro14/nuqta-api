@@ -3,7 +3,7 @@ package dgraph
 var functions = map[string]string{
 	"uid":          `uid(%s)`,
 	"firebase_uid": `eq(firebase_uid, "%s")`,
-	"username":     `eq(username, "%s")`,
+	"username":     `anyofterms(username, "%s")`,
 }
 
 const userQuery = `{

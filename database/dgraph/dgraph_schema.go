@@ -35,7 +35,7 @@ func (d *Dgraph) DeleteSchema(ctx context.Context) error {
 
 const schema = `
 name: string .
-username: string @index(trigram) .
+username: string @index(term) .
 bio: string .
 birthday: int .
 joined_at: int .
