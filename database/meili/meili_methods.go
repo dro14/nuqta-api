@@ -20,7 +20,7 @@ func (m *Meili) AddUser(user *models.User) error {
 }
 
 func (m *Meili) SearchUser(query string) ([]*models.User, error) {
-	request := &meilisearch.SearchRequest{Limit: 10}
+	request := &meilisearch.SearchRequest{Limit: 20}
 	results, err := m.users.Search(query, request)
 	if err != nil {
 		return nil, err
