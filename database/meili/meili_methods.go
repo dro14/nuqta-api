@@ -48,7 +48,7 @@ func (m *Meili) GetUidByUsername(username string) (string, error) {
 	}
 
 	request := &meilisearch.SearchRequest{
-		Filter: fmt.Sprintf(`username = "%s"`, username),
+		Filter: [][]string{{fmt.Sprintf("username = %q", username)}},
 	}
 
 	results, err := m.users.Search("", request)
