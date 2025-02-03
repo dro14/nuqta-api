@@ -23,7 +23,7 @@ func (h *Handler) Run(port string) error {
 	group.POST("", h.createProfile)
 	group.GET("", h.getProfile)
 	group.PUT("", h.updateProfile)
-	group.DELETE("/:attribute", h.deleteProfileAttribute)
+	group.DELETE("/:uid/:attribute", h.deleteProfileAttribute)
 
 	group = authorized.Group("/user")
 	group.GET("", h.getUser)
