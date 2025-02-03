@@ -28,8 +28,8 @@ func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Pos
 	return post, nil
 }
 
-func (d *Dgraph) GetPosts(ctx context.Context) ([]string, error) {
-	resp, err := d.client.NewTxn().Query(ctx, postsQuery)
+func (d *Dgraph) GetAllPosts(ctx context.Context) ([]string, error) {
+	resp, err := d.client.NewTxn().Query(ctx, allPostsQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -40,12 +40,12 @@ func (d *Dgraph) GetPosts(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
-	var posts []string
+	var allPosts []string
 	for _, post := range response["all_posts"] {
-		posts = append(posts, post.Uid)
+		allPosts = append(allPosts, post.Uid)
 	}
 
-	return posts, nil
+	return allPosts, nil
 }
 
 func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*models.Post, error) {
@@ -123,4 +123,14 @@ func (d *Dgraph) GetPostReplies(ctx context.Context, uid string) ([]string, erro
 	}
 
 	return replies, nil
+}
+
+func (d *Dgraph) DeletePost(ctx context.Context, uid string) error {
+	nquads := fmt.Sprintf(`<%s> * * .`, uid)
+	mutation := &api.Mutation{DelNquads: []byte(nquads), CommitNow: true}
+	_, err := d.client.NewTxn().Mutate(ctx, mutation)
+	if err != nil {
+		return err
+	}
+	return nil
 }

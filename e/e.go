@@ -3,6 +3,7 @@ package e
 import "errors"
 
 var (
+	ErrForbidden        = errors.New("forbidden")
 	ErrInvalidMatch     = errors.New("invalid match")
 	ErrInvalidParams    = errors.New("invalid params")
 	ErrNoAuthHeader     = errors.New("no authorization header")

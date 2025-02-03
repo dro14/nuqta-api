@@ -32,7 +32,7 @@ const userByFirebaseUidQuery = `{
 	}
 }`
 
-const postsQuery = `{
+const allPostsQuery = `{
 	all_posts(func: type(Post), orderdesc: posted_at) {
 		uid
 	}
@@ -45,9 +45,6 @@ const postByUidQuery = `{
 		posted_at
 		author {
 			uid
-			name
-			username
-			avatars
 		}
 		in_reply_to {
 			uid
@@ -55,9 +52,6 @@ const postByUidQuery = `{
 			posted_at
 			author {
 				uid
-				name
-				username
-				avatars
 			}
 			views: count(viewed_by)
 			likes: count(~like)

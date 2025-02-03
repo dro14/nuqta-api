@@ -31,10 +31,11 @@ func (h *Handler) Run(port string) error {
 
 	group = authorized.Group("/post")
 	group.POST("", h.createPost)
-	group.GET("", h.getPosts)
+	group.GET("", h.getAllPosts)
 	group.GET("/:uid", h.getPost)
 	group.GET("/user/:uid", h.getUserPosts)
 	group.GET("/reply/:uid", h.getPostReplies)
+	group.DELETE("/:uid", h.deletePost)
 
 	group = authorized.Group("/edge")
 	group.POST("/:source/:edge/:target", h.createEdge)

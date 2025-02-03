@@ -24,15 +24,14 @@ func (h *Handler) createPost(c *gin.Context) {
 	}
 }
 
-func (h *Handler) getPosts(c *gin.Context) {
+func (h *Handler) getAllPosts(c *gin.Context) {
 	ctx := c.Request.Context()
-	posts, err := h.db.GetPosts(ctx)
+	allPosts, err := h.db.GetAllPosts(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-
-	c.JSON(http.StatusOK, posts)
+	c.JSON(http.StatusOK, allPosts)
 }
 
 func (h *Handler) getPost(c *gin.Context) {
@@ -53,6 +52,20 @@ func (h *Handler) getPost(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
+	}
+
+	post.Author, err = h.db.GetUserByUid(ctx, firebaseUid, post.Author.Uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	if post.InReplyTo != nil {
+		post.InReplyTo.Author, err = h.db.GetUserByUid(ctx, firebaseUid, post.InReplyTo.Author.Uid)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, post)
@@ -90,4 +103,42 @@ func (h *Handler) getPostReplies(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, replies)
+}
+
+func (h *Handler) deletePost(c *gin.Context) {
+	uid := c.Param("uid")
+	if uid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	firebaseUid := c.GetString("firebase_uid")
+	if firebaseUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	ctx := c.Request.Context()
+	post, err := h.db.GetPostByUid(ctx, firebaseUid, uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	author, err := h.db.GetUserByUid(ctx, firebaseUid, post.Author.Uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	if author.Uid != firebaseUid {
+		c.JSON(http.StatusForbidden, failure(e.ErrForbidden))
+		return
+	}
+
+	err = h.db.DeletePost(ctx, uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
 }
