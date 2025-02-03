@@ -1,13 +1,7 @@
 package dgraph
 
-var functions = map[string]string{
-	"uid":          `uid(%s)`,
-	"firebase_uid": `eq(firebase_uid, "%s")`,
-	"username":     `anyofterms(username, "%s")`,
-}
-
-const userQuery = `{
-	users(func: %s) {
+const userByUidQuery = `{
+	users(func: uid(%s)) {
 		uid
 		name
 		username
@@ -22,13 +16,35 @@ const userQuery = `{
 	}
 }`
 
+const userByFirebaseUidQuery = `{
+	users(func: eq(firebase_uid, %q)) {
+		uid
+		name
+		username
+		bio
+		birthday
+		joined_at
+		banner
+		avatars
+		posts: count(~author)
+		following: count(follow)
+		followers: count(~follow)
+	}
+}`
+
+const uidByFirebaseUidQuery = `{
+	uids(func: eq(firebase_uid, %q)) {
+		uid
+	}
+}`
+
 const postsQuery = `{
 	all_posts(func: type(Post), orderdesc: posted_at) {
 		uid
 	}
 }`
 
-const postQuery = `{
+const postByUidQuery = `{
 	posts(func: uid(%s)) {
 		uid
 		text
@@ -77,8 +93,8 @@ const postRepliesQuery = `{
 	}
 }`
 
-const edgesQuery = `{
-	edges(func: eq(firebase_uid, "%s")) {
+const edgeQuery = `{
+	edges(func: eq(firebase_uid, %q)) {
 		%s @filter(uid(%s)) {
 			uid
 		}

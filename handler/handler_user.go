@@ -2,128 +2,58 @@ package handler
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/dro14/nuqta-service/e"
-	"github.com/dro14/nuqta-service/models"
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) createUser(c *gin.Context) {
-	user := &models.User{}
-	err := c.ShouldBindJSON(user)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	ctx := c.Request.Context()
-	existingUser, err := h.db.GetUser(ctx, "firebase_uid", user.FirebaseUid)
-	if err != nil && !errors.Is(err, e.ErrNotFound) {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	if existingUser != nil {
-		c.JSON(http.StatusOK, existingUser)
-		return
-	}
-
-	user, err = h.db.CreateUser(ctx, user)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	err = h.index.AddUser(user)
-	if err != nil {
-		log.Printf("user %s: can't add user to search index: %s", user.Uid, err)
-	}
-
-	c.JSON(http.StatusOK, user)
-}
-
 func (h *Handler) getUser(c *gin.Context) {
-	ctx := c.Request.Context()
-	user, err := h.db.GetUser(ctx, c.Param("by"), c.Query("value"))
-	if errors.Is(err, e.ErrUnknownParam) {
-		c.Status(http.StatusBadRequest)
-		return
-	} else if errors.Is(err, e.ErrNotFound) {
-		c.Status(http.StatusNotFound)
-		return
-	} else if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
+	firebaseUid := c.GetString("firebase_uid")
+	if firebaseUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
-	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid != "" {
-		user.IsFollowed, err = h.db.DoesEdgeExist(ctx, firebaseUid, "follow", user.Uid)
+	var uid string
+	if c.Query("username") != "" {
+		var err error
+		uid, err = h.index.GetUidByUsername(c.Query("username"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
+	} else {
+		uid = c.Query("uid")
+		if uid == "" {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+	}
+
+	ctx := c.Request.Context()
+	user, err := h.db.GetUserByUid(ctx, firebaseUid, uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
 	}
 
 	c.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) updateUser(c *gin.Context) {
-	user := &models.User{}
-	err := c.ShouldBindJSON(user)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	ctx := c.Request.Context()
-	err = h.db.UpdateUser(ctx, user)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	err = h.index.UpdateUser(user)
-	if err != nil {
-		log.Printf("user %s: can't update user in search index: %s", user.Uid, err)
-	}
-}
-
-func (h *Handler) deleteUserPredicate(c *gin.Context) {
-	uid := c.Param("uid")
-	predicate := c.Param("predicate")
-	value := c.Query("value")
-	if uid == "" || predicate == "" || value == "" {
+func (h *Handler) isUsernameAvailable(c *gin.Context) {
+	username := c.Param("username")
+	if username == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
-	ctx := c.Request.Context()
-	err := h.db.DeleteUserPredicate(ctx, uid, predicate, value)
-	if err != nil {
+	uid, err := h.index.GetUidByUsername(username)
+	if uid != "" {
+		c.JSON(http.StatusOK, gin.H{"available": false})
+	} else if errors.Is(err, e.ErrNotFound) {
+		c.JSON(http.StatusOK, gin.H{"available": true})
+	} else {
 		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-}
-
-func (h *Handler) deleteUser(c *gin.Context) {
-	uid := c.Param("uid")
-	if uid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	ctx := c.Request.Context()
-	err := h.db.DeleteUser(ctx, uid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	err = h.index.DeleteUser(uid)
-	if err != nil {
-		log.Printf("user %s: can't delete user from search index: %s", uid, err)
 	}
 }

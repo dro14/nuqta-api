@@ -48,8 +48,8 @@ func (d *Dgraph) GetPosts(ctx context.Context) ([]string, error) {
 	return posts, nil
 }
 
-func (d *Dgraph) GetPost(ctx context.Context, uid string) (*models.Post, error) {
-	query := fmt.Sprintf(postQuery, uid)
+func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*models.Post, error) {
+	query := fmt.Sprintf(postByUidQuery, uid)
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -61,11 +61,22 @@ func (d *Dgraph) GetPost(ctx context.Context, uid string) (*models.Post, error) 
 		return nil, err
 	}
 
-	if len(response["posts"]) > 0 && response["posts"][0].PostedAt != 0 {
-		return response["posts"][0], nil
-	} else {
+	post := response["posts"][0]
+	if post.PostedAt == 0 {
 		return nil, e.ErrNotFound
 	}
+
+	post.IsLiked, err = d.doesEdgeExist(ctx, firebaseUid, "like", uid)
+	if err != nil {
+		return nil, err
+	}
+
+	post.IsReposted, err = d.doesEdgeExist(ctx, firebaseUid, "repost", uid)
+	if err != nil {
+		return nil, err
+	}
+
+	return post, nil
 }
 
 func (d *Dgraph) GetUserPosts(ctx context.Context, uid string) ([]string, error) {

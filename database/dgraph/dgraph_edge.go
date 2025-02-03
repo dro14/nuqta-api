@@ -29,11 +29,21 @@ func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target string) er
 	return err
 }
 
-func (d *Dgraph) DoesEdgeExist(ctx context.Context, source, edge, target string) (bool, error) {
+func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) error {
+	if !slices.Contains(edges, edge) {
+		return e.ErrUnknownEdge
+	}
+	nquads := []byte(fmt.Sprintf("<%s> <%s> <%s> .", source, edge, target))
+	mutation := &api.Mutation{DelNquads: nquads, CommitNow: true}
+	_, err := d.client.NewTxn().Mutate(ctx, mutation)
+	return err
+}
+
+func (d *Dgraph) doesEdgeExist(ctx context.Context, source, edge, target string) (bool, error) {
 	if !slices.Contains(edges, edge) {
 		return false, e.ErrUnknownEdge
 	}
-	query := fmt.Sprintf(edgesQuery, source, edge, target)
+	query := fmt.Sprintf(edgeQuery, source, edge, target)
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return false, err
@@ -46,14 +56,4 @@ func (d *Dgraph) DoesEdgeExist(ctx context.Context, source, edge, target string)
 	}
 
 	return len(response["edges"]) > 0, nil
-}
-
-func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) error {
-	if !slices.Contains(edges, edge) {
-		return e.ErrUnknownEdge
-	}
-	nquads := []byte(fmt.Sprintf("<%s> <%s> <%s> .", source, edge, target))
-	mutation := &api.Mutation{DelNquads: nquads, CommitNow: true}
-	_, err := d.client.NewTxn().Mutate(ctx, mutation)
-	return err
 }

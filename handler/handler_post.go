@@ -36,6 +36,12 @@ func (h *Handler) getPosts(c *gin.Context) {
 }
 
 func (h *Handler) getPost(c *gin.Context) {
+	firebaseUid := c.GetString("firebase_uid")
+	if firebaseUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
 	uid := c.Param("uid")
 	if uid == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
@@ -43,25 +49,10 @@ func (h *Handler) getPost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	post, err := h.db.GetPost(ctx, uid)
+	post, err := h.db.GetPostByUid(ctx, firebaseUid, uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
-	}
-
-	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid != "" {
-		post.IsLiked, err = h.db.DoesEdgeExist(ctx, firebaseUid, "like", uid)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-
-		post.IsReposted, err = h.db.DoesEdgeExist(ctx, firebaseUid, "repost", uid)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
 	}
 
 	c.JSON(http.StatusOK, post)

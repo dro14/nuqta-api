@@ -8,6 +8,12 @@ import (
 )
 
 func (h *Handler) search(c *gin.Context) {
+	firebaseUid := c.GetString("firebase_uid")
+	if firebaseUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
 	query := c.Query("query")
 	if query == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
@@ -22,7 +28,7 @@ func (h *Handler) search(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	for i := range users {
-		user, err := h.db.GetUser(ctx, "uid", users[i].Uid)
+		user, err := h.db.GetUserByUid(ctx, firebaseUid, users[i].Uid)
 		if err != nil {
 			continue
 		}

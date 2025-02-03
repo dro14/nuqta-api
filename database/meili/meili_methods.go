@@ -1,13 +1,16 @@
 package meili
 
 import (
+	"strings"
+
+	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
 	"github.com/meilisearch/meilisearch-go"
 )
 
 func (m *Meili) AddUser(user *models.User) error {
-	username := user.Username
-	if username != "" {
+	username := strings.ToLower(user.Username)
+	if username != "" && username[0] != '@' {
 		username = "@" + username
 	}
 	_, err := m.users.AddDocuments([]map[string]any{{
@@ -37,6 +40,31 @@ func (m *Meili) SearchUser(query string) ([]*models.User, error) {
 	return users, nil
 }
 
+func (m *Meili) GetUidByUsername(username string) (string, error) {
+	username = strings.ToLower(username)
+	if username != "" && username[0] != '@' {
+		username = "@" + username
+	}
+
+	request := &meilisearch.SearchRequest{
+		Filter: "username = '" + username + "'",
+	}
+
+	results, err := m.users.Search("", request)
+	if err != nil {
+		return "", err
+	}
+
+	if len(results.Hits) == 0 {
+		return "", e.ErrNotFound
+	} else if len(results.Hits) == 1 {
+		hit := results.Hits[0].(map[string]any)
+		return hit["id"].(string), nil
+	} else {
+		return "", e.ErrInvalidMatch
+	}
+}
+
 func (m *Meili) UpdateUser(user *models.User) error {
 	request := &meilisearch.DocumentQuery{}
 	var doc map[string]any
@@ -49,14 +77,20 @@ func (m *Meili) UpdateUser(user *models.User) error {
 		doc["name"] = user.Name
 		doUpdate = true
 	}
-	if doc["username"] != user.Username {
-		doc["username"] = user.Username
+	username := strings.ToLower(user.Username)
+	if username != "" && username[0] != '@' {
+		username = "@" + username
+	}
+	if doc["username"] != username {
+		doc["username"] = username
 		doUpdate = true
 	}
 	if doUpdate {
 		_, err = m.users.UpdateDocuments(doc)
+		return err
+	} else {
+		return nil
 	}
-	return err
 }
 
 func (m *Meili) IncrementHits(uid string) error {
@@ -71,7 +105,14 @@ func (m *Meili) IncrementHits(uid string) error {
 	return err
 }
 
-func (m *Meili) DeleteUser(uid string) error {
-	_, err := m.users.DeleteDocument(uid)
+func (m *Meili) DeleteName(uid string) error {
+	request := &meilisearch.DocumentQuery{}
+	var doc map[string]any
+	err := m.users.GetDocument(uid, request, &doc)
+	if err != nil {
+		return err
+	}
+	doc["name"] = ""
+	_, err = m.users.UpdateDocuments(doc)
 	return err
 }

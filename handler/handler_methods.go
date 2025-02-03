@@ -19,12 +19,15 @@ func (h *Handler) Run(port string) error {
 	authorized := h.engine.Group("")
 	authorized.Use(h.authMiddleware)
 
+	group = authorized.Group("/profile")
+	group.POST("", h.createProfile)
+	group.GET("", h.getProfile)
+	group.PUT("", h.updateProfile)
+	group.DELETE("/:attribute", h.deleteProfileAttribute)
+
 	group = authorized.Group("/user")
-	group.POST("", h.createUser)
-	group.GET("/:by", h.getUser)
-	group.PUT("", h.updateUser)
-	group.DELETE("/:uid/:predicate", h.deleteUserPredicate)
-	group.DELETE("/:uid", h.deleteUser)
+	group.GET("", h.getUser)
+	group.GET("/:username", h.isUsernameAvailable)
 
 	group = authorized.Group("/post")
 	group.POST("", h.createPost)
