@@ -1,6 +1,7 @@
 package meili
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/dro14/nuqta-service/e"
@@ -47,7 +48,7 @@ func (m *Meili) GetUidByUsername(username string) (string, error) {
 	}
 
 	request := &meilisearch.SearchRequest{
-		Filter: "username = '" + username + "'",
+		Filter: fmt.Sprintf(`username = "%s"`, username),
 	}
 
 	results, err := m.users.Search("", request)
