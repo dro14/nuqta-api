@@ -59,28 +59,6 @@ func (d *Dgraph) GetProfile(ctx context.Context, firebaseUid string) (*models.Us
 	}
 }
 
-func (d *Dgraph) GetUid(ctx context.Context, firebaseUid string) (string, error) {
-	query := fmt.Sprintf(uidByFirebaseUidQuery, firebaseUid)
-	resp, err := d.client.NewTxn().Query(ctx, query)
-	if err != nil {
-		return "", err
-	}
-
-	var response map[string][]string
-	err = json.Unmarshal(resp.Json, &response)
-	if err != nil {
-		return "", err
-	}
-
-	if len(response["uids"]) == 0 {
-		return "", e.ErrNotFound
-	} else if len(response["uids"]) == 1 {
-		return response["uids"][0], nil
-	} else {
-		return "", e.ErrInvalidMatch
-	}
-}
-
 func (d *Dgraph) UpdateProfile(ctx context.Context, user *models.User) error {
 	user.DType = []string{"User"}
 	json, err := json.Marshal(user)

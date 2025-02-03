@@ -32,12 +32,6 @@ const userByFirebaseUidQuery = `{
 	}
 }`
 
-const uidByFirebaseUidQuery = `{
-	uids(func: eq(firebase_uid, %q)) {
-		uid
-	}
-}`
-
 const postsQuery = `{
 	all_posts(func: type(Post), orderdesc: posted_at) {
 		uid

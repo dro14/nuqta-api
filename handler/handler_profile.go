@@ -105,27 +105,16 @@ func (h *Handler) updateProfile(c *gin.Context) {
 }
 
 func (h *Handler) deleteProfileAttribute(c *gin.Context) {
-	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
+	uid := c.Param("uid")
 	attribute := c.Param("attribute")
 	value := c.Query("value")
-	if attribute == "" || value == "" {
+	if uid == "" || attribute == "" || value == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	uid, err := h.db.GetUid(ctx, firebaseUid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	err = h.db.DeleteProfileAttribute(ctx, uid, attribute, value)
+	err := h.db.DeleteProfileAttribute(ctx, uid, attribute, value)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
