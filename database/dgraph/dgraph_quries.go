@@ -3,6 +3,7 @@ package dgraph
 const userByUidQuery = `{
 	users(func: uid(%s)) {
 		uid
+		firebase_uid
 		name
 		username
 		bio
@@ -19,6 +20,7 @@ const userByUidQuery = `{
 const userByFirebaseUidQuery = `{
 	users(func: eq(firebase_uid, %q)) {
 		uid
+		firebase_uid
 		name
 		username
 		bio
