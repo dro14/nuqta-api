@@ -21,9 +21,9 @@ func main() {
 	}
 	gin.DefaultWriter = file
 
-	file, err = os.Create("nuqta-service.log")
+	file, err = os.Create("my.log")
 	if err != nil {
-		log.Fatal("can't open yordamchi.log: ", err)
+		log.Fatal("can't open my.log: ", err)
 	}
 	log.SetOutput(file)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)

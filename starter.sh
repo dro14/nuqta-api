@@ -36,6 +36,6 @@ while true; do
 
         # Move log files after crash
         mv gin.log gin-crashed.log
-        mv nuqta-service.log nuqta-service-crashed.log
+        mv my.log my-crashed.log
         sleep 5
 done

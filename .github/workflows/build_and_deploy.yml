@@ -34,14 +34,14 @@ jobs:
         env:
           VM_HOST: ${{ secrets.VM_HOST }}
           VM_USER: ${{ secrets.VM_USER }}
-        run: scp -o StrictHostKeyChecking=no ${{ github.sha }} $VM_USER@$VM_HOST:~/nuqta-service
+        run: scp -P 49048 -o StrictHostKeyChecking=no ${{ github.sha }} $VM_USER@$VM_HOST:~/nuqta-service
 
       - name: Start new application version on alternate port
         env:
           VM_HOST: ${{ secrets.VM_HOST }}
           VM_USER: ${{ secrets.VM_USER }}
         run: |
-          ssh -o StrictHostKeyChecking=no $VM_USER@$VM_HOST '
+          ssh -p 49048 -o StrictHostKeyChecking=no $VM_USER@$VM_HOST '
             cd ~/nuqta-service
           
             chmod +x ${{ github.sha }}
@@ -74,7 +74,7 @@ jobs:
           VM_HOST: ${{ secrets.VM_HOST }}
           VM_USER: ${{ secrets.VM_USER }}
         run: |
-          ssh -o StrictHostKeyChecking=no $VM_USER@$VM_HOST '
+          ssh -p 49048 -o StrictHostKeyChecking=no $VM_USER@$VM_HOST '
             cd ~/nuqta-service
           
             PORT=$(cat port.txt 2>/dev/null || echo 8000)
