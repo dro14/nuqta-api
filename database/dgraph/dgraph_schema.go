@@ -41,7 +41,6 @@ username: string .
 bio: string .
 joined_at: int .
 birthday: int .
-banner_th: string .
 banner: string .
 avatar_th: string .
 avatars: [string] .
@@ -64,7 +63,6 @@ type User {
 	bio
 	joined_at
 	birthday
-	banner_th
 	banner
 	avatar_th
 	avatars

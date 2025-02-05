@@ -54,20 +54,6 @@ func (h *Handler) getPost(c *gin.Context) {
 		return
 	}
 
-	post.Author, err = h.db.GetUserByUid(ctx, firebaseUid, post.Author.Uid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	if post.InReplyTo != nil {
-		post.InReplyTo.Author, err = h.db.GetUserByUid(ctx, firebaseUid, post.InReplyTo.Author.Uid)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-	}
-
 	c.JSON(http.StatusOK, post)
 }
 
@@ -131,7 +117,7 @@ func (h *Handler) deletePost(c *gin.Context) {
 		return
 	}
 
-	if author.Uid != firebaseUid {
+	if author.FirebaseUid != firebaseUid {
 		c.JSON(http.StatusForbidden, failure(e.ErrForbidden))
 		return
 	}

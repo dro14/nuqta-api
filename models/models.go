@@ -10,7 +10,6 @@ type User struct {
 	Bio         string   `json:"bio,omitempty"`
 	JoinedAt    int      `json:"joined_at,omitempty"`
 	Birthday    int      `json:"birthday,omitempty"`
-	BannerTh    string   `json:"banner_th,omitempty"`
 	Banner      string   `json:"banner,omitempty"`
 	AvatarTh    string   `json:"avatar_th,omitempty"`
 	Avatars     []string `json:"avatars,omitempty"`
