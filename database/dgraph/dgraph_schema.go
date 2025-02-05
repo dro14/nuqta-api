@@ -34,20 +34,17 @@ func (d *Dgraph) DeleteSchema(ctx context.Context) error {
 }
 
 const schema = `
+firebase_uid: string @index(hash) .
+email: string .
 name: string .
 username: string .
 bio: string .
-birthday: int .
 joined_at: int .
+birthday: int .
+banner_th: string .
 banner: string .
+avatar_th: string .
 avatars: [string] .
-email: string .
-is_email_verified: bool .
-is_anonymous: bool .
-phone_number: string .
-provider_id: string .
-provider_uid: string .
-firebase_uid: string @index(hash) .
 follow: [uid] @count @reverse .
 like: [uid] @count @reverse .
 repost: [uid] @count @reverse .
@@ -60,20 +57,17 @@ in_reply_to: uid @count @reverse .
 viewed_by: [uid] @count .
 
 type User {
+	firebase_uid
+	email
 	name
 	username
 	bio
-	birthday
 	joined_at
+	birthday
+	banner_th
 	banner
+	avatar_th
 	avatars
-	email
-	is_email_verified
-	is_anonymous
-	phone_number
-	provider_id
-	provider_uid
-	firebase_uid
 	follow
 	like
 	repost

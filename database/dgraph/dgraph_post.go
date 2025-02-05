@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
 	"github.com/dro14/nuqta-service/e"
@@ -13,6 +14,7 @@ import (
 func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Post, error) {
 	post.DType = []string{"Post"}
 	post.Uid = "_:post"
+	post.PostedAt = int(time.Now().Unix())
 	json, err := json.Marshal(post)
 	if err != nil {
 		return nil, err

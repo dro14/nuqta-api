@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
+	"time"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
 	"github.com/dro14/nuqta-service/e"
@@ -22,6 +24,8 @@ var attributes = []string{
 func (d *Dgraph) CreateProfile(ctx context.Context, user *models.User) (*models.User, error) {
 	user.DType = []string{"User"}
 	user.Uid = "_:user"
+	user.Username = strings.Split(user.Email, "@")[0]
+	user.JoinedAt = int(time.Now().Unix())
 	json, err := json.Marshal(user)
 	if err != nil {
 		return nil, err
