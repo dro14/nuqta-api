@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/gin-gonic/gin"
@@ -56,14 +55,12 @@ func (h *Handler) root(c *gin.Context) {
 }
 
 func (h *Handler) authMiddleware(c *gin.Context) {
-	header := c.GetHeader("Authorization")
-	if header == "" {
+	idToken := c.GetHeader("my-id-token")
+	if idToken == "" {
 		c.JSON(http.StatusUnauthorized, failure(e.ErrNoAuthHeader))
 		c.Abort()
 		return
 	}
-
-	idToken := strings.TrimPrefix(header, "Bearer ")
 
 	uid, err := h.auth.VerifyIdToken(c.Request.Context(), idToken)
 	if err != nil {
