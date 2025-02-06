@@ -11,5 +11,5 @@ var (
 	ErrNoParams         = errors.New("params are not specified")
 	ErrNotFound         = errors.New("not found")
 	ErrUnknownEdge      = errors.New("unknown edge")
-	ErrUnknownPredicate = errors.New("unknown predicate")
+	ErrUnknownAttribute = errors.New("unknown attribute")
 )

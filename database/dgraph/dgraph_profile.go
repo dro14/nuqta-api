@@ -19,6 +19,7 @@ var attributes = []string{
 	"birthday",
 	"banner",
 	"avatars",
+	"thumbnails",
 }
 
 func (d *Dgraph) CreateProfile(ctx context.Context, user *models.User) (*models.User, error) {
@@ -81,7 +82,7 @@ func (d *Dgraph) UpdateProfile(ctx context.Context, user *models.User) error {
 
 func (d *Dgraph) DeleteProfileAttribute(ctx context.Context, uid, attribute, value string) error {
 	if !slices.Contains(attributes, attribute) {
-		return e.ErrUnknownPredicate
+		return e.ErrUnknownAttribute
 	}
 	nquads := []byte(fmt.Sprintf("<%s> <%s> %q .", uid, attribute, value))
 	mutation := &api.Mutation{DelNquads: nquads, CommitNow: true}
