@@ -11,6 +11,7 @@ const userByUidQuery = `{
 		joined_at
 		banner
 		avatars
+		thumbnails
 		posts: count(~author)
 		following: count(follow)
 		followers: count(~follow)
@@ -28,6 +29,7 @@ const userByFirebaseUidQuery = `{
 		joined_at
 		banner
 		avatars
+		thumbnails
 		posts: count(~author)
 		following: count(follow)
 		followers: count(~follow)
