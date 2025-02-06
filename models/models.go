@@ -11,8 +11,8 @@ type User struct {
 	JoinedAt    int      `json:"joined_at,omitempty"`
 	Birthday    int      `json:"birthday,omitempty"`
 	Banner      string   `json:"banner,omitempty"`
-	AvatarTh    string   `json:"avatar_th,omitempty"`
 	Avatars     []string `json:"avatars,omitempty"`
+	Thumbnails  []string `json:"thumbnails,omitempty"`
 	Posts       int      `json:"posts,omitempty"`
 	Following   int      `json:"following,omitempty"`
 	Followers   int      `json:"followers,omitempty"`

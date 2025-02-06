@@ -42,8 +42,8 @@ bio: string .
 joined_at: int .
 birthday: int .
 banner: string .
-avatar_th: string .
 avatars: [string] .
+thumbnails: [string] .
 follow: [uid] @count @reverse .
 like: [uid] @count @reverse .
 repost: [uid] @count @reverse .
@@ -64,8 +64,8 @@ type User {
 	joined_at
 	birthday
 	banner
-	avatar_th
 	avatars
+	thumbnails
 	follow
 	like
 	repost
