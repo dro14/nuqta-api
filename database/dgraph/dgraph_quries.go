@@ -57,15 +57,15 @@ const postByUidQuery = `{
 			author {
 				uid
 			}
-			views: count(viewed_by)
 			likes: count(~like)
 			reposts: count(~repost)
-			replies: count(~in_reply_to)			
+			replies: count(~in_reply_to)
+			views: count(~view)
 		}
-		views: count(viewed_by)
 		likes: count(~like)
 		reposts: count(~repost)
 		replies: count(~in_reply_to)
+		views: count(~view)
 	}
 }`
 
@@ -94,9 +94,9 @@ const edgeQuery = `{
 }`
 
 const isRepliedQuery = `{
-	edges(func: eq(firebase_uid, %q)) {
-		~author {
-			~in_reply_to @filter(uid(%s)) {
+	edges(func: uid(%s)) {
+		~in_reply_to {
+			author @filter(eq(firebase_uid, %q)) {
 				uid
 			}
 		}

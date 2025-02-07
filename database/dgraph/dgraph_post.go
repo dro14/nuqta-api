@@ -78,7 +78,7 @@ func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*mo
 		return nil, err
 	}
 
-	post.IsReplied, err = d.isReplied(ctx, firebaseUid, uid)
+	post.IsReplied, err = d.isReplied(ctx, uid, firebaseUid)
 	if err != nil {
 		return nil, err
 	}
