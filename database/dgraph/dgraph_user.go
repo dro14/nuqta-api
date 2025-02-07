@@ -27,7 +27,7 @@ func (d *Dgraph) GetUserByUid(ctx context.Context, firebaseUid, uid string) (*mo
 		return nil, e.ErrNotFound
 	}
 
-	user.IsFollowed, err = d.doesEdgeExist(ctx, firebaseUid, "follow", uid)
+	user.IsFollowed, err = d.doesEdgeExist(ctx, uid, "~follow", firebaseUid)
 	if err != nil {
 		return nil, err
 	}

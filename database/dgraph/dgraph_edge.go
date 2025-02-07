@@ -39,11 +39,11 @@ func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) er
 	return err
 }
 
-func (d *Dgraph) doesEdgeExist(ctx context.Context, source, edge, target string) (bool, error) {
-	if !slices.Contains(edges, edge) {
+func (d *Dgraph) doesEdgeExist(ctx context.Context, target, edge, firebaseUid string) (bool, error) {
+	if !slices.Contains(edges, edge[1:]) {
 		return false, e.ErrUnknownEdge
 	}
-	query := fmt.Sprintf(edgeQuery, source, edge, target)
+	query := fmt.Sprintf(edgeQuery, target, edge, firebaseUid)
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return false, err
@@ -58,8 +58,8 @@ func (d *Dgraph) doesEdgeExist(ctx context.Context, source, edge, target string)
 	return len(response["edges"]) > 0, nil
 }
 
-func (d *Dgraph) isReplied(ctx context.Context, postUid, firebaseUid string) (bool, error) {
-	query := fmt.Sprintf(isRepliedQuery, postUid, firebaseUid)
+func (d *Dgraph) isReplied(ctx context.Context, target, firebaseUid string) (bool, error) {
+	query := fmt.Sprintf(isRepliedQuery, target, firebaseUid)
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return false, err

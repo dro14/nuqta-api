@@ -68,12 +68,12 @@ func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*mo
 		return nil, e.ErrNotFound
 	}
 
-	post.IsLiked, err = d.doesEdgeExist(ctx, firebaseUid, "like", uid)
+	post.IsLiked, err = d.doesEdgeExist(ctx, uid, "~like", firebaseUid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsReposted, err = d.doesEdgeExist(ctx, firebaseUid, "repost", uid)
+	post.IsReposted, err = d.doesEdgeExist(ctx, uid, "~repost", firebaseUid)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,12 @@ func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*mo
 		return nil, err
 	}
 
-	post.IsViewed, err = d.doesEdgeExist(ctx, firebaseUid, "view", uid)
+	post.IsClicked, err = d.doesEdgeExist(ctx, uid, "~click", firebaseUid)
+	if err != nil {
+		return nil, err
+	}
+
+	post.IsViewed, err = d.doesEdgeExist(ctx, uid, "~view", firebaseUid)
 	if err != nil {
 		return nil, err
 	}

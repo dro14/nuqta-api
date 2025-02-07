@@ -34,5 +34,6 @@ type Post struct {
 	IsLiked    bool     `json:"is_liked,omitempty"`
 	IsReposted bool     `json:"is_reposted,omitempty"`
 	IsReplied  bool     `json:"is_replied,omitempty"`
+	IsClicked  bool     `json:"is_clicked,omitempty"`
 	IsViewed   bool     `json:"is_viewed,omitempty"`
 }

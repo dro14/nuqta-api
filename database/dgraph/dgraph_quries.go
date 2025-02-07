@@ -7,8 +7,8 @@ const userByUidQuery = `{
 		name
 		username
 		bio
-		birthday
 		joined_at
+		birthday
 		banner
 		avatars
 		thumbnails
@@ -25,8 +25,8 @@ const userByFirebaseUidQuery = `{
 		name
 		username
 		bio
-		birthday
 		joined_at
+		birthday
 		banner
 		avatars
 		thumbnails
@@ -86,8 +86,8 @@ const postRepliesQuery = `{
 }`
 
 const edgeQuery = `{
-	edges(func: eq(firebase_uid, %q)) {
-		%s @filter(uid(%s)) {
+	edges(func: uid(%s)) {
+		%s @filter(eq(firebase_uid, %q)) {
 			uid
 		}
 	}
