@@ -48,12 +48,12 @@ follow: [uid] @count @reverse .
 like: [uid] @count @reverse .
 repost: [uid] @count @reverse .
 click: [uid] @count @reverse .
+view: [uid] @count @reverse .
 
 text: string .
 posted_at: int @index(int) .
 author: uid @count @reverse .
 in_reply_to: uid @count @reverse .
-viewed_by: [uid] @count .
 
 type User {
 	firebase_uid
@@ -70,6 +70,7 @@ type User {
 	like
 	repost
 	click
+	view
 }
 
 type Post {
@@ -77,5 +78,4 @@ type Post {
 	posted_at
 	author
 	in_reply_to
-	viewed_by
 }`

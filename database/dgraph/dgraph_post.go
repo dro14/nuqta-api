@@ -78,6 +78,16 @@ func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*mo
 		return nil, err
 	}
 
+	post.IsReplied, err = d.isReplied(ctx, firebaseUid, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	post.IsViewed, err = d.doesEdgeExist(ctx, firebaseUid, "view", uid)
+	if err != nil {
+		return nil, err
+	}
+
 	return post, nil
 }
 

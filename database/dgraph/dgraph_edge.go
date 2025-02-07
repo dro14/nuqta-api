@@ -57,3 +57,19 @@ func (d *Dgraph) doesEdgeExist(ctx context.Context, source, edge, target string)
 
 	return len(response["edges"]) > 0, nil
 }
+
+func (d *Dgraph) isReplied(ctx context.Context, firebaseUid, postUid string) (bool, error) {
+	query := fmt.Sprintf(isRepliedQuery, firebaseUid, postUid)
+	resp, err := d.client.NewTxn().Query(ctx, query)
+	if err != nil {
+		return false, err
+	}
+
+	var response map[string][]any
+	err = json.Unmarshal(resp.Json, &response)
+	if err != nil {
+		return false, err
+	}
+
+	return len(response["edges"]) > 0, nil
+}

@@ -92,3 +92,13 @@ const edgeQuery = `{
 		}
 	}
 }`
+
+const isRepliedQuery = `{
+	edges(func: eq(firebase_uid, %q)) {
+		~author {
+			~in_reply_to @filter(uid(%s)) {
+				uid
+			}
+		}
+	}
+}`
