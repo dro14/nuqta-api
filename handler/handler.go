@@ -5,6 +5,7 @@ import (
 	"github.com/dro14/nuqta-service/database/dgraph"
 	"github.com/dro14/nuqta-service/database/meili"
 	"github.com/dro14/nuqta-service/database/memcached"
+	"github.com/dro14/nuqta-service/recommender"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,6 +15,7 @@ type Handler struct {
 	index  *meili.Meili
 	cache  *memcached.Memcached
 	auth   *auth.Auth
+	rec    *recommender.Recommender
 }
 
 func New() *Handler {
@@ -23,5 +25,6 @@ func New() *Handler {
 		index:  meili.New(),
 		cache:  memcached.New(),
 		auth:   auth.New(),
+		rec:    recommender.New(),
 	}
 }

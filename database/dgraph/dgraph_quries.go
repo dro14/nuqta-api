@@ -69,6 +69,18 @@ const postByUidQuery = `{
 	}
 }`
 
+const latestPostsQuery = `{
+	posts(func: type(Post)) @filter(gt(posted_at, %q) AND not has(in_reply_to)) {
+		uid
+		likes: count(~like)
+		reposts: count(~repost)
+		replies: count(~in_reply_to)
+		clicks: count(~click)
+		views: count(~view)
+		removes: count(~remove)
+	}
+}`
+
 const followingQuery = `{
 	var(func: eq(firebase_uid, %q)) {
 		following as follow

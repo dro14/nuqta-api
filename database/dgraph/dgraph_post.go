@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
@@ -14,7 +15,7 @@ import (
 func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Post, error) {
 	post.DType = []string{"Post"}
 	post.Uid = "_:post"
-	post.PostedAt = int(time.Now().Unix())
+	post.PostedAt = time.Now().Unix()
 	json, err := json.Marshal(post)
 	if err != nil {
 		return nil, err
@@ -68,12 +69,12 @@ func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*mo
 		return nil, e.ErrNotFound
 	}
 
-	post.IsLiked, err = d.doesEdgeExist(ctx, uid, "~like", firebaseUid)
+	post.IsLiked, err = d.DoesEdgeExist(ctx, uid, "~like", firebaseUid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsReposted, err = d.doesEdgeExist(ctx, uid, "~repost", firebaseUid)
+	post.IsReposted, err = d.DoesEdgeExist(ctx, uid, "~repost", firebaseUid)
 	if err != nil {
 		return nil, err
 	}
@@ -83,17 +84,34 @@ func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*mo
 		return nil, err
 	}
 
-	post.IsClicked, err = d.doesEdgeExist(ctx, uid, "~click", firebaseUid)
+	post.IsClicked, err = d.DoesEdgeExist(ctx, uid, "~click", firebaseUid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsViewed, err = d.doesEdgeExist(ctx, uid, "~view", firebaseUid)
+	post.IsViewed, err = d.DoesEdgeExist(ctx, uid, "~view", firebaseUid)
 	if err != nil {
 		return nil, err
 	}
 
 	return post, nil
+}
+
+func (d *Dgraph) GetLatestPosts(ctx context.Context) ([]*models.Post, error) {
+	timestamp := strconv.FormatInt(time.Now().AddDate(0, 0, -2).Unix(), 10)
+	query := fmt.Sprintf(latestPostsQuery, timestamp)
+	resp, err := d.client.NewTxn().Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]*models.Post
+	err = json.Unmarshal(resp.Json, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response["posts"], nil
 }
 
 func (d *Dgraph) GetFollowingPosts(ctx context.Context, firebaseUid, before string) ([]string, error) {

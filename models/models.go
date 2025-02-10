@@ -8,8 +8,8 @@ type User struct {
 	Name        string   `json:"name,omitempty"`
 	Username    string   `json:"username,omitempty"`
 	Bio         string   `json:"bio,omitempty"`
-	JoinedAt    int      `json:"joined_at,omitempty"`
-	Birthday    int      `json:"birthday,omitempty"`
+	JoinedAt    int64    `json:"joined_at,omitempty"`
+	Birthday    int64    `json:"birthday,omitempty"`
 	Banner      string   `json:"banner,omitempty"`
 	Avatars     []string `json:"avatars,omitempty"`
 	Thumbnails  []string `json:"thumbnails,omitempty"`
@@ -23,17 +23,19 @@ type Post struct {
 	DType      []string `json:"dgraph.type,omitempty"`
 	Uid        string   `json:"uid,omitempty"`
 	Text       string   `json:"text,omitempty"`
-	PostedAt   int      `json:"posted_at,omitempty"`
+	PostedAt   int64    `json:"posted_at,omitempty"`
 	Author     *User    `json:"author,omitempty"`
 	InReplyTo  *Post    `json:"in_reply_to,omitempty"`
-	Views      int      `json:"views,omitempty"`
 	Likes      int      `json:"likes,omitempty"`
 	Reposts    int      `json:"reposts,omitempty"`
 	Replies    int      `json:"replies,omitempty"`
 	Clicks     int      `json:"clicks,omitempty"`
+	Views      int      `json:"views,omitempty"`
+	Removes    int      `json:"removes,omitempty"`
 	IsLiked    bool     `json:"is_liked,omitempty"`
 	IsReposted bool     `json:"is_reposted,omitempty"`
 	IsReplied  bool     `json:"is_replied,omitempty"`
 	IsClicked  bool     `json:"is_clicked,omitempty"`
 	IsViewed   bool     `json:"is_viewed,omitempty"`
+	Score      float64  `json:"score,omitempty"`
 }

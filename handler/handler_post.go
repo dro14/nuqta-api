@@ -34,6 +34,39 @@ func (h *Handler) getAllPosts(c *gin.Context) {
 	c.JSON(http.StatusOK, allPosts)
 }
 
+func (h *Handler) getForYouPosts(c *gin.Context) {
+	firebaseUid := c.GetString("firebase_uid")
+	if firebaseUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	postUids := h.rec.GetRecs()
+
+	ctx := c.Request.Context()
+	posts := make([]*models.Post, 0, 20)
+	for _, uid := range postUids {
+		isViewed, err := h.db.DoesEdgeExist(ctx, uid, "~view", firebaseUid)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		} else if isViewed {
+			continue
+		}
+		post, err := h.db.GetPostByUid(ctx, firebaseUid, uid)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+		posts = append(posts, post)
+		if len(posts) == 20 {
+			break
+		}
+	}
+
+	c.JSON(http.StatusOK, posts)
+}
+
 func (h *Handler) getPost(c *gin.Context) {
 	firebaseUid := c.GetString("firebase_uid")
 	if firebaseUid == "" {

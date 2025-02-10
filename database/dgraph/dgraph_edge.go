@@ -39,7 +39,7 @@ func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) er
 	return err
 }
 
-func (d *Dgraph) doesEdgeExist(ctx context.Context, target, edge, firebaseUid string) (bool, error) {
+func (d *Dgraph) DoesEdgeExist(ctx context.Context, target, edge, firebaseUid string) (bool, error) {
 	if !slices.Contains(edges, edge[1:]) {
 		return false, e.ErrUnknownEdge
 	}

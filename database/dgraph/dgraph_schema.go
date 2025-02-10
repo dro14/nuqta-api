@@ -49,6 +49,7 @@ like: [uid] @count @reverse .
 repost: [uid] @count @reverse .
 click: [uid] @count @reverse .
 view: [uid] @count @reverse .
+remove: [uid] @count @reverse .
 
 text: string .
 posted_at: int @index(int) .
@@ -71,6 +72,7 @@ type User {
 	repost
 	click
 	view
+	remove
 }
 
 type Post {

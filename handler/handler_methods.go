@@ -32,6 +32,7 @@ func (h *Handler) Run(port string) error {
 	group.POST("", h.createPost)
 	group.GET("", h.getAllPosts)
 	group.GET("/:uid", h.getPost)
+	group.GET("/for-you", h.getForYouPosts)
 	group.GET("/following/:before", h.getFollowingPosts)
 	group.GET("/user/:uid", h.getUserPosts)
 	group.GET("/reply/:uid", h.getPostReplies)

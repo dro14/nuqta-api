@@ -26,7 +26,7 @@ func (d *Dgraph) CreateProfile(ctx context.Context, user *models.User) (*models.
 	user.DType = []string{"User"}
 	user.Uid = "_:user"
 	user.Username = strings.Split(user.Email, "@")[0]
-	user.JoinedAt = int(time.Now().Unix())
+	user.JoinedAt = time.Now().Unix()
 	json, err := json.Marshal(user)
 	if err != nil {
 		return nil, err
