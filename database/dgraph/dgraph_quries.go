@@ -69,6 +69,16 @@ const postByUidQuery = `{
 	}
 }`
 
+const followingQuery = `{
+	var(func: eq(firebase_uid, %q)) {
+		following as follow
+	}
+	
+	posts(func: type(Post), orderdesc: posted_at, first: 20) @filter(lt(posted_at, %q) AND uid_in(author, uid(following))) {
+		uid
+	}
+}`
+
 const userPostsQuery = `{
 	users(func: uid(%s)) {
 		posts: ~author(orderdesc: posted_at) {

@@ -57,6 +57,39 @@ func (h *Handler) getPost(c *gin.Context) {
 	c.JSON(http.StatusOK, post)
 }
 
+func (h *Handler) getFollowingPosts(c *gin.Context) {
+	firebaseUid := c.GetString("firebase_uid")
+	if firebaseUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	before := c.Query("before")
+	if before == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	ctx := c.Request.Context()
+	postUids, err := h.db.GetFollowingPosts(ctx, firebaseUid, before)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	var posts []*models.Post
+	for _, uid := range postUids {
+		post, err := h.db.GetPostByUid(ctx, firebaseUid, uid)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+		posts = append(posts, post)
+	}
+
+	c.JSON(http.StatusOK, posts)
+}
+
 func (h *Handler) getUserPosts(c *gin.Context) {
 	uid := c.Param("uid")
 	if uid == "" {

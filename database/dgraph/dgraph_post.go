@@ -96,6 +96,22 @@ func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*mo
 	return post, nil
 }
 
+func (d *Dgraph) GetFollowingPosts(ctx context.Context, firebaseUid, before string) ([]string, error) {
+	query := fmt.Sprintf(followingQuery, firebaseUid, before)
+	resp, err := d.client.NewTxn().Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]string
+	err = json.Unmarshal(resp.Json, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response["posts"], nil
+}
+
 func (d *Dgraph) GetUserPosts(ctx context.Context, uid string) ([]string, error) {
 	query := fmt.Sprintf(userPostsQuery, uid)
 	resp, err := d.client.NewTxn().Query(ctx, query)
