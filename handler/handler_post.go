@@ -64,7 +64,7 @@ func (h *Handler) getFollowingPosts(c *gin.Context) {
 		return
 	}
 
-	before := c.Query("before")
+	before := c.Param("before")
 	if before == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
