@@ -103,13 +103,18 @@ func (d *Dgraph) GetFollowingPosts(ctx context.Context, firebaseUid, before stri
 		return nil, err
 	}
 
-	var response map[string][]string
+	var response map[string][]*models.Post
 	err = json.Unmarshal(resp.Json, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	return response["posts"], nil
+	var followingPosts []string
+	for _, post := range response["posts"] {
+		followingPosts = append(followingPosts, post.Uid)
+	}
+
+	return followingPosts, nil
 }
 
 func (d *Dgraph) GetUserPosts(ctx context.Context, uid string) ([]string, error) {
