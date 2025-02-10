@@ -77,7 +77,7 @@ func (h *Handler) getFollowingPosts(c *gin.Context) {
 		return
 	}
 
-	var posts []*models.Post
+	posts := make([]*models.Post, 0, len(postUids))
 	for _, uid := range postUids {
 		post, err := h.db.GetPostByUid(ctx, firebaseUid, uid)
 		if err != nil {
