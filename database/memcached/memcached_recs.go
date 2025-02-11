@@ -52,7 +52,7 @@ func (m *Memcached) GetRecUpdateTime() (time.Time, error) {
 }
 
 func (m *Memcached) IncrRecUpdateTime() (time.Time, error) {
-	timestamp, err := m.client.Increment("rec_update_time", 600)
+	timestamp, err := m.client.Increment("rec_update_time", 60)
 	if err != nil {
 		return time.Now(), err
 	}
