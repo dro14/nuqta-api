@@ -53,6 +53,10 @@ func (h *Handler) Run(port string) error {
 	return h.engine.Run(":" + port)
 }
 
+func (h *Handler) UpdateRecs() {
+	go h.rec.UpdateRecs()
+}
+
 func (h *Handler) root(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})
 }

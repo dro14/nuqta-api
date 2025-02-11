@@ -11,16 +11,6 @@ import (
 	"gonum.org/v1/gonum/stat/distuv"
 )
 
-func calculateScore(post *models.Post, now int64) float64 {
-	return (1.0*float64(post.Likes) +
-		1.5*float64(post.Reposts) +
-		2.0*float64(post.Replies) +
-		0.5*float64(post.Clicks) +
-		0.1*float64(post.Views) -
-		1.0*float64(post.Removes)) *
-		(2 - float64(now-post.PostedAt)/172800.0)
-}
-
 func (r *Recommender) UpdateRecs() {
 	updateTime, err := r.cache.GetRecUpdateTime()
 	if err != nil {
@@ -81,8 +71,8 @@ func (r *Recommender) GetRecs() []string {
 	recs := make([]*models.Post, 0, len(r.recs))
 	for _, rec := range r.recs {
 		beta := distuv.Beta{
-			Alpha: rec.Score,
-			Beta:  float64(rec.Views) - rec.Score,
+			Alpha: max(rec.Score, 0.00001),
+			Beta:  max(float64(rec.Views)-rec.Score, 0.00001),
 		}
 		recs = append(recs, &models.Post{
 			Uid:   rec.Uid,

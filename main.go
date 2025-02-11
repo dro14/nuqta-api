@@ -34,6 +34,7 @@ func main() {
 	}
 
 	h := handler.New()
+	h.UpdateRecs()
 	err = h.Run(port)
 	if err != nil {
 		log.Fatal("Error running handler: ", err)
