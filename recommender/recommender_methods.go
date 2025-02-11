@@ -11,21 +11,23 @@ import (
 	"gonum.org/v1/gonum/stat/distuv"
 )
 
-func calculateScore(post *models.Post) float64 {
-	return 1.0*float64(post.Likes) +
+func calculateScore(post *models.Post, now int64) float64 {
+	return (1.0*float64(post.Likes) +
 		1.5*float64(post.Reposts) +
 		2.0*float64(post.Replies) +
 		0.5*float64(post.Clicks) +
 		0.1*float64(post.Views) -
-		1.0*float64(post.Removes)
+		1.0*float64(post.Removes)) *
+		(2 - float64(now-post.PostedAt)/172800.0)
 }
 
-func (r *Recommender) updateRecs() {
+func (r *Recommender) UpdateRecs() {
 	updateTime, err := r.cache.GetRecUpdateTime()
 	if err != nil {
 		log.Println(err)
 		updateTime = time.Now().Add(time.Minute)
 	}
+
 	for {
 		time.Sleep(time.Until(updateTime))
 		updateTime, err = r.cache.IncrRecUpdateTime()
@@ -45,8 +47,9 @@ func (r *Recommender) updateRecs() {
 		C := 0.0
 		m := 0.0
 
+		now := time.Now().Unix()
 		for i, post := range posts {
-			score := calculateScore(post)
+			score := calculateScore(post, now)
 			posts[i].Score = score
 			C += score
 			m += float64(post.Views)
@@ -86,15 +89,19 @@ func (r *Recommender) GetRecs() []string {
 			Score: beta.Rand(),
 		})
 	}
-	slices.SortFunc(recs, func(a, b *models.Post) int {
-		if a.Score < b.Score {
-			return -1
-		} else if a.Score > b.Score {
-			return 1
-		} else {
-			return 0
-		}
-	})
+
+	slices.SortFunc(
+		recs,
+		func(a, b *models.Post) int {
+			if a.Score < b.Score {
+				return -1
+			} else if a.Score > b.Score {
+				return 1
+			} else {
+				return 0
+			}
+		},
+	)
 
 	postUids := make([]string, 0, len(recs))
 	for _, rec := range recs {

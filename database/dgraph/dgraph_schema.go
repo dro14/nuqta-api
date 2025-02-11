@@ -33,6 +33,15 @@ func (d *Dgraph) DeleteSchema(ctx context.Context) error {
 	return nil
 }
 
+func (d *Dgraph) DeletePredicate(ctx context.Context, predicate string) error {
+	operation := &api.Operation{DropOp: api.Operation_ATTR, DropValue: predicate}
+	err := d.client.Alter(ctx, operation)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 const schema = `
 firebase_uid: string @index(hash) .
 email: string .

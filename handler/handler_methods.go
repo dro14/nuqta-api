@@ -14,6 +14,7 @@ func (h *Handler) Run(port string) error {
 	group.GET("", h.getSchema)
 	group.PUT("", h.updateSchema)
 	group.DELETE("", h.deleteSchema)
+	group.DELETE("/:predicate", h.deletePredicate)
 
 	authorized := h.engine.Group("")
 	authorized.Use(h.authMiddleware)

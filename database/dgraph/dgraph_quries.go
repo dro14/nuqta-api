@@ -72,6 +72,7 @@ const postByUidQuery = `{
 const latestPostsQuery = `{
 	posts(func: type(Post)) @filter(gt(posted_at, %q) AND not has(in_reply_to)) {
 		uid
+		posted_at
 		likes: count(~like)
 		reposts: count(~repost)
 		replies: count(~in_reply_to)

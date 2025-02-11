@@ -31,3 +31,11 @@ func (h *Handler) deleteSchema(c *gin.Context) {
 		return
 	}
 }
+
+func (h *Handler) deletePredicate(c *gin.Context) {
+	err := h.db.DeletePredicate(c.Request.Context(), c.Param("predicate"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+}
