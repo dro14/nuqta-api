@@ -71,8 +71,8 @@ func (r *Recommender) GetRecs() []string {
 	recs := make([]*models.Post, 0, len(r.recs))
 	for _, rec := range r.recs {
 		beta := distuv.Beta{
-			Alpha: max(rec.Score, 0.00001),
-			Beta:  max(float64(rec.Views)-rec.Score, 0.00001),
+			Alpha: max(rec.Score, 1.0),
+			Beta:  max(float64(rec.Views)-rec.Score, 1.0),
 		}
 		recs = append(recs, &models.Post{
 			Uid:   rec.Uid,
