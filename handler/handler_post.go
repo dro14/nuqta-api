@@ -125,13 +125,12 @@ func (h *Handler) getPost(c *gin.Context) {
 			return
 		}
 	default:
-		if request.PostUid != "" {
-			post, err := h.db.GetPost(ctx, request.Uid, request.PostUid)
+		if len(request.PostUids) > 0 {
+			posts, err = h.db.GetPosts(ctx, request.Uid, request.PostUids)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return
 			}
-			posts = append(posts, post)
 		} else {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return

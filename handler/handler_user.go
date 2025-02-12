@@ -17,22 +17,19 @@ func (h *Handler) getUser(c *gin.Context) {
 		return
 	}
 
-	if request.Username != "" {
-		var err error
-		request.UserUid, err = h.index.GetUidByUsername(request.Username)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-	}
-
-	if request.Uid != "" && request.UserUid == "" {
+	if request.Uid == "" && request.Username == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
+	userUid, err := h.index.GetUidByUsername(request.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
 	ctx := c.Request.Context()
-	user, err := h.db.GetUserByUid(ctx, request.Uid, request.UserUid)
+	user, err := h.db.GetUserByUid(ctx, request.Uid, userUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -72,7 +69,7 @@ func (h *Handler) searchUser(c *gin.Context) {
 		return
 	}
 
-	if request.Uid != "" && request.Query == "" {
+	if request.Uid == "" || request.Query == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
@@ -84,18 +81,19 @@ func (h *Handler) searchUser(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	users := make([]*models.User, len(userUids))
+	users := make([]*models.User, 0, len(userUids))
 	for i := range userUids {
-		users[i], err = h.db.GetUserByUid(ctx, request.Uid, userUids[i])
+		user, err := h.db.GetUserByUid(ctx, request.Uid, userUids[i])
 		if err != nil {
 			continue
 		}
+		users = append(users, user)
 	}
 
 	c.JSON(http.StatusOK, users)
 }
 
-func (h *Handler) hitUser(c *gin.Context) {
+func (h *Handler) updateUser(c *gin.Context) {
 	request := &models.Request{}
 	err := c.ShouldBindJSON(&request)
 	if err != nil {

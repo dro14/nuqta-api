@@ -29,7 +29,7 @@ func (h *Handler) Run(port string) error {
 	group.GET("", h.getUser)
 	group.GET("/available", h.isUsernameAvailable)
 	group.GET("/search", h.searchUser)
-	group.PATCH("/hit", h.hitUser)
+	group.PATCH("", h.updateUser)
 
 	group = authorized.Group("/post")
 	group.POST("", h.createPost)
@@ -59,12 +59,12 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 		return
 	}
 
-	uid, err := h.auth.VerifyIdToken(c.Request.Context(), idToken)
+	firebaseUid, err := h.auth.VerifyIdToken(c.Request.Context(), idToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, failure(err))
 		c.Abort()
 		return
 	}
 
-	c.Set("firebase_uid", uid)
+	c.Set("firebase_uid", firebaseUid)
 }
