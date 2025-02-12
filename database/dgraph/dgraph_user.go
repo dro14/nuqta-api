@@ -11,13 +11,13 @@ import (
 
 func (d *Dgraph) GetUserByUid(ctx context.Context, uid, userUid string) (*models.User, error) {
 	query := fmt.Sprintf(userByUidQuery, userUid)
-	resp, err := d.client.NewTxn().Query(ctx, query)
+	bytes, err := d.get(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
 	var response map[string][]*models.User
-	err = json.Unmarshal(resp.Json, &response)
+	err = json.Unmarshal(bytes, &response)
 	if err != nil {
 		return nil, err
 	}

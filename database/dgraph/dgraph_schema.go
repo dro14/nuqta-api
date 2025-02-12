@@ -8,11 +8,11 @@ import (
 
 func (d *Dgraph) GetSchema(ctx context.Context) (string, error) {
 	query := `schema {}`
-	resp, err := d.client.NewTxn().Query(ctx, query)
+	bytes, err := d.get(ctx, query)
 	if err != nil {
 		return "", err
 	}
-	return string(resp.Json), nil
+	return string(bytes), nil
 }
 
 func (d *Dgraph) UpdateSchema(ctx context.Context) error {
