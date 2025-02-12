@@ -77,7 +77,13 @@ func (h *Handler) getPost(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return
 			}
-			posts[i].RepostedBy = post.RepostedBy
+			if post.RepostedBy != nil {
+				posts[i].RepostedBy, err = h.db.GetUserByUid(ctx, request.Uid, post.RepostedBy.Uid)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, failure(err))
+					return
+				}
+			}
 		}
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
 		if request.UserUid == "" || request.Before == 0 {

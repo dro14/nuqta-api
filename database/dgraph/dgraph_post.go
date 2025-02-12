@@ -42,6 +42,18 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post
 		return nil, e.ErrNotFound
 	}
 
+	post.Author, err = d.GetUserByUid(ctx, uid, post.Author.Uid)
+	if err != nil {
+		return nil, err
+	}
+
+	if post.InReplyTo != nil {
+		post.InReplyTo.Author, err = d.GetUserByUid(ctx, uid, post.InReplyTo.Author.Uid)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	post.IsReplied, err = d.IsReplied(ctx, uid, postUid)
 	if err != nil {
 		return nil, err
