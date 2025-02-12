@@ -24,142 +24,132 @@ func (h *Handler) createPost(c *gin.Context) {
 	}
 }
 
-func (h *Handler) getAllPosts(c *gin.Context) {
-	ctx := c.Request.Context()
-	allPosts, err := h.db.GetAllPosts(ctx)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-	c.JSON(http.StatusOK, allPosts)
-}
-
-func (h *Handler) getForYouPosts(c *gin.Context) {
-	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	postUids := h.rec.GetRecs()
-
-	ctx := c.Request.Context()
-	posts := make([]*models.Post, 0, 20)
-	for _, uid := range postUids {
-		isViewed, err := h.db.DoesEdgeExist(ctx, uid, "~view", firebaseUid)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		} else if isViewed {
-			continue
-		}
-		post, err := h.db.GetPostByUid(ctx, firebaseUid, uid)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-		posts = append(posts, post)
-		if len(posts) == 20 {
-			break
-		}
-	}
-
-	c.JSON(http.StatusOK, posts)
-}
-
 func (h *Handler) getPost(c *gin.Context) {
-	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	uid := c.Param("uid")
-	if uid == "" {
+	if request.Uid == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	post, err := h.db.GetPostByUid(ctx, firebaseUid, uid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	c.JSON(http.StatusOK, post)
-}
-
-func (h *Handler) getFollowingPosts(c *gin.Context) {
-	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	before := c.Param("before")
-	if before == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	ctx := c.Request.Context()
-	postUids, err := h.db.GetFollowingPosts(ctx, firebaseUid, before)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	posts := make([]*models.Post, 0, len(postUids))
-	for _, uid := range postUids {
-		post, err := h.db.GetPostByUid(ctx, firebaseUid, uid)
+	var posts []*models.Post
+	switch request.Tab {
+	case "feed_for_you":
+		posts = make([]*models.Post, 0, 20)
+		postUids := h.rec.GetRecs()
+		for _, postUid := range postUids {
+			isViewed, err := h.db.GetEdge(ctx, request.Uid, "view", postUid)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, failure(err))
+				return
+			} else if isViewed {
+				continue
+			}
+			post, err := h.db.GetPost(ctx, request.Uid, postUid)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, failure(err))
+				return
+			}
+			posts = append(posts, post)
+			if len(posts) == cap(posts) {
+				break
+			}
+		}
+	case "feed_following":
+		if request.Before == 0 {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		posts, err = h.db.GetFollowingPosts(ctx, request.Uid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-		posts = append(posts, post)
+		for i, post := range posts {
+			posts[i], err = h.db.GetPost(ctx, request.Uid, post.Uid)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, failure(err))
+				return
+			}
+			posts[i].RepostedBy = post.RepostedBy
+		}
+	case "user_posts", "user_replies", "user_reposts", "user_likes":
+		if request.UserUid == "" || request.Before == 0 {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		postUids, err := h.db.GetUserPosts(ctx, request.Tab, request.UserUid, request.Before)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+		posts, err = h.db.GetPosts(ctx, request.Uid, postUids)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+	case "reply_popular":
+		if request.PostUid == "" {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		postUids, err := h.db.GetPopularReplies(ctx, request.PostUid, request.Offset)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+		posts, err = h.db.GetPosts(ctx, request.Uid, postUids)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+	case "reply_recent":
+		if request.PostUid == "" || request.Before == 0 {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		postUids, err := h.db.GetRecentReplies(ctx, request.PostUid, request.Before)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+		posts, err = h.db.GetPosts(ctx, request.Uid, postUids)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+	default:
+		if request.PostUid != "" {
+			post, err := h.db.GetPost(ctx, request.Uid, request.PostUid)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, failure(err))
+				return
+			}
+			posts = append(posts, post)
+		} else {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, posts)
-}
-
-func (h *Handler) getUserPosts(c *gin.Context) {
-	uid := c.Param("uid")
-	if uid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	ctx := c.Request.Context()
-	posts, err := h.db.GetUserPosts(ctx, uid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	c.JSON(http.StatusOK, posts)
-}
-
-func (h *Handler) getPostReplies(c *gin.Context) {
-	uid := c.Param("uid")
-	if uid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	ctx := c.Request.Context()
-	replies, err := h.db.GetPostReplies(ctx, uid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	c.JSON(http.StatusOK, replies)
 }
 
 func (h *Handler) deletePost(c *gin.Context) {
-	uid := c.Param("uid")
-	if uid == "" {
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request.Uid == "" || request.PostUid == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
@@ -171,24 +161,29 @@ func (h *Handler) deletePost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	post, err := h.db.GetPostByUid(ctx, firebaseUid, uid)
+	post, err := h.db.GetPost(ctx, request.Uid, request.PostUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	author, err := h.db.GetUserByUid(ctx, firebaseUid, post.Author.Uid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	if author.FirebaseUid != firebaseUid {
+	if request.Uid != post.Author.Uid {
 		c.JSON(http.StatusForbidden, failure(e.ErrForbidden))
 		return
 	}
 
-	err = h.db.DeletePost(ctx, uid)
+	author, err := h.db.GetProfile(ctx, firebaseUid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	if request.Uid != author.Uid {
+		c.JSON(http.StatusForbidden, failure(e.ErrForbidden))
+		return
+	}
+
+	err = h.db.DeletePost(ctx, request.PostUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

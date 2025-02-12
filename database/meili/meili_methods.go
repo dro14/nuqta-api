@@ -23,22 +23,18 @@ func (m *Meili) AddUser(user *models.User) error {
 	return err
 }
 
-func (m *Meili) SearchUser(query string) ([]*models.User, error) {
+func (m *Meili) SearchUser(query string) ([]string, error) {
 	request := &meilisearch.SearchRequest{Limit: 20}
 	results, err := m.users.Search(query, request)
 	if err != nil {
 		return nil, err
 	}
-	users := make([]*models.User, 0, len(results.Hits))
+	userUids := make([]string, len(results.Hits))
 	for i := range results.Hits {
 		hit := results.Hits[i].(map[string]any)
-		users = append(users, &models.User{
-			Uid:      hit["id"].(string),
-			Name:     hit["name"].(string),
-			Username: hit["username"].(string),
-		})
+		userUids[i] = hit["id"].(string)
 	}
-	return users, nil
+	return userUids, nil
 }
 
 func (m *Meili) GetUidByUsername(username string) (string, error) {
@@ -48,7 +44,7 @@ func (m *Meili) GetUidByUsername(username string) (string, error) {
 	}
 
 	request := &meilisearch.SearchRequest{
-		Filter: [][]string{{fmt.Sprintf("username = %q", username)}},
+		Filter: [][]string{{fmt.Sprintf(`username = "%s"`, username)}},
 	}
 
 	results, err := m.users.Search("", request)

@@ -9,8 +9,8 @@ import (
 	"github.com/dro14/nuqta-service/models"
 )
 
-func (d *Dgraph) GetUserByUid(ctx context.Context, firebaseUid, uid string) (*models.User, error) {
-	query := fmt.Sprintf(userByUidQuery, uid)
+func (d *Dgraph) GetUserByUid(ctx context.Context, uid, userUid string) (*models.User, error) {
+	query := fmt.Sprintf(userByUidQuery, userUid)
 	resp, err := d.client.NewTxn().Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (d *Dgraph) GetUserByUid(ctx context.Context, firebaseUid, uid string) (*mo
 		return nil, e.ErrNotFound
 	}
 
-	user.IsFollowed, err = d.DoesEdgeExist(ctx, uid, "~follow", firebaseUid)
+	user.IsFollowed, err = d.GetEdge(ctx, uid, "follow", userUid)
 	if err != nil {
 		return nil, err
 	}

@@ -23,32 +23,22 @@ func (h *Handler) Run(port string) error {
 	group.POST("", h.createProfile)
 	group.GET("", h.getProfile)
 	group.PUT("", h.updateProfile)
-	group.DELETE("/:uid/:attribute", h.deleteProfileAttribute)
+	group.DELETE("", h.deleteProfileAttribute)
 
 	group = authorized.Group("/user")
 	group.GET("", h.getUser)
-	group.GET("/:username", h.isUsernameAvailable)
+	group.GET("/available", h.isUsernameAvailable)
+	group.GET("/search", h.searchUser)
+	group.PATCH("/hit", h.hitUser)
 
 	group = authorized.Group("/post")
 	group.POST("", h.createPost)
-	group.GET("", h.getAllPosts)
-	group.GET("/:uid", h.getPost)
-	group.GET("/for-you", h.getForYouPosts)
-	group.GET("/following/:before", h.getFollowingPosts)
-	group.GET("/user/:uid", h.getUserPosts)
-	group.GET("/reply/:uid", h.getPostReplies)
-	group.DELETE("/:uid", h.deletePost)
+	group.GET("", h.getPost)
+	group.DELETE("", h.deletePost)
 
 	group = authorized.Group("/edge")
-	group.POST("/:source/:edge/:target", h.createEdge)
-	group.DELETE("/:source/:edge/:target", h.deleteEdge)
-
-	group = authorized.Group("/index")
-	group.GET("/search", h.search)
-	group.PATCH("/hit/:uid", h.hit)
-
-	group = authorized.Group("/storage")
-	group.POST("", h.upload)
+	group.POST("", h.createEdge)
+	group.DELETE("", h.deleteEdge)
 
 	return h.engine.Run(":" + port)
 }

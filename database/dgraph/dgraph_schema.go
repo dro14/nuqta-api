@@ -54,8 +54,8 @@ banner: string .
 avatars: [string] .
 thumbnails: [string] .
 follow: [uid] @count @reverse .
-like: [uid] @count @reverse .
 repost: [uid] @count @reverse .
+like: [uid] @count @reverse .
 click: [uid] @count @reverse .
 view: [uid] @count @reverse .
 remove: [uid] @count @reverse .
@@ -77,8 +77,8 @@ type User {
 	avatars
 	thumbnails
 	follow
-	like
 	repost
+	like
 	click
 	view
 	remove

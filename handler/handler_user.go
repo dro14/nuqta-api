@@ -5,34 +5,34 @@ import (
 	"net/http"
 
 	"github.com/dro14/nuqta-service/e"
+	"github.com/dro14/nuqta-service/models"
 	"github.com/gin-gonic/gin"
 )
 
 func (h *Handler) getUser(c *gin.Context) {
-	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	var uid string
-	if c.Query("username") != "" {
+	if request.Username != "" {
 		var err error
-		uid, err = h.index.GetUidByUsername(c.Query("username"))
+		request.UserUid, err = h.index.GetUidByUsername(request.Username)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-	} else {
-		uid = c.Query("uid")
-		if uid == "" {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-			return
-		}
+	}
+
+	if request.Uid != "" && request.UserUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
 	}
 
 	ctx := c.Request.Context()
-	user, err := h.db.GetUserByUid(ctx, firebaseUid, uid)
+	user, err := h.db.GetUserByUid(ctx, request.Uid, request.UserUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -42,18 +42,75 @@ func (h *Handler) getUser(c *gin.Context) {
 }
 
 func (h *Handler) isUsernameAvailable(c *gin.Context) {
-	username := c.Param("username")
-	if username == "" {
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request.Username == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
-	uid, err := h.index.GetUidByUsername(username)
+	uid, err := h.index.GetUidByUsername(request.Username)
 	if uid != "" {
 		c.JSON(http.StatusOK, gin.H{"available": false})
 	} else if errors.Is(err, e.ErrNotFound) {
 		c.JSON(http.StatusOK, gin.H{"available": true})
 	} else {
 		c.JSON(http.StatusInternalServerError, failure(err))
+	}
+}
+
+func (h *Handler) searchUser(c *gin.Context) {
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request.Uid != "" && request.Query == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	userUids, err := h.index.SearchUser(request.Query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	ctx := c.Request.Context()
+	users := make([]*models.User, len(userUids))
+	for i := range userUids {
+		users[i], err = h.db.GetUserByUid(ctx, request.Uid, userUids[i])
+		if err != nil {
+			continue
+		}
+	}
+
+	c.JSON(http.StatusOK, users)
+}
+
+func (h *Handler) hitUser(c *gin.Context) {
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request.UserUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	err = h.index.IncrementHits(request.UserUid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
 	}
 }

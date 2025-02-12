@@ -105,25 +105,29 @@ func (h *Handler) updateProfile(c *gin.Context) {
 }
 
 func (h *Handler) deleteProfileAttribute(c *gin.Context) {
-	uid := c.Param("uid")
-	attribute := c.Param("attribute")
-	value := c.Query("value")
-	if uid == "" || attribute == "" || value == "" {
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request.Uid == "" || request.Attribute == "" || request.Value == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	err := h.db.DeleteProfileAttribute(ctx, uid, attribute, value)
+	err = h.db.DeleteProfileAttribute(ctx, request.Uid, request.Attribute, request.Value)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	if attribute == "name" {
-		err = h.index.DeleteName(uid)
+	if request.Attribute == "name" {
+		err = h.index.DeleteName(request.Uid)
 		if err != nil {
-			log.Printf("user %s: can't delete name in search index: %s", uid, err)
+			log.Printf("user %s: can't delete name in search index: %s", request.Uid, err)
 		}
 	}
 }

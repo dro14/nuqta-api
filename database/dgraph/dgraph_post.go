@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
-	"github.com/dgraph-io/dgo/v240/protos/api"
 	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
 )
@@ -16,13 +14,8 @@ func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Pos
 	post.DType = []string{"Post"}
 	post.Uid = "_:post"
 	post.PostedAt = time.Now().Unix()
-	json, err := json.Marshal(post)
-	if err != nil {
-		return nil, err
-	}
 
-	mutation := &api.Mutation{SetJson: json, CommitNow: true}
-	assigned, err := d.client.NewTxn().Mutate(ctx, mutation)
+	assigned, err := d.setJson(ctx, post)
 	if err != nil {
 		return nil, err
 	}
@@ -31,35 +24,15 @@ func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Pos
 	return post, nil
 }
 
-func (d *Dgraph) GetAllPosts(ctx context.Context) ([]string, error) {
-	resp, err := d.client.NewTxn().Query(ctx, allPostsQuery)
+func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post, error) {
+	query := fmt.Sprintf(postQuery, postUid)
+	bytes, err := d.get(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
 	var response map[string][]*models.Post
-	err = json.Unmarshal(resp.Json, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	var allPosts []string
-	for _, post := range response["all_posts"] {
-		allPosts = append(allPosts, post.Uid)
-	}
-
-	return allPosts, nil
-}
-
-func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*models.Post, error) {
-	query := fmt.Sprintf(postByUidQuery, uid)
-	resp, err := d.client.NewTxn().Query(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	var response map[string][]*models.Post
-	err = json.Unmarshal(resp.Json, &response)
+	err = json.Unmarshal(bytes, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -69,27 +42,27 @@ func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*mo
 		return nil, e.ErrNotFound
 	}
 
-	post.IsLiked, err = d.DoesEdgeExist(ctx, uid, "~like", firebaseUid)
+	post.IsReplied, err = d.IsReplied(ctx, uid, postUid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsReposted, err = d.DoesEdgeExist(ctx, uid, "~repost", firebaseUid)
+	post.IsReposted, err = d.GetEdge(ctx, uid, "repost", postUid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsReplied, err = d.isReplied(ctx, uid, firebaseUid)
+	post.IsLiked, err = d.GetEdge(ctx, uid, "like", postUid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsClicked, err = d.DoesEdgeExist(ctx, uid, "~click", firebaseUid)
+	post.IsClicked, err = d.GetEdge(ctx, uid, "click", postUid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsViewed, err = d.DoesEdgeExist(ctx, uid, "~view", firebaseUid)
+	post.IsViewed, err = d.GetEdge(ctx, uid, "view", postUid)
 	if err != nil {
 		return nil, err
 	}
@@ -97,16 +70,28 @@ func (d *Dgraph) GetPostByUid(ctx context.Context, firebaseUid, uid string) (*mo
 	return post, nil
 }
 
-func (d *Dgraph) GetLatestPosts(ctx context.Context) ([]*models.Post, error) {
-	timestamp := strconv.FormatInt(time.Now().AddDate(0, 0, -2).Unix(), 10)
-	query := fmt.Sprintf(latestPostsQuery, timestamp)
-	resp, err := d.client.NewTxn().Query(ctx, query)
+func (d *Dgraph) GetPosts(ctx context.Context, uid string, postUids []string) ([]*models.Post, error) {
+	posts := make([]*models.Post, 0, len(postUids))
+	for _, postUid := range postUids {
+		post, err := d.GetPost(ctx, uid, postUid)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func (d *Dgraph) GetRecentPosts(ctx context.Context) ([]*models.Post, error) {
+	timestamp := time.Now().AddDate(0, 0, -2).Unix()
+	query := fmt.Sprintf(recentPostsQuery, timestamp)
+	bytes, err := d.get(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
 	var response map[string][]*models.Post
-	err = json.Unmarshal(resp.Json, &response)
+	err = json.Unmarshal(bytes, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -114,36 +99,42 @@ func (d *Dgraph) GetLatestPosts(ctx context.Context) ([]*models.Post, error) {
 	return response["posts"], nil
 }
 
-func (d *Dgraph) GetFollowingPosts(ctx context.Context, firebaseUid, before string) ([]string, error) {
-	query := fmt.Sprintf(followingQuery, firebaseUid, before)
-	resp, err := d.client.NewTxn().Query(ctx, query)
+func (d *Dgraph) GetFollowingPosts(ctx context.Context, uid string, before int64) ([]*models.Post, error) {
+	query := fmt.Sprintf(followingQuery, uid, before)
+	bytes, err := d.get(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
 	var response map[string][]*models.Post
-	err = json.Unmarshal(resp.Json, &response)
+	err = json.Unmarshal(bytes, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	var followingPosts []string
-	for _, post := range response["posts"] {
-		followingPosts = append(followingPosts, post.Uid)
-	}
-
-	return followingPosts, nil
+	return response["posts"], nil
 }
 
-func (d *Dgraph) GetUserPosts(ctx context.Context, uid string) ([]string, error) {
-	query := fmt.Sprintf(userPostsQuery, uid)
-	resp, err := d.client.NewTxn().Query(ctx, query)
+func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before int64) ([]string, error) {
+	var query string
+	switch tab {
+	case "user_posts":
+		query = fmt.Sprintf(userPostsQuery, userUid, before)
+	case "user_replies":
+		query = fmt.Sprintf(userRepliesQuery, userUid, before)
+	case "user_reposts":
+		query = fmt.Sprintf(userRepostsQuery, userUid, before)
+	case "user_likes":
+		query = fmt.Sprintf(userLikesQuery, userUid, before)
+	}
+
+	bytes, err := d.get(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
 	var response map[string][]map[string][]*models.Post
-	err = json.Unmarshal(resp.Json, &response)
+	err = json.Unmarshal(bytes, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -158,15 +149,15 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, uid string) ([]string, error)
 	return posts, nil
 }
 
-func (d *Dgraph) GetPostReplies(ctx context.Context, uid string) ([]string, error) {
-	query := fmt.Sprintf(postRepliesQuery, uid)
-	resp, err := d.client.NewTxn().Query(ctx, query)
+func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset int) ([]string, error) {
+	query := fmt.Sprintf(popularRepliesQuery, postUid, offset)
+	bytes, err := d.get(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
 	var response map[string][]map[string][]*models.Post
-	err = json.Unmarshal(resp.Json, &response)
+	err = json.Unmarshal(bytes, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -181,12 +172,30 @@ func (d *Dgraph) GetPostReplies(ctx context.Context, uid string) ([]string, erro
 	return replies, nil
 }
 
-func (d *Dgraph) DeletePost(ctx context.Context, uid string) error {
-	nquads := fmt.Sprintf(`<%s> * * .`, uid)
-	mutation := &api.Mutation{DelNquads: []byte(nquads), CommitNow: true}
-	_, err := d.client.NewTxn().Mutate(ctx, mutation)
+func (d *Dgraph) GetRecentReplies(ctx context.Context, postUid string, before int64) ([]string, error) {
+	query := fmt.Sprintf(recentRepliesQuery, postUid, before)
+	bytes, err := d.get(ctx, query)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+
+	var response map[string][]map[string][]*models.Post
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var replies []string
+	for _, post := range response["posts"] {
+		for _, reply := range post["replies"] {
+			replies = append(replies, reply.Uid)
+		}
+	}
+
+	return replies, nil
+}
+
+func (d *Dgraph) DeletePost(ctx context.Context, postUid string) error {
+	query := fmt.Sprintf(`<%s> * * .`, postUid)
+	return d.deleteNquads(ctx, query)
 }
