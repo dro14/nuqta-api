@@ -78,8 +78,8 @@ func (h *Handler) getPost(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return
 			}
-			if post.RepostedBy != nil {
-				posts[i].RepostedBy, err = h.db.GetUserByUid(ctx, request.Uid, post.RepostedBy.Uid)
+			if len(post.Reposted) > 0 {
+				posts[i].RepostedBy, err = h.db.GetUserByUid(ctx, request.Uid, post.Reposted[0].Uid)
 				if err != nil {
 					c.JSON(http.StatusInternalServerError, failure(err))
 					return

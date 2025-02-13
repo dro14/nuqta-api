@@ -25,8 +25,9 @@ type Post struct {
 	Text       string   `json:"text,omitempty"`
 	PostedAt   int64    `json:"posted_at,omitempty"`
 	Author     *User    `json:"author,omitempty"`
-	RepostedBy *User    `json:"reposted_by,omitempty"`
 	InReplyTo  *Post    `json:"in_reply_to,omitempty"`
+	RepostedBy *User    `json:"reposted_by,omitempty"`
+	Reposted   []*User  `json:"reposted,omitempty"`
 	Replies    int      `json:"replies,omitempty"`
 	Reposts    int      `json:"reposts,omitempty"`
 	Likes      int      `json:"likes,omitempty"`
