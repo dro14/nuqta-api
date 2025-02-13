@@ -197,8 +197,14 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 		},
 	)
 
+	if len(posts) > offset+20 {
+		posts = posts[offset : offset+20]
+	} else {
+		posts = posts[offset:]
+	}
+
 	var postUids []string
-	for _, post := range posts[offset : offset+20] {
+	for _, post := range posts {
 		postUids = append(postUids, post.Uid)
 	}
 
