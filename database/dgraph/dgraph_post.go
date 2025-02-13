@@ -175,6 +175,10 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 		return nil, err
 	}
 
+	if len(response["posts"]) == 0 {
+		return nil, nil
+	}
+
 	posts := response["posts"][0]["replies"]
 	for i, post := range posts {
 		posts[i].Score = 2.0*float64(post.Replies) +
@@ -182,10 +186,6 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 			1.0*float64(post.Likes) +
 			0.5*float64(post.Clicks) +
 			0.1*float64(post.Views)
-	}
-
-	if len(posts) <= offset {
-		return nil, nil
 	}
 
 	slices.SortFunc(
@@ -201,10 +201,12 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 		},
 	)
 
-	if len(posts) > offset+20 {
-		posts = posts[offset : offset+20]
-	} else {
+	if 0 < offset && offset < len(posts) {
 		posts = posts[offset:]
+	}
+
+	if len(posts) > 20 {
+		posts = posts[:20]
 	}
 
 	var postUids []string
