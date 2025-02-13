@@ -184,6 +184,10 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 			0.1*float64(post.Views)
 	}
 
+	if len(posts) <= offset {
+		return nil, nil
+	}
+
 	slices.SortFunc(
 		posts,
 		func(a, b *models.Post) int {
@@ -197,12 +201,10 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 		},
 	)
 
-	if len(posts) > offset {
+	if len(posts) > offset+20 {
+		posts = posts[offset : offset+20]
+	} else {
 		posts = posts[offset:]
-	}
-
-	if len(posts) > 20 {
-		posts = posts[:20]
 	}
 
 	var postUids []string
