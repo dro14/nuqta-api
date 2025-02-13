@@ -84,9 +84,9 @@ func (r *Recommender) GetRecs() []string {
 		recs,
 		func(a, b *models.Post) int {
 			if a.Score < b.Score {
-				return -1
-			} else if a.Score > b.Score {
 				return 1
+			} else if a.Score > b.Score {
+				return -1
 			} else {
 				return 0
 			}

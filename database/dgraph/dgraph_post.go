@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/dro14/nuqta-service/e"
@@ -162,7 +163,7 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before i
 }
 
 func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset int) ([]string, error) {
-	query := fmt.Sprintf(popularRepliesQuery, postUid, offset)
+	query := fmt.Sprintf(popularRepliesQuery, postUid)
 	bytes, err := d.get(ctx, query)
 	if err != nil {
 		return nil, err
@@ -174,14 +175,34 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 		return nil, err
 	}
 
-	var replies []string
-	for _, post := range response["posts"] {
-		for _, reply := range post["replies"] {
-			replies = append(replies, reply.Uid)
-		}
+	posts := response["posts"][0]["replies"]
+	for i, post := range posts {
+		posts[i].Score = 2.0*float64(post.Replies) +
+			1.5*float64(post.Reposts) +
+			1.0*float64(post.Likes) +
+			0.5*float64(post.Clicks) +
+			0.1*float64(post.Views)
 	}
 
-	return replies, nil
+	slices.SortFunc(
+		posts,
+		func(a, b *models.Post) int {
+			if a.Score < b.Score {
+				return 1
+			} else if a.Score > b.Score {
+				return -1
+			} else {
+				return 0
+			}
+		},
+	)
+
+	var postUids []string
+	for _, post := range posts[offset : offset+20] {
+		postUids = append(postUids, post.Uid)
+	}
+
+	return postUids, nil
 }
 
 func (d *Dgraph) GetRecentReplies(ctx context.Context, postUid string, before int64) ([]string, error) {

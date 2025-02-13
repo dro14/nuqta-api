@@ -145,14 +145,13 @@ const userLikesQuery = `{
 
 const popularRepliesQuery = `{
 	posts(func: uid(%s)) {
-		replies: ~in_reply_to(orderdesc: val(score), first: 20, offset: %d) {
+		replies: ~in_reply_to {
 			uid
 			replies: count(~in_reply_to)
 			reposts: count(~repost)
 			likes: count(~like)
 			clicks: count(~click)
 			views: count(~view)
-			score as math(2.0*replies + 1.5*reposts + likes + 0.5*clicks + 0.1*views)
 		}
 	}
 }`
