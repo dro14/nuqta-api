@@ -130,13 +130,13 @@ func (d *Dgraph) GetFollowingPosts(ctx context.Context, uid string, before int64
 func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before int64) ([]string, error) {
 	var query string
 	switch tab {
-	case "user_posts":
+	case "posts":
 		query = fmt.Sprintf(userPostsQuery, userUid, before)
-	case "user_replies":
+	case "replies":
 		query = fmt.Sprintf(userRepliesQuery, userUid, before)
-	case "user_reposts":
+	case "reposts":
 		query = fmt.Sprintf(userRepostsQuery, userUid, before)
-	case "user_likes":
+	case "likes":
 		query = fmt.Sprintf(userLikesQuery, userUid, before)
 	}
 

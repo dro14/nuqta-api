@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
@@ -86,6 +87,7 @@ func (h *Handler) getPost(c *gin.Context) {
 			}
 		}
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
+		request.Tab = strings.TrimPrefix(request.Tab, "user_")
 		if request.UserUid == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return

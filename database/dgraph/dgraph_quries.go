@@ -96,10 +96,14 @@ const recentPostsQuery = `{
 
 const followingQuery = `{
 	var(func: uid(%s)) {
-		following as follow
+		follow_uids as follow
 	}
 
-	posts(func: lt(posted_at, "%d")) @filter(uid_in(author, uid(following)) OR uid_in(~repost, uid(following))) (orderdesc: posted_at, first: 20) {
+	var(func: lt(posted_at, "%d")) @filter(uid_in(author, uid(follow_uids)) OR uid_in(~repost, uid(follow_uids))) {
+		post_uids as uid
+	}
+
+	posts(func: uid(post_uids), orderdesc: posted_at, first: 20) {
 		uid
 	}
 }`
