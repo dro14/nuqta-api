@@ -199,7 +199,7 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 
 	if len(posts) > offset+20 {
 		posts = posts[offset : offset+20]
-	} else {
+	} else if len(posts) > offset {
 		posts = posts[offset:]
 	}
 
