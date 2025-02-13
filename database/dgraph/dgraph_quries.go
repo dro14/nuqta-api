@@ -105,6 +105,9 @@ const followingQuery = `{
 
 	posts(func: uid(post_uids), orderdesc: posted_at, first: 20) {
 		uid
+		reposted_by: ~repost @filter(uid(follow_uids)) (first: 1) {
+			uid
+		}
 	}
 }`
 
