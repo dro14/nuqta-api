@@ -82,9 +82,9 @@ type User {
 
 type Post {
 	text
-	reply_control
 	posted_at
 	author
+	reply_control
 	in_reply_to
 	repost
 	like
