@@ -56,9 +56,9 @@ thumbnails: [string] .
 follow: [uid] @count @reverse .
 
 text: string .
-reply_control: string .
 posted_at: int @index(int) .
 author: uid @count @reverse .
+reply_control: string .
 in_reply_to: uid @count @reverse .
 repost: [uid] @count @reverse .
 like: [uid] @count @reverse .
