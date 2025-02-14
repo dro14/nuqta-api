@@ -56,6 +56,7 @@ thumbnails: [string] .
 follow: [uid] @count @reverse .
 
 text: string .
+reply_control: string .
 posted_at: int @index(int) .
 author: uid @count @reverse .
 in_reply_to: uid @count @reverse .
@@ -81,6 +82,7 @@ type User {
 
 type Post {
 	text
+	reply_control
 	posted_at
 	author
 	in_reply_to

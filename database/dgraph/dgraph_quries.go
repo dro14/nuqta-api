@@ -40,6 +40,7 @@ const postQuery = `{
 	posts(func: uid(%s)) {
 		uid
 		text
+		reply_control
 		posted_at
 		author {
 			uid
