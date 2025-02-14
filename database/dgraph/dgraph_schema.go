@@ -54,16 +54,16 @@ banner: string .
 avatars: [string] .
 thumbnails: [string] .
 follow: [uid] @count @reverse .
-repost: [uid] @count @reverse .
-like: [uid] @count @reverse .
-click: [uid] @count @reverse .
-view: [uid] @count @reverse .
-remove: [uid] @count @reverse .
 
 text: string .
 posted_at: int @index(int) .
 author: uid @count @reverse .
 in_reply_to: uid @count @reverse .
+repost: [uid] @count @reverse .
+like: [uid] @count @reverse .
+click: [uid] @count @reverse .
+view: [uid] @count @reverse .
+remove: [uid] @count @reverse .
 
 type User {
 	firebase_uid
@@ -77,11 +77,6 @@ type User {
 	avatars
 	thumbnails
 	follow
-	repost
-	like
-	click
-	view
-	remove
 }
 
 type Post {
@@ -89,4 +84,9 @@ type Post {
 	posted_at
 	author
 	in_reply_to
+	repost
+	like
+	click
+	view
+	remove
 }`

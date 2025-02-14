@@ -61,10 +61,7 @@ func (d *Dgraph) GetProfile(ctx context.Context, firebaseUid string) (*models.Us
 func (d *Dgraph) UpdateProfile(ctx context.Context, user *models.User) error {
 	user.DType = []string{"User"}
 	_, err := d.setJson(ctx, user)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (d *Dgraph) DeleteProfileAttribute(ctx context.Context, userUid, attribute, value string) error {

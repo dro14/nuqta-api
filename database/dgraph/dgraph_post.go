@@ -43,39 +43,27 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post
 		return nil, e.ErrNotFound
 	}
 
-	post.Author, err = d.GetUserByUid(ctx, uid, post.Author.Uid)
-	if err != nil {
-		return nil, err
-	}
-
-	if post.InReplyTo != nil {
-		post.InReplyTo.Author, err = d.GetUserByUid(ctx, uid, post.InReplyTo.Author.Uid)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	post.IsReplied, err = d.IsReplied(ctx, uid, postUid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsReposted, err = d.GetEdge(ctx, uid, "repost", postUid)
+	post.IsReposted, err = d.GetEdge(ctx, postUid, "repost", uid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsLiked, err = d.GetEdge(ctx, uid, "like", postUid)
+	post.IsLiked, err = d.GetEdge(ctx, postUid, "like", uid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsClicked, err = d.GetEdge(ctx, uid, "click", postUid)
+	post.IsClicked, err = d.GetEdge(ctx, postUid, "click", uid)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsViewed, err = d.GetEdge(ctx, uid, "view", postUid)
+	post.IsViewed, err = d.GetEdge(ctx, postUid, "view", uid)
 	if err != nil {
 		return nil, err
 	}
@@ -152,14 +140,14 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before i
 		return nil, err
 	}
 
-	var posts []string
+	var postUids []string
 	for _, user := range response["users"] {
 		for _, post := range user["posts"] {
-			posts = append(posts, post.Uid)
+			postUids = append(postUids, post.Uid)
 		}
 	}
 
-	return posts, nil
+	return postUids, nil
 }
 
 func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset int) ([]string, error) {
@@ -179,17 +167,17 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 		return nil, nil
 	}
 
-	posts := response["posts"][0]["replies"]
-	for i, post := range posts {
-		posts[i].Score = 2.0*float64(post.Replies) +
-			1.5*float64(post.Reposts) +
-			1.0*float64(post.Likes) +
-			0.5*float64(post.Clicks) +
-			0.1*float64(post.Views)
+	replies := response["posts"][0]["replies"]
+	for i, reply := range replies {
+		replies[i].Score = 2.0*float64(reply.Replies) +
+			1.5*float64(reply.Reposts) +
+			1.0*float64(reply.Likes) +
+			0.5*float64(reply.Clicks) +
+			0.1*float64(reply.Views)
 	}
 
 	slices.SortFunc(
-		posts,
+		replies,
 		func(a, b *models.Post) int {
 			if a.Score < b.Score {
 				return 1
@@ -201,20 +189,20 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 		},
 	)
 
-	if 0 < offset && offset < len(posts) {
-		posts = posts[offset:]
+	if 0 < offset && offset < len(replies) {
+		replies = replies[offset:]
 	}
 
-	if len(posts) > 20 {
-		posts = posts[:20]
+	if len(replies) > 20 {
+		replies = replies[:20]
 	}
 
-	var postUids []string
-	for _, post := range posts {
-		postUids = append(postUids, post.Uid)
+	var replyUids []string
+	for _, reply := range replies {
+		replyUids = append(replyUids, reply.Uid)
 	}
 
-	return postUids, nil
+	return replyUids, nil
 }
 
 func (d *Dgraph) GetRecentReplies(ctx context.Context, postUid string, before int64) ([]string, error) {
@@ -230,17 +218,50 @@ func (d *Dgraph) GetRecentReplies(ctx context.Context, postUid string, before in
 		return nil, err
 	}
 
-	var replies []string
+	var replyUids []string
 	for _, post := range response["posts"] {
 		for _, reply := range post["replies"] {
-			replies = append(replies, reply.Uid)
+			replyUids = append(replyUids, reply.Uid)
 		}
 	}
 
-	return replies, nil
+	return replyUids, nil
+}
+
+func (d *Dgraph) GetPostReplies(ctx context.Context, postUid string) ([]string, error) {
+	query := fmt.Sprintf(postRepliesQuery, postUid)
+	bytes, err := d.get(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]map[string][]*models.Post
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var replyUids []string
+	for _, post := range response["posts"] {
+		for _, reply := range post["replies"] {
+			replyUids = append(replyUids, reply.Uid)
+		}
+	}
+
+	return replyUids, nil
 }
 
 func (d *Dgraph) DeletePost(ctx context.Context, postUid string) error {
-	query := fmt.Sprintf(`<%s> * * .`, postUid)
+	replyUids, err := d.GetPostReplies(ctx, postUid)
+	if err != nil {
+		return err
+	}
+
+	query := ""
+	for _, replyUid := range replyUids {
+		query += fmt.Sprintf("<%s> <in_reply_to> <%s> .\n", replyUid, postUid)
+	}
+
+	query += fmt.Sprintf("<%s> * * .", postUid)
 	return d.deleteNquads(ctx, query)
 }

@@ -15,14 +15,14 @@ type Dgraph struct {
 }
 
 func New() *Dgraph {
-	uri, ok := os.LookupEnv("DGRAPH_URI")
+	url, ok := os.LookupEnv("DGRAPH_URI")
 	if !ok {
 		log.Fatal("dgraph uri is not specified")
 	}
 
-	conn, err := grpc.NewClient(uri, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatal("can't connect to dgraph")
+		log.Fatal("can't connect to dgraph: ", err)
 	}
 
 	return &Dgraph{

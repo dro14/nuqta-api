@@ -3,7 +3,7 @@ module github.com/dro14/nuqta-service
 go 1.23
 
 require (
-	firebase.google.com/go/v4 v4.15.1
+	firebase.google.com/go/v4 v4.15.2
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
 	github.com/dgraph-io/dgo/v240 v240.1.0
 	github.com/gin-gonic/gin v1.10.0

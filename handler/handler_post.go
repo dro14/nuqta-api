@@ -18,11 +18,13 @@ func (h *Handler) createPost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	_, err = h.db.CreatePost(ctx, post)
+	post, err = h.db.CreatePost(ctx, post)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
+
+	c.JSON(http.StatusOK, post)
 }
 
 func (h *Handler) getPost(c *gin.Context) {
@@ -45,7 +47,7 @@ func (h *Handler) getPost(c *gin.Context) {
 		posts = make([]*models.Post, 0, 20)
 		postUids := h.rec.GetRecs()
 		for _, postUid := range postUids {
-			isViewed, err := h.db.GetEdge(ctx, request.Uid, "view", postUid)
+			isViewed, err := h.db.GetEdge(ctx, postUid, "view", request.Uid)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return
@@ -58,7 +60,7 @@ func (h *Handler) getPost(c *gin.Context) {
 				return
 			}
 			posts = append(posts, post)
-			if len(posts) == cap(posts) {
+			if len(posts) == 20 {
 				break
 			}
 		}
@@ -79,11 +81,7 @@ func (h *Handler) getPost(c *gin.Context) {
 				return
 			}
 			if len(post.Reposted) > 0 {
-				posts[i].RepostedBy, err = h.db.GetUserByUid(ctx, request.Uid, post.Reposted[0].Uid)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, failure(err))
-					return
-				}
+				posts[i].RepostedBy = &models.User{Uid: post.Reposted[0].Uid}
 			}
 		}
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
@@ -149,6 +147,12 @@ func (h *Handler) getPost(c *gin.Context) {
 }
 
 func (h *Handler) deletePost(c *gin.Context) {
+	firebaseUid := c.GetString("firebase_uid")
+	if firebaseUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
 	request := &models.Request{}
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
@@ -157,12 +161,6 @@ func (h *Handler) deletePost(c *gin.Context) {
 	}
 
 	if request.Uid == "" || request.PostUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}

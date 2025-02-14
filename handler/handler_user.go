@@ -17,19 +17,26 @@ func (h *Handler) getUser(c *gin.Context) {
 		return
 	}
 
-	if request.Uid == "" && request.Username == "" {
+	if request.Uid == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
-	userUid, err := h.index.GetUidByUsername(request.Username)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
+	if request.Username != "" {
+		request.UserUid, err = h.index.GetUidByUsername(request.Username)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+	}
+
+	if request.UserUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	user, err := h.db.GetUserByUid(ctx, request.Uid, userUid)
+	user, err := h.db.GetUser(ctx, request.Uid, request.UserUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -38,7 +45,7 @@ func (h *Handler) getUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) isUsernameAvailable(c *gin.Context) {
+func (h *Handler) availableUser(c *gin.Context) {
 	request := &models.Request{}
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
@@ -83,7 +90,7 @@ func (h *Handler) searchUser(c *gin.Context) {
 	ctx := c.Request.Context()
 	users := make([]*models.User, 0, len(userUids))
 	for i := range userUids {
-		user, err := h.db.GetUserByUid(ctx, request.Uid, userUids[i])
+		user, err := h.db.GetUser(ctx, request.Uid, userUids[i])
 		if err != nil {
 			continue
 		}

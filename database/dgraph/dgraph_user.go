@@ -9,7 +9,7 @@ import (
 	"github.com/dro14/nuqta-service/models"
 )
 
-func (d *Dgraph) GetUserByUid(ctx context.Context, uid, userUid string) (*models.User, error) {
+func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User, error) {
 	query := fmt.Sprintf(userByUidQuery, userUid)
 	bytes, err := d.get(ctx, query)
 	if err != nil {

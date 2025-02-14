@@ -52,14 +52,14 @@ const postQuery = `{
 				uid
 			}
 			replies: count(~in_reply_to)
-			reposts: count(~repost)
-			likes: count(~like)
-			views: count(~view)
+			reposts: count(repost)
+			likes: count(like)
+			views: count(view)
 		}
 		replies: count(~in_reply_to)
-		reposts: count(~repost)
-		likes: count(~like)
-		views: count(~view)
+		reposts: count(repost)
+		likes: count(like)
+		views: count(view)
 	}
 }`
 
@@ -73,7 +73,7 @@ const edgeQuery = `{
 
 const isRepliedQuery = `{
 	edges(func: uid(%s)) {
-		~author {
+		~author @filter(has(in_reply_to)) {
 			in_reply_to @filter(uid(%s)) {
 				uid
 			}
@@ -86,11 +86,11 @@ const recentPostsQuery = `{
 		uid
 		posted_at
 		replies: count(~in_reply_to)
-		reposts: count(~repost)
-		likes: count(~like)
-		clicks: count(~click)
-		views: count(~view)
-		removes: count(~remove)
+		reposts: count(repost)
+		likes: count(like)
+		clicks: count(click)
+		views: count(view)
+		removes: count(remove)
 	}
 }`
 
@@ -99,13 +99,13 @@ const followingQuery = `{
 		follow_uids as follow
 	}
 
-	var(func: lt(posted_at, "%d")) @filter(uid_in(author, uid(follow_uids)) OR uid_in(~repost, uid(follow_uids))) {
+	var(func: lt(posted_at, "%d")) @filter(uid_in(author, uid(follow_uids)) OR uid_in(repost, uid(follow_uids))) {
 		post_uids as uid
 	}
 
 	posts(func: uid(post_uids), orderdesc: posted_at, first: 20) {
 		uid
-		reposted: ~repost @filter(uid(follow_uids)) (first: 1) {
+		reposted: repost @filter(uid(follow_uids)) (first: 1) {
 			uid
 		}
 	}
@@ -129,7 +129,7 @@ const userRepliesQuery = `{
 
 const userRepostsQuery = `{
 	users(func: uid(%s)) {
-		posts: repost @facets(lt(timestamp, "%d")) @facets(orderdesc: timestamp, first: 20) {
+		posts: ~repost @facets(lt(timestamp, "%d")) @facets(orderdesc: timestamp, first: 20) {
 			uid
     	}
 	}
@@ -137,7 +137,7 @@ const userRepostsQuery = `{
 
 const userLikesQuery = `{
 	users(func: uid(%s)) {
-		posts: like @facets(lt(timestamp, "%d")) @facets(orderdesc: timestamp, first: 20) {
+		posts: ~like @facets(lt(timestamp, "%d")) @facets(orderdesc: timestamp, first: 20) {
 			uid
     	}
 	}
@@ -148,10 +148,10 @@ const popularRepliesQuery = `{
 		replies: ~in_reply_to {
 			uid
 			replies: count(~in_reply_to)
-			reposts: count(~repost)
-			likes: count(~like)
-			clicks: count(~click)
-			views: count(~view)
+			reposts: count(repost)
+			likes: count(like)
+			clicks: count(click)
+			views: count(view)
 		}
 	}
 }`
@@ -159,6 +159,14 @@ const popularRepliesQuery = `{
 const recentRepliesQuery = `{
 	posts(func: uid(%s)) {
 		replies: ~in_reply_to @filter(lt(posted_at, "%d")) (orderdesc: posted_at, first: 20) {
+			uid
+		}
+	}
+}`
+
+const postRepliesQuery = `{
+	posts(func: uid(%s)) {
+		replies: ~in_reply_to {
 			uid
 		}
 	}
