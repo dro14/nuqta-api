@@ -64,6 +64,14 @@ func (d *Dgraph) UpdateProfile(ctx context.Context, user *models.User) error {
 	return err
 }
 
+func (d *Dgraph) UpdateProfileAttribute(ctx context.Context, userUid, attribute, value string) error {
+	if !slices.Contains(attributes, attribute) {
+		return e.ErrUnknownAttribute
+	}
+	query := fmt.Sprintf(`<%s> <%s> "%s" .`, userUid, attribute, value)
+	return d.setNquads(ctx, query)
+}
+
 func (d *Dgraph) DeleteProfileAttribute(ctx context.Context, userUid, attribute, value string) error {
 	if !slices.Contains(attributes, attribute) {
 		return e.ErrUnknownAttribute

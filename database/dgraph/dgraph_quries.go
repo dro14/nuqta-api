@@ -3,7 +3,6 @@ package dgraph
 const userByUidQuery = `{
 	users(func: uid(%s)) {
 		uid
-		firebase_uid
 		name
 		username
 		bio

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/dro14/nuqta-service/e"
@@ -43,29 +42,6 @@ func (h *Handler) getUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
-}
-
-func (h *Handler) availableUser(c *gin.Context) {
-	request := &models.Request{}
-	err := c.ShouldBindJSON(&request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	if request.Username == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	uid, err := h.index.GetUidByUsername(request.Username)
-	if uid != "" {
-		c.JSON(http.StatusOK, gin.H{"available": false})
-	} else if errors.Is(err, e.ErrNotFound) {
-		c.JSON(http.StatusOK, gin.H{"available": true})
-	} else {
-		c.JSON(http.StatusInternalServerError, failure(err))
-	}
 }
 
 func (h *Handler) searchUser(c *gin.Context) {
