@@ -16,6 +16,8 @@ type User struct {
 	Posts       int      `json:"posts,omitempty"`
 	Following   int      `json:"following,omitempty"`
 	Followers   int      `json:"followers,omitempty"`
+	Saved       []string `json:"saved,omitempty"`
+	Save        []*Post  `json:"save,omitempty"`
 	IsFollowing bool     `json:"is_following,omitempty"`
 	IsFollowed  bool     `json:"is_followed,omitempty"`
 }
@@ -35,12 +37,14 @@ type Post struct {
 	Likes        int      `json:"likes,omitempty"`
 	Clicks       int      `json:"clicks,omitempty"`
 	Views        int      `json:"views,omitempty"`
+	Saves        int      `json:"saves,omitempty"`
 	Removes      int      `json:"removes,omitempty"`
 	IsReplied    bool     `json:"is_replied,omitempty"`
 	IsReposted   bool     `json:"is_reposted,omitempty"`
 	IsLiked      bool     `json:"is_liked,omitempty"`
 	IsClicked    bool     `json:"is_clicked,omitempty"`
 	IsViewed     bool     `json:"is_viewed,omitempty"`
+	IsSaved      bool     `json:"is_saved,omitempty"`
 	Score        float64  `json:"score,omitempty"`
 }
 

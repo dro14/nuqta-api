@@ -116,6 +116,29 @@ func (d *Dgraph) GetFollowingPosts(ctx context.Context, uid string, before int64
 	return response["posts"], nil
 }
 
+func (d *Dgraph) GetSavedPosts(ctx context.Context, uid string, before int64) ([]string, error) {
+	query := fmt.Sprintf(savedPostsQuery, uid, before)
+	bytes, err := d.get(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]map[string][]*models.Post
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var postUids []string
+	for _, user := range response["users"] {
+		for _, post := range user["posts"] {
+			postUids = append(postUids, post.Uid)
+		}
+	}
+
+	return postUids, nil
+}
+
 func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before int64) ([]string, error) {
 	var query string
 	switch tab {

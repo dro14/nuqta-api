@@ -41,11 +41,11 @@ func (h *Handler) getPost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	var posts []*models.Post
+	var postUids []string
 	switch request.Tab {
 	case "feed_for_you":
-		posts = make([]*models.Post, 0, 20)
-		postUids := h.rec.GetRecs()
+		postUids = h.rec.GetRecs()
+		posts := make([]*models.Post, 0, 20)
 		for _, postUid := range postUids {
 			isViewed, err := h.db.GetEdge(ctx, postUid, "view", request.Uid)
 			if err != nil {
@@ -64,12 +64,14 @@ func (h *Handler) getPost(c *gin.Context) {
 				break
 			}
 		}
+		c.JSON(http.StatusOK, posts)
+		return
 	case "feed_following":
 		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		posts, err = h.db.GetFollowingPosts(ctx, request.Uid, request.Before)
+		posts, err := h.db.GetFollowingPosts(ctx, request.Uid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -84,18 +86,25 @@ func (h *Handler) getPost(c *gin.Context) {
 				posts[i].RepostedBy = &models.User{Uid: post.Reposted[0].Uid}
 			}
 		}
+		c.JSON(http.StatusOK, posts)
+		return
+	case "feed_saved":
+		if request.Before == 0 {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		postUids, err = h.db.GetSavedPosts(ctx, request.Uid, request.Before)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
 		request.Tab = strings.TrimPrefix(request.Tab, "user_")
 		if request.UserUid == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err := h.db.GetUserPosts(ctx, request.Tab, request.UserUid, request.Before)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-		posts, err = h.db.GetPosts(ctx, request.Uid, postUids)
+		postUids, err = h.db.GetUserPosts(ctx, request.Tab, request.UserUid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -105,12 +114,7 @@ func (h *Handler) getPost(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err := h.db.GetPopularReplies(ctx, request.PostUid, request.Offset)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-		posts, err = h.db.GetPosts(ctx, request.Uid, postUids)
+		postUids, err = h.db.GetPopularReplies(ctx, request.PostUid, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -120,27 +124,20 @@ func (h *Handler) getPost(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err := h.db.GetRecentReplies(ctx, request.PostUid, request.Before)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-		posts, err = h.db.GetPosts(ctx, request.Uid, postUids)
+		postUids, err = h.db.GetRecentReplies(ctx, request.PostUid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	default:
-		if len(request.PostUids) > 0 {
-			posts, err = h.db.GetPosts(ctx, request.Uid, request.PostUids)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, failure(err))
-				return
-			}
-		} else {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-			return
-		}
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	posts, err := h.db.GetPosts(ctx, request.Uid, postUids)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
 	}
 
 	c.JSON(http.StatusOK, posts)

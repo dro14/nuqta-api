@@ -64,6 +64,7 @@ repost: [uid] @count @reverse .
 like: [uid] @count @reverse .
 click: [uid] @count @reverse .
 view: [uid] @count @reverse .
+save: [uid] @count @reverse .
 remove: [uid] @count @reverse .
 
 type User {
@@ -90,5 +91,6 @@ type Post {
 	like
 	click
 	view
+	save
 	remove
 }`

@@ -32,6 +32,9 @@ const userByFirebaseUidQuery = `{
 		posts: count(~author)
 		following: count(follow)
 		followers: count(~follow)
+		~save {
+			uid
+		}
 	}
 }`
 
@@ -106,6 +109,14 @@ const followingQuery = `{
 	posts(func: uid(post_uids), orderdesc: posted_at, first: 20) {
 		uid
 		reposted: repost @filter(uid(follow_uids)) (first: 1) {
+			uid
+		}
+	}
+}`
+
+const savedPostsQuery = `{
+	users(func: uid(%s)) {
+		posts: ~save @facets(lt(timestamp, "%d")) @facets(orderdesc: timestamp, first: 20) {
 			uid
 		}
 	}
