@@ -55,12 +55,7 @@ func (d *Dgraph) GetProfile(ctx context.Context, firebaseUid string) (*models.Us
 		return nil, e.ErrInvalidMatch
 	}
 
-	user := response["users"][0]
-	for _, post := range user.Save {
-		user.Saved = append(user.Saved, post.Uid)
-	}
-	user.Save = nil
-	return user, nil
+	return response["users"][0], nil
 }
 
 func (d *Dgraph) UpdateProfile(ctx context.Context, user *models.User) error {

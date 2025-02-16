@@ -29,9 +29,6 @@ const userByFirebaseUidQuery = `{
 		banner
 		avatars
 		thumbnails
-		~save {
-			uid
-		}
 		posts: count(~author)
 		following: count(follow)
 		followers: count(~follow)
