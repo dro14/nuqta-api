@@ -29,12 +29,12 @@ const userByFirebaseUidQuery = `{
 		banner
 		avatars
 		thumbnails
-		posts: count(~author)
-		following: count(follow)
-		followers: count(~follow)
 		~save {
 			uid
 		}
+		posts: count(~author)
+		following: count(follow)
+		followers: count(~follow)
 	}
 }`
 
@@ -58,11 +58,13 @@ const postQuery = `{
 			reposts: count(repost)
 			likes: count(like)
 			views: count(view)
+			saves: count(save)
 		}
 		replies: count(~in_reply_to)
 		reposts: count(repost)
 		likes: count(like)
 		views: count(view)
+		saves: count(save)
 	}
 }`
 

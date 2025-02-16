@@ -68,6 +68,11 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post
 		return nil, err
 	}
 
+	post.IsSaved, err = d.GetEdge(ctx, postUid, "save", uid)
+	if err != nil {
+		return nil, err
+	}
+
 	return post, nil
 }
 
