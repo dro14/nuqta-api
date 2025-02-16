@@ -16,8 +16,8 @@ type User struct {
 	Posts       int      `json:"posts,omitempty"`
 	Following   int      `json:"following,omitempty"`
 	Followers   int      `json:"followers,omitempty"`
-	IsFollowed  bool     `json:"is_followed,omitempty"`
 	IsFollowing bool     `json:"is_following,omitempty"`
+	IsFollowed  bool     `json:"is_followed,omitempty"`
 }
 
 type Post struct {

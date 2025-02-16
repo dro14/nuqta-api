@@ -22,10 +22,10 @@ func (h *Handler) Run(port string) error {
 	group = authorized.Group("/profile")
 	group.POST("", h.createProfile)
 	group.GET("", h.getProfile)
-	group.GET("/available", h.isAvailable)
 	group.PUT("", h.updateProfile)
 	group.PATCH("", h.updateProfileAttribute)
 	group.DELETE("", h.deleteProfileAttribute)
+	group.OPTIONS("", h.isAvailable)
 
 	group = authorized.Group("/user")
 	group.GET("", h.getUser)

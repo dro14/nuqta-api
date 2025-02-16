@@ -27,12 +27,12 @@ func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User
 		return nil, e.ErrNotFound
 	}
 
-	user.IsFollowed, err = d.GetEdge(ctx, uid, "follow", userUid)
+	user.IsFollowing, err = d.GetEdge(ctx, userUid, "follow", uid)
 	if err != nil {
 		return nil, err
 	}
 
-	user.IsFollowing, err = d.GetEdge(ctx, userUid, "follow", uid)
+	user.IsFollowed, err = d.GetEdge(ctx, uid, "follow", userUid)
 	if err != nil {
 		return nil, err
 	}
