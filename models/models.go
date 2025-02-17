@@ -47,17 +47,16 @@ type Post struct {
 }
 
 type Request struct {
-	Uid       string   `json:"uid"`
-	UserUid   string   `json:"user_uid"`
-	PostUid   string   `json:"post_uid"`
-	PostUids  []string `json:"post_uids"`
-	Username  string   `json:"username"`
-	Query     string   `json:"query"`
-	Attribute string   `json:"attribute"`
-	Value     string   `json:"value"`
-	Tab       string   `json:"tab"`
-	Before    int64    `json:"before"`
-	Offset    int      `json:"offset"`
-	Edge      string   `json:"edge"`
-	Target    string   `json:"target"`
+	Uid       string `json:"uid"`
+	UserUid   string `json:"user_uid"`
+	PostUid   string `json:"post_uid"`
+	Username  string `json:"username"`
+	Query     string `json:"query"`
+	Attribute string `json:"attribute"`
+	Value     string `json:"value"`
+	Tab       string `json:"tab"`
+	Before    int64  `json:"before"`
+	Offset    int    `json:"offset"`
+	Edge      string `json:"edge"`
+	Target    string `json:"target"`
 }
