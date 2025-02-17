@@ -68,6 +68,7 @@ func (r *Recommender) UpdateRecs() {
 }
 
 func (r *Recommender) GetRecs() []string {
+	log.Println(r.recs)
 	recs := make([]*models.Post, 0, len(r.recs))
 	for _, rec := range r.recs {
 		beta := distuv.Beta{
