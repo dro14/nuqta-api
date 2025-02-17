@@ -45,9 +45,10 @@ func (r *Recommender) UpdateRecs() {
 			m += float64(post.Views)
 		}
 
-		n := float64(len(posts))
+		n := max(float64(len(posts)), 1.0)
 		C /= n
 		m /= n
+		m = max(m, 1.0)
 
 		recs := make([]*models.Post, 0, len(posts))
 		for _, post := range posts {
@@ -68,7 +69,6 @@ func (r *Recommender) UpdateRecs() {
 }
 
 func (r *Recommender) GetRecs() []string {
-	log.Println(r.recs)
 	recs := make([]*models.Post, 0, len(r.recs))
 	for _, rec := range r.recs {
 		beta := distuv.Beta{
