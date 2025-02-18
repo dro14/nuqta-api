@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/dro14/nuqta-service/e"
@@ -26,8 +27,10 @@ func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Pos
 }
 
 func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post, error) {
-	query := fmt.Sprintf(postQuery, postUid)
-	bytes, err := d.get(ctx, query)
+	vars := map[string]string{
+		"post_uid": postUid,
+	}
+	bytes, err := d.get(ctx, postQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -43,34 +46,29 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post
 		return nil, e.ErrNotFound
 	}
 
-	post.IsReplied, err = d.IsReplied(ctx, uid, postUid)
+	vars = map[string]string{
+		"uid":      uid,
+		"post_uid": postUid,
+	}
+	bytes, err = d.get(ctx, postEdgesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsReposted, err = d.GetEdge(ctx, postUid, "repost", uid)
+	var edges map[string][]map[string][]any
+	err = json.Unmarshal(bytes, &edges)
 	if err != nil {
 		return nil, err
 	}
 
-	post.IsLiked, err = d.GetEdge(ctx, postUid, "like", uid)
-	if err != nil {
-		return nil, err
-	}
-
-	post.IsClicked, err = d.GetEdge(ctx, postUid, "click", uid)
-	if err != nil {
-		return nil, err
-	}
-
-	post.IsViewed, err = d.GetEdge(ctx, postUid, "view", uid)
-	if err != nil {
-		return nil, err
-	}
-
-	post.IsSaved, err = d.GetEdge(ctx, postUid, "save", uid)
-	if err != nil {
-		return nil, err
+	if len(edges["users"]) > 0 {
+		user := edges["users"][0]
+		post.IsReplied = len(user["is_replied"]) > 0
+		post.IsReposted = len(user["is_reposted"]) > 0
+		post.IsLiked = len(user["is_liked"]) > 0
+		post.IsClicked = len(user["is_clicked"]) > 0
+		post.IsViewed = len(user["is_viewed"]) > 0
+		post.IsSaved = len(user["is_saved"]) > 0
 	}
 
 	return post, nil
@@ -89,9 +87,11 @@ func (d *Dgraph) GetPosts(ctx context.Context, uid string, postUids []string) ([
 }
 
 func (d *Dgraph) GetRecentPosts(ctx context.Context) ([]*models.Post, error) {
-	timestamp := time.Now().AddDate(0, 0, -2).Unix()
-	query := fmt.Sprintf(recentPostsQuery, timestamp)
-	bytes, err := d.get(ctx, query)
+	after := time.Now().AddDate(0, 0, -2).Unix()
+	vars := map[string]string{
+		"after": strconv.FormatInt(after, 10),
+	}
+	bytes, err := d.get(ctx, recentPostsQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +106,11 @@ func (d *Dgraph) GetRecentPosts(ctx context.Context) ([]*models.Post, error) {
 }
 
 func (d *Dgraph) GetFollowingPosts(ctx context.Context, uid string, before int64) ([]*models.Post, error) {
-	query := fmt.Sprintf(followingQuery, uid, before)
-	bytes, err := d.get(ctx, query)
+	vars := map[string]string{
+		"uid":    uid,
+		"before": strconv.FormatInt(before, 10),
+	}
+	bytes, err := d.get(ctx, followingQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +125,11 @@ func (d *Dgraph) GetFollowingPosts(ctx context.Context, uid string, before int64
 }
 
 func (d *Dgraph) GetSavedPosts(ctx context.Context, uid string, before int64) ([]string, error) {
-	query := fmt.Sprintf(savedPostsQuery, uid, before)
-	bytes, err := d.get(ctx, query)
+	vars := map[string]string{
+		"uid":    uid,
+		"before": strconv.FormatInt(before, 10),
+	}
+	bytes, err := d.get(ctx, savedPostsQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -148,16 +154,20 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before i
 	var query string
 	switch tab {
 	case "posts":
-		query = fmt.Sprintf(userPostsQuery, userUid, before)
+		query = userPostsQuery
 	case "replies":
-		query = fmt.Sprintf(userRepliesQuery, userUid, before)
+		query = userRepliesQuery
 	case "reposts":
-		query = fmt.Sprintf(userRepostsQuery, userUid, before)
+		query = userRepostsQuery
 	case "likes":
-		query = fmt.Sprintf(userLikesQuery, userUid, before)
+		query = userLikesQuery
 	}
 
-	bytes, err := d.get(ctx, query)
+	vars := map[string]string{
+		"user_uid": userUid,
+		"before":   strconv.FormatInt(before, 10),
+	}
+	bytes, err := d.get(ctx, query, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -179,8 +189,10 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before i
 }
 
 func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset int) ([]string, error) {
-	query := fmt.Sprintf(popularRepliesQuery, postUid)
-	bytes, err := d.get(ctx, query)
+	vars := map[string]string{
+		"post_uid": postUid,
+	}
+	bytes, err := d.get(ctx, postRepliesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -234,8 +246,11 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 }
 
 func (d *Dgraph) GetRecentReplies(ctx context.Context, postUid string, before int64) ([]string, error) {
-	query := fmt.Sprintf(recentRepliesQuery, postUid, before)
-	bytes, err := d.get(ctx, query)
+	vars := map[string]string{
+		"post_uid": postUid,
+		"before":   strconv.FormatInt(before, 10),
+	}
+	bytes, err := d.get(ctx, recentRepliesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -257,8 +272,10 @@ func (d *Dgraph) GetRecentReplies(ctx context.Context, postUid string, before in
 }
 
 func (d *Dgraph) GetPostReplies(ctx context.Context, postUid string) ([]string, error) {
-	query := fmt.Sprintf(postRepliesQuery, postUid)
-	bytes, err := d.get(ctx, query)
+	vars := map[string]string{
+		"post_uid": postUid,
+	}
+	bytes, err := d.get(ctx, postRepliesQuery, vars)
 	if err != nil {
 		return nil, err
 	}

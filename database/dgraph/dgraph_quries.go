@@ -1,7 +1,8 @@
 package dgraph
 
-const userByUidQuery = `{
-	users(func: uid(%s)) {
+const userByUidQuery = `
+query Query($user_uid: string) {
+	users(func: uid($user_uid)) {
 		uid
 		name
 		username
@@ -17,8 +18,9 @@ const userByUidQuery = `{
 	}
 }`
 
-const userByFirebaseUidQuery = `{
-	users(func: eq(firebase_uid, "%s")) {
+const userByFirebaseUidQuery = `
+query Query($firebase_uid: string) {
+	users(func: eq(firebase_uid, $firebase_uid)) {
 		uid
 		firebase_uid
 		name
@@ -35,27 +37,31 @@ const userByFirebaseUidQuery = `{
 	}
 }`
 
-const postQuery = `{
-	posts(func: uid(%s)) {
+const userEdgesQuery = `
+query Query($uid: string, $user_uid: string) {
+	users(func: uid($uid)) {
+		uid
+		is_following: ~follow @filter(uid($user_uid)) {
+			uid
+		}
+		is_followed: follow @filter(uid($user_uid)) {
+			uid
+		}
+	}
+}`
+
+const postQuery = `
+query Query($post_uid: string) {
+	posts(func: uid($post_uid)) {
 		uid
 		text
-		reply_control
 		posted_at
 		author {
 			uid
 		}
+		reply_control
 		in_reply_to {
 			uid
-			text
-			posted_at
-			author {
-				uid
-			}
-			replies: count(~in_reply_to)
-			reposts: count(repost)
-			likes: count(like)
-			views: count(view)
-			saves: count(save)
 		}
 		replies: count(~in_reply_to)
 		reposts: count(repost)
@@ -65,26 +71,42 @@ const postQuery = `{
 	}
 }`
 
-const edgeQuery = `{
-	edges(func: uid(%s)) {
-		%s @filter(uid(%s)) {
+const postEdgesQuery = `
+query Query($uid: string, $post_uid: string) {
+	users(func: uid($uid)) {
+		is_replied: ~author @filter(uid_in(in_reply_to, uid($post_uid))) {
+			uid
+		}
+		is_reposted: ~repost @filter(uid($post_uid)) {
+			uid
+		}
+		is_liked: ~like @filter(uid($post_uid)) {
+			uid
+		}
+		is_clicked: ~click @filter(uid($post_uid)) {
+			uid
+		}
+		is_viewed: ~view @filter(uid($post_uid)) {
+			uid
+		}
+		is_saved: ~save @filter(uid($post_uid)) {
 			uid
 		}
 	}
 }`
 
-const isRepliedQuery = `{
-	edges(func: uid(%s)) {
-		~author @filter(has(in_reply_to)) {
-			in_reply_to @filter(uid(%s)) {
-				uid
-			}
+const isViewedQuery = `
+query Query($uid: string, $post_uid: string) {
+	posts(func: uid($post_uid)) {
+		view @filter(uid($uid)) {
+			uid
 		}
 	}
 }`
 
-const recentPostsQuery = `{
-	posts(func: gt(posted_at, "%d")) @filter(not has(in_reply_to)) {
+const recentPostsQuery = `
+query Query($after: int) {
+	posts(func: gt(posted_at, $after)) @filter(not has(in_reply_to)) {
 		uid
 		posted_at
 		replies: count(~in_reply_to)
@@ -96,12 +118,13 @@ const recentPostsQuery = `{
 	}
 }`
 
-const followingQuery = `{
-	var(func: uid(%s)) {
+const followingQuery = `
+query Query($uid: string, $before: int) {
+	var(func: uid($uid)) {
 		follow_uids as follow
 	}
 
-	var(func: lt(posted_at, "%d")) @filter(uid_in(author, uid(follow_uids)) OR uid_in(repost, uid(follow_uids))) {
+	var(func: lt(posted_at, $before)) @filter(uid_in(author, uid(follow_uids)) OR uid_in(repost, uid(follow_uids))) {
 		post_uids as uid
 	}
 
@@ -113,48 +136,54 @@ const followingQuery = `{
 	}
 }`
 
-const savedPostsQuery = `{
-	users(func: uid(%s)) {
-		posts: ~save @facets(lt(timestamp, "%d")) @facets(orderdesc: timestamp, first: 20) {
+const savedPostsQuery = `
+query Query($uid: string, $before: int) {
+	users(func: uid($uid)) {
+		posts: ~save @facets(lt(timestamp, $before)) @facets(orderdesc: timestamp, first: 20) {
 			uid
 		}
 	}
 }`
 
-const userPostsQuery = `{
-	users(func: uid(%s)) {
-		posts: ~author @filter(lt(posted_at, "%d") AND not has(in_reply_to)) (orderdesc: posted_at, first: 20) {
+const userPostsQuery = `
+query Query($user_uid: string, $before: int) {
+	users(func: uid($user_uid)) {
+		posts: ~author @filter(lt(posted_at, $before) AND not has(in_reply_to)) (orderdesc: posted_at, first: 20) {
 			uid
 		}
 	}
 }`
 
-const userRepliesQuery = `{
-	users(func: uid(%s)) {
-		posts: ~author @filter(lt(posted_at, "%d") AND has(in_reply_to)) (orderdesc: posted_at, first: 20) {
+const userRepliesQuery = `
+query Query($user_uid: string, $before: int) {
+	users(func: uid($user_uid)) {
+		posts: ~author @filter(lt(posted_at, $before) AND has(in_reply_to)) (orderdesc: posted_at, first: 20) {
 			uid
 		}
 	}
 }`
 
-const userRepostsQuery = `{
-	users(func: uid(%s)) {
-		posts: ~repost @facets(lt(timestamp, "%d")) @facets(orderdesc: timestamp, first: 20) {
+const userRepostsQuery = `
+query Query($user_uid: string, $before: int) {
+	users(func: uid($user_uid)) {
+		posts: ~repost @facets(lt(timestamp, $before)) @facets(orderdesc: timestamp, first: 20) {
 			uid
     	}
 	}
 }`
 
-const userLikesQuery = `{
-	users(func: uid(%s)) {
-		posts: ~like @facets(lt(timestamp, "%d")) @facets(orderdesc: timestamp, first: 20) {
+const userLikesQuery = `
+query Query($user_uid: string, $before: int) {
+	users(func: uid($user_uid)) {
+		posts: ~like @facets(lt(timestamp, $before)) @facets(orderdesc: timestamp, first: 20) {
 			uid
     	}
 	}
 }`
 
-const popularRepliesQuery = `{
-	posts(func: uid(%s)) {
+const postRepliesQuery = `
+query Query($post_uid: string) {
+	posts(func: uid($post_uid)) {
 		replies: ~in_reply_to {
 			uid
 			replies: count(~in_reply_to)
@@ -166,17 +195,10 @@ const popularRepliesQuery = `{
 	}
 }`
 
-const recentRepliesQuery = `{
-	posts(func: uid(%s)) {
-		replies: ~in_reply_to @filter(lt(posted_at, "%d")) (orderdesc: posted_at, first: 20) {
-			uid
-		}
-	}
-}`
-
-const postRepliesQuery = `{
-	posts(func: uid(%s)) {
-		replies: ~in_reply_to {
+const recentRepliesQuery = `
+query Query($post_uid: string, $before: int) {
+	posts(func: uid($post_uid)) {
+		replies: ~in_reply_to @filter(lt(posted_at, $before)) (orderdesc: posted_at, first: 20) {
 			uid
 		}
 	}

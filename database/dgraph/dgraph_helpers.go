@@ -10,10 +10,10 @@ import (
 
 const retryAttempts = 5
 
-func (d *Dgraph) get(ctx context.Context, query string) ([]byte, error) {
+func (d *Dgraph) get(ctx context.Context, query string, vars map[string]string) ([]byte, error) {
 	var err error
 	for i := 0; i < retryAttempts; i++ {
-		resp, err := d.client.NewTxn().Query(ctx, query)
+		resp, err := d.client.NewTxn().QueryWithVars(ctx, query, vars)
 		if err == nil {
 			return resp.Json, nil
 		}

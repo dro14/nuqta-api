@@ -7,8 +7,8 @@ import (
 )
 
 func (d *Dgraph) GetSchema(ctx context.Context) (string, error) {
-	query := `schema {}`
-	bytes, err := d.get(ctx, query)
+	query := "schema {}"
+	bytes, err := d.get(ctx, query, nil)
 	if err != nil {
 		return "", err
 	}

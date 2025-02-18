@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/dro14/nuqta-service/models"
-
 	"gonum.org/v1/gonum/stat/distuv"
 )
 

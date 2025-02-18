@@ -29,46 +29,29 @@ func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target string) er
 	return d.setNquads(ctx, query)
 }
 
-func (d *Dgraph) GetEdge(ctx context.Context, source, edge, target string) (bool, error) {
-	if !slices.Contains(edges, edge) {
-		return false, e.ErrUnknownEdge
-	}
-
-	query := fmt.Sprintf(edgeQuery, source, edge, target)
-	bytes, err := d.get(ctx, query)
-	if err != nil {
-		return false, err
-	}
-
-	var response map[string][]any
-	err = json.Unmarshal(bytes, &response)
-	if err != nil {
-		return false, err
-	}
-
-	return len(response["edges"]) > 0, nil
-}
-
-func (d *Dgraph) IsReplied(ctx context.Context, userUid, postUid string) (bool, error) {
-	query := fmt.Sprintf(isRepliedQuery, userUid, postUid)
-	bytes, err := d.get(ctx, query)
-	if err != nil {
-		return false, err
-	}
-
-	var response map[string][]any
-	err = json.Unmarshal(bytes, &response)
-	if err != nil {
-		return false, err
-	}
-
-	return len(response["edges"]) > 0, nil
-}
-
 func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) error {
 	if !slices.Contains(edges, edge) {
 		return e.ErrUnknownEdge
 	}
 	query := fmt.Sprintf("<%s> <%s> <%s> .", source, edge, target)
 	return d.deleteNquads(ctx, query)
+}
+
+func (d *Dgraph) IsPostViewed(ctx context.Context, uid, postUid string) (bool, error) {
+	vars := map[string]string{
+		"uid":      uid,
+		"post_uid": postUid,
+	}
+	bytes, err := d.get(ctx, isViewedQuery, vars)
+	if err != nil {
+		return false, err
+	}
+
+	var response map[string][]any
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return false, err
+	}
+
+	return len(response["edges"]) > 0, nil
 }

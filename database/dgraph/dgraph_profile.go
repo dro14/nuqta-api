@@ -37,8 +37,10 @@ func (d *Dgraph) CreateProfile(ctx context.Context, user *models.User) (*models.
 }
 
 func (d *Dgraph) GetProfile(ctx context.Context, firebaseUid string) (*models.User, error) {
-	query := fmt.Sprintf(userByFirebaseUidQuery, firebaseUid)
-	bytes, err := d.get(ctx, query)
+	vars := map[string]string{
+		"firebase_uid": firebaseUid,
+	}
+	bytes, err := d.get(ctx, userByFirebaseUidQuery, vars)
 	if err != nil {
 		return nil, err
 	}

@@ -47,7 +47,7 @@ func (h *Handler) getPost(c *gin.Context) {
 		postUids = h.rec.GetRecs()
 		posts := make([]*models.Post, 0, 20)
 		for _, postUid := range postUids {
-			isViewed, err := h.db.GetEdge(ctx, postUid, "view", request.Uid)
+			isViewed, err := h.db.IsPostViewed(ctx, request.Uid, postUid)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return
