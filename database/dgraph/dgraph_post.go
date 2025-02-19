@@ -47,7 +47,7 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post
 	}
 
 	vars = map[string]string{
-		"$uid":      uid,
+		"$user_uid": uid,
 		"$post_uid": postUid,
 	}
 	bytes, err = d.get(ctx, postEdgesQuery, vars)
