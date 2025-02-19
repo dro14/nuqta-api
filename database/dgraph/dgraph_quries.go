@@ -72,9 +72,9 @@ query Query($post_uid: string) {
 }`
 
 const postEdgesQuery = `
-query Query($user_uid: string, $post_uid: string) {
-	users(func: uid($user_uid)) {
-		is_replied: ~author @filter(uid_in(in_reply_to, uid($post_uid))) {
+query Query($uid: string, $post_uid: string) {
+	users(func: uid($uid)) {
+		is_replied: ~author @filter(uid_in(in_reply_to, $post_uid)) {
 			uid
 		}
 		is_reposted: ~repost @filter(uid($post_uid)) {

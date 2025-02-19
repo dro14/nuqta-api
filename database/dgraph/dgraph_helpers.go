@@ -18,7 +18,7 @@ func (d *Dgraph) get(ctx context.Context, query string, vars map[string]string) 
 			return resp.Json, nil
 		}
 		lastErr = err
-		log.Printf("can't get nquads: %s\n%s", err, query)
+		log.Printf("can't get nquads: %s%s", err, query)
 	}
 	log.Printf("failed to get nquads after %d attempts", retryAttempts)
 	return nil, lastErr
