@@ -40,7 +40,9 @@ func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) er
 	}
 	object := map[string]any{
 		"uid": source,
-		edge:  target,
+		edge: map[string]any{
+			"uid": target,
+		},
 	}
 	return d.deleteJson(ctx, object)
 }
