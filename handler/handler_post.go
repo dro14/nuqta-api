@@ -41,10 +41,11 @@ func (h *Handler) getPost(c *gin.Context) {
 	}
 
 	var postUids []string
-	withInReplyTo := true
+	var withInReplyTo bool
 	ctx := c.Request.Context()
 	switch request.Tab {
 	case "feed_for_you":
+		withInReplyTo = false
 		postUids = h.rec.GetRecs()
 		posts := make([]*models.Post, 0, 20)
 		for _, postUid := range postUids {
@@ -55,7 +56,7 @@ func (h *Handler) getPost(c *gin.Context) {
 			} else if isViewed {
 				continue
 			}
-			post, err := h.db.GetPost(ctx, request.Uid, postUid)
+			post, err := h.db.GetPost(ctx, request.Uid, postUid, withInReplyTo)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return
@@ -68,6 +69,7 @@ func (h *Handler) getPost(c *gin.Context) {
 		c.JSON(http.StatusOK, posts)
 		return
 	case "feed_following":
+		withInReplyTo = true
 		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -78,7 +80,7 @@ func (h *Handler) getPost(c *gin.Context) {
 			return
 		}
 		for i, post := range posts {
-			posts[i], err = h.db.GetPost(ctx, request.Uid, post.Uid)
+			posts[i], err = h.db.GetPost(ctx, request.Uid, post.Uid, withInReplyTo)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return
@@ -90,6 +92,7 @@ func (h *Handler) getPost(c *gin.Context) {
 		c.JSON(http.StatusOK, posts)
 		return
 	case "feed_saved":
+		withInReplyTo = true
 		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -100,6 +103,7 @@ func (h *Handler) getPost(c *gin.Context) {
 			return
 		}
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
+		withInReplyTo = true
 		request.Tab = strings.TrimPrefix(request.Tab, "user_")
 		if request.UserUid == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
@@ -111,6 +115,7 @@ func (h *Handler) getPost(c *gin.Context) {
 			return
 		}
 	case "reply_popular":
+		withInReplyTo = false
 		if request.PostUid == "" {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -120,8 +125,8 @@ func (h *Handler) getPost(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-		withInReplyTo = false
 	case "reply_recent":
+		withInReplyTo = false
 		if request.PostUid == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -131,7 +136,6 @@ func (h *Handler) getPost(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-		withInReplyTo = false
 	default:
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
@@ -166,7 +170,7 @@ func (h *Handler) deletePost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	post, err := h.db.GetPost(ctx, request.Uid, request.PostUid)
+	post, err := h.db.GetPost(ctx, request.Uid, request.PostUid, false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

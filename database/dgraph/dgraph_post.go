@@ -26,7 +26,7 @@ func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Pos
 	return post, nil
 }
 
-func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post, error) {
+func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string, withInReplyTo bool) (*models.Post, error) {
 	vars := map[string]string{
 		"$post_uid": postUid,
 	}
@@ -71,23 +71,24 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post
 		post.IsSaved = len(user["is_saved"]) > 0
 	}
 
+	if withInReplyTo && post.InReplyTo != nil {
+		post.InReplyTo, err = d.GetPost(ctx, uid, post.InReplyTo.Uid, false)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		post.InReplyTo = nil
+	}
+
 	return post, nil
 }
 
 func (d *Dgraph) GetPosts(ctx context.Context, uid string, postUids []string, withInReplyTo bool) ([]*models.Post, error) {
 	posts := make([]*models.Post, 0, len(postUids))
 	for _, postUid := range postUids {
-		post, err := d.GetPost(ctx, uid, postUid)
+		post, err := d.GetPost(ctx, uid, postUid, withInReplyTo)
 		if err != nil {
 			return nil, err
-		}
-		if withInReplyTo && post.InReplyTo != nil {
-			post.InReplyTo, err = d.GetPost(ctx, uid, post.InReplyTo.Uid)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			post.InReplyTo = nil
 		}
 		posts = append(posts, post)
 	}
