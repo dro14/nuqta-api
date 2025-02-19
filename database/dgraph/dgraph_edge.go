@@ -53,5 +53,5 @@ func (d *Dgraph) IsPostViewed(ctx context.Context, uid, postUid string) (bool, e
 		return false, err
 	}
 
-	return len(response["edges"]) > 0, nil
+	return len(response["posts"]) > 0, nil
 }
