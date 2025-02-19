@@ -72,29 +72,6 @@ func (h *Handler) getProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) isAvailable(c *gin.Context) {
-	request := &models.Request{}
-	err := c.ShouldBindJSON(&request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	if request.Username == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	uid, err := h.index.GetUidByUsername(request.Username)
-	if uid != "" {
-		c.JSON(http.StatusOK, gin.H{"available": false})
-	} else if errors.Is(err, e.ErrNotFound) {
-		c.JSON(http.StatusOK, gin.H{"available": true})
-	} else {
-		c.JSON(http.StatusInternalServerError, failure(err))
-	}
-}
-
 func (h *Handler) updateProfile(c *gin.Context) {
 	firebaseUid := c.GetString("firebase_uid")
 	if firebaseUid == "" {
@@ -207,5 +184,28 @@ func (h *Handler) deleteProfileAttribute(c *gin.Context) {
 		if err != nil {
 			log.Printf("user %s: can't delete name in search index: %s", request.Uid, err)
 		}
+	}
+}
+
+func (h *Handler) isAvailable(c *gin.Context) {
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request.Username == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	uid, err := h.index.GetUidByUsername(request.Username)
+	if uid != "" {
+		c.JSON(http.StatusOK, gin.H{"available": false})
+	} else if errors.Is(err, e.ErrNotFound) {
+		c.JSON(http.StatusOK, gin.H{"available": true})
+	} else {
+		c.JSON(http.StatusInternalServerError, failure(err))
 	}
 }

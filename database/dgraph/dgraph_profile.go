@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"slices"
 	"strings"
 	"time"
@@ -45,6 +46,7 @@ func (d *Dgraph) GetProfile(ctx context.Context, firebaseUid string) (*models.Us
 		return nil, err
 	}
 
+	log.Println(string(bytes))
 	var response map[string][]*models.User
 	err = json.Unmarshal(bytes, &response)
 	if err != nil {
