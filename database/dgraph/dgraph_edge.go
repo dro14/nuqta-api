@@ -30,7 +30,7 @@ func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target string) er
 			edge + "|timestamp": time.Now().Unix(),
 		},
 	}
-	_, err := d.setJson(ctx, object)
+	_, err := d.set(ctx, object)
 	return err
 }
 
@@ -44,7 +44,7 @@ func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) er
 			"uid": target,
 		},
 	}
-	return d.deleteJson(ctx, object)
+	return d.delete(ctx, object)
 }
 
 func (d *Dgraph) IsPostViewed(ctx context.Context, uid, postUid string) (bool, error) {
@@ -52,7 +52,7 @@ func (d *Dgraph) IsPostViewed(ctx context.Context, uid, postUid string) (bool, e
 		"$uid":      uid,
 		"$post_uid": postUid,
 	}
-	bytes, err := d.getJson(ctx, isViewedQuery, vars)
+	bytes, err := d.get(ctx, isViewedQuery, vars)
 	if err != nil {
 		return false, err
 	}
@@ -63,5 +63,5 @@ func (d *Dgraph) IsPostViewed(ctx context.Context, uid, postUid string) (bool, e
 		return false, err
 	}
 
-	return len(response["posts"]) > 0, nil
+	return len(response["is_viewed"]) > 0, nil
 }

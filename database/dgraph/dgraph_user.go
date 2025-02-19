@@ -12,7 +12,7 @@ func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User
 	vars := map[string]string{
 		"$user_uid": userUid,
 	}
-	bytes, err := d.getJson(ctx, userByUidQuery, vars)
+	bytes, err := d.get(ctx, userByUidQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User
 		"$uid":      uid,
 		"$user_uid": userUid,
 	}
-	bytes, err = d.getJson(ctx, userEdgesQuery, vars)
+	bytes, err = d.get(ctx, userEdgesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +44,9 @@ func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User
 	}
 
 	if len(edges["users"]) > 0 {
-		user.IsFollowing = len(edges["users"][0]["is_following"]) > 0
-		user.IsFollowed = len(edges["users"][0]["is_followed"]) > 0
+		user_ := edges["users"][0]
+		user.IsFollowing = len(user_["is_following"]) > 0
+		user.IsFollowed = len(user_["is_followed"]) > 0
 	}
 
 	return user, nil

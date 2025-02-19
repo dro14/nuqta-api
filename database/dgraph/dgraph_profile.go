@@ -26,7 +26,7 @@ func (d *Dgraph) CreateProfile(ctx context.Context, user *models.User) (*models.
 	user.Username = strings.Split(user.Email, "@")[0]
 	user.JoinedAt = time.Now().Unix()
 
-	assigned, err := d.setJson(ctx, user)
+	assigned, err := d.set(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (d *Dgraph) GetProfile(ctx context.Context, firebaseUid string) (*models.Us
 	vars := map[string]string{
 		"$firebase_uid": firebaseUid,
 	}
-	bytes, err := d.getJson(ctx, userByFirebaseUidQuery, vars)
+	bytes, err := d.get(ctx, userByFirebaseUidQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (d *Dgraph) GetProfile(ctx context.Context, firebaseUid string) (*models.Us
 
 func (d *Dgraph) UpdateProfile(ctx context.Context, user *models.User) error {
 	user.DType = []string{"User"}
-	_, err := d.setJson(ctx, user)
+	_, err := d.set(ctx, user)
 	return err
 }
 
@@ -73,7 +73,7 @@ func (d *Dgraph) UpdateProfileAttribute(ctx context.Context, userUid, attribute,
 		"uid":     userUid,
 		attribute: value,
 	}
-	_, err := d.setJson(ctx, object)
+	_, err := d.set(ctx, object)
 	return err
 }
 
@@ -85,5 +85,5 @@ func (d *Dgraph) DeleteProfileAttribute(ctx context.Context, userUid, attribute,
 		"uid":     userUid,
 		attribute: value,
 	}
-	return d.deleteJson(ctx, object)
+	return d.delete(ctx, object)
 }

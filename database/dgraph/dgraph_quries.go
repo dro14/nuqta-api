@@ -1,9 +1,10 @@
 package dgraph
 
-const userByUidQuery = `
-query Query($user_uid: string) {
-	users(func: uid($user_uid)) {
+const userByFirebaseUidQuery = `
+query Query($firebase_uid: string) {
+	users(func: eq(firebase_uid, $firebase_uid)) {
 		uid
+		firebase_uid
 		name
 		username
 		bio
@@ -18,11 +19,10 @@ query Query($user_uid: string) {
 	}
 }`
 
-const userByFirebaseUidQuery = `
-query Query($firebase_uid: string) {
-	users(func: eq(firebase_uid, $firebase_uid)) {
+const userByUidQuery = `
+query Query($user_uid: string) {
+	users(func: uid($user_uid)) {
 		uid
-		firebase_uid
 		name
 		username
 		bio
@@ -96,8 +96,8 @@ query Query($uid: string, $post_uid: string) {
 
 const isViewedQuery = `
 query Query($uid: string, $post_uid: string) {
-	posts(func: uid($post_uid)) {
-		view @filter(uid($uid)) {
+	is_viewed(func: uid($uid)) {
+		~view @filter(uid($post_uid)) {
 			uid
 		}
 	}
@@ -117,7 +117,7 @@ query Query($after: int) {
 	}
 }`
 
-const followingQuery = `
+const followingPostsQuery = `
 query Query($uid: string, $before: int) {
 	var(func: uid($uid)) {
 		follow_uids as follow
@@ -129,7 +129,7 @@ query Query($uid: string, $before: int) {
 
 	posts(func: uid(post_uids), orderdesc: posted_at, first: 20) {
 		uid
-		reposted: repost @filter(uid(follow_uids)) (first: 1) {
+		reposted: repost @filter(uid(follow_uids)) @facets(orderasc: timestamp, first: 1) {
 			uid
 		}
 	}
