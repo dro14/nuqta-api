@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -71,21 +70,9 @@ func (d *Dgraph) UpdateProfileAttribute(ctx context.Context, userUid, attribute,
 	if !slices.Contains(attributes, attribute) {
 		return e.ErrUnknownAttribute
 	}
-	var object map[string]any
-	if attribute == "birthday" {
-		birthday, err := strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			return err
-		}
-		object = map[string]any{
-			"uid":     userUid,
-			attribute: birthday,
-		}
-	} else {
-		object = map[string]any{
-			"uid":     userUid,
-			attribute: value,
-		}
+	object := map[string]any{
+		"uid":     userUid,
+		attribute: value,
 	}
 	_, err := d.setJson(ctx, object)
 	return err

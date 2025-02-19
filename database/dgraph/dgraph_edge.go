@@ -27,8 +27,8 @@ func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target string) er
 	object := map[string]any{
 		"uid": source,
 		edge: map[string]any{
-			"uid":        target,
-			"timestamp|": time.Now().Unix(),
+			"uid":                             target,
+			fmt.Sprintf("%s|timestamp", edge): time.Now().Unix(),
 		},
 	}
 	_, err := d.setJson(ctx, object)
