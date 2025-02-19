@@ -40,8 +40,9 @@ func (h *Handler) getPost(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
 	var postUids []string
+	withInReplyTo := true
+	ctx := c.Request.Context()
 	switch request.Tab {
 	case "feed_for_you":
 		postUids = h.rec.GetRecs()
@@ -119,6 +120,7 @@ func (h *Handler) getPost(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
+		withInReplyTo = false
 	case "reply_recent":
 		if request.PostUid == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
@@ -129,12 +131,13 @@ func (h *Handler) getPost(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
+		withInReplyTo = false
 	default:
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
-	posts, err := h.db.GetPosts(ctx, request.Uid, postUids)
+	posts, err := h.db.GetPosts(ctx, request.Uid, postUids, withInReplyTo)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

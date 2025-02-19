@@ -74,12 +74,20 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post
 	return post, nil
 }
 
-func (d *Dgraph) GetPosts(ctx context.Context, uid string, postUids []string) ([]*models.Post, error) {
+func (d *Dgraph) GetPosts(ctx context.Context, uid string, postUids []string, withInReplyTo bool) ([]*models.Post, error) {
 	posts := make([]*models.Post, 0, len(postUids))
 	for _, postUid := range postUids {
 		post, err := d.GetPost(ctx, uid, postUid)
 		if err != nil {
 			return nil, err
+		}
+		if withInReplyTo && post.InReplyTo != nil {
+			post.InReplyTo, err = d.GetPost(ctx, uid, post.InReplyTo.Uid)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			post.InReplyTo = nil
 		}
 		posts = append(posts, post)
 	}
