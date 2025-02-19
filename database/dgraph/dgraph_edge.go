@@ -24,9 +24,15 @@ func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target string) er
 	if !slices.Contains(edges, edge) {
 		return e.ErrUnknownEdge
 	}
-	now := time.Now().Unix()
-	query := fmt.Sprintf("<%s> <%s> <%s> (timestamp=%d) .", source, edge, target, now)
-	return d.setNquads(ctx, query)
+	object := map[string]any{
+		"uid": source,
+		edge: map[string]any{
+			"uid":        target,
+			"timestamp|": time.Now().Unix(),
+		},
+	}
+	_, err := d.setJson(ctx, object)
+	return err
 }
 
 func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) error {
