@@ -13,7 +13,8 @@ const retryAttempts = 5
 func (d *Dgraph) get(ctx context.Context, query string, vars map[string]string) ([]byte, error) {
 	var lastErr error
 	for i := 0; i < retryAttempts; i++ {
-		resp, err := d.client.NewTxn().BestEffort().QueryWithVars(ctx, query, vars)
+		txn := d.client.NewReadOnlyTxn().BestEffort()
+		resp, err := txn.QueryWithVars(ctx, query, vars)
 		if err == nil {
 			return resp.Json, nil
 		}
