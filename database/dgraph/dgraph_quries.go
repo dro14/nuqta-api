@@ -105,7 +105,7 @@ query Query($uid: string, $post_uid: string) {
 }`
 
 const recentPostsQuery = `
-query Query($after: string) {
+query Query($after: int) {
 	posts(func: gt(posted_at, $after)) @filter(not has(in_reply_to)) {
 		uid
 		posted_at

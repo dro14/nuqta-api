@@ -39,8 +39,8 @@ func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) er
 
 func (d *Dgraph) IsPostViewed(ctx context.Context, uid, postUid string) (bool, error) {
 	vars := map[string]string{
-		"uid":      uid,
-		"post_uid": postUid,
+		"$uid":      uid,
+		"$post_uid": postUid,
 	}
 	bytes, err := d.get(ctx, isViewedQuery, vars)
 	if err != nil {

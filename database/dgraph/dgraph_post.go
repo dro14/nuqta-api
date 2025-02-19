@@ -28,7 +28,7 @@ func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Pos
 
 func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post, error) {
 	vars := map[string]string{
-		"post_uid": postUid,
+		"$post_uid": postUid,
 	}
 	bytes, err := d.get(ctx, postQuery, vars)
 	if err != nil {
@@ -47,8 +47,8 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string) (*models.Post
 	}
 
 	vars = map[string]string{
-		"uid":      uid,
-		"post_uid": postUid,
+		"$uid":      uid,
+		"$post_uid": postUid,
 	}
 	bytes, err = d.get(ctx, postEdgesQuery, vars)
 	if err != nil {
@@ -89,7 +89,7 @@ func (d *Dgraph) GetPosts(ctx context.Context, uid string, postUids []string) ([
 func (d *Dgraph) GetRecentPosts(ctx context.Context) ([]*models.Post, error) {
 	after := time.Now().AddDate(0, 0, -2).Unix()
 	vars := map[string]string{
-		"after": strconv.FormatInt(after, 10),
+		"$after": strconv.FormatInt(after, 10),
 	}
 	bytes, err := d.get(ctx, recentPostsQuery, vars)
 	if err != nil {
@@ -107,8 +107,8 @@ func (d *Dgraph) GetRecentPosts(ctx context.Context) ([]*models.Post, error) {
 
 func (d *Dgraph) GetFollowingPosts(ctx context.Context, uid string, before int64) ([]*models.Post, error) {
 	vars := map[string]string{
-		"uid":    uid,
-		"before": strconv.FormatInt(before, 10),
+		"$uid":    uid,
+		"$before": strconv.FormatInt(before, 10),
 	}
 	bytes, err := d.get(ctx, followingQuery, vars)
 	if err != nil {
@@ -126,8 +126,8 @@ func (d *Dgraph) GetFollowingPosts(ctx context.Context, uid string, before int64
 
 func (d *Dgraph) GetSavedPosts(ctx context.Context, uid string, before int64) ([]string, error) {
 	vars := map[string]string{
-		"uid":    uid,
-		"before": strconv.FormatInt(before, 10),
+		"$uid":    uid,
+		"$before": strconv.FormatInt(before, 10),
 	}
 	bytes, err := d.get(ctx, savedPostsQuery, vars)
 	if err != nil {
@@ -164,8 +164,8 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before i
 	}
 
 	vars := map[string]string{
-		"user_uid": userUid,
-		"before":   strconv.FormatInt(before, 10),
+		"$user_uid": userUid,
+		"$before":   strconv.FormatInt(before, 10),
 	}
 	bytes, err := d.get(ctx, query, vars)
 	if err != nil {
@@ -190,7 +190,7 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before i
 
 func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset int) ([]string, error) {
 	vars := map[string]string{
-		"post_uid": postUid,
+		"$post_uid": postUid,
 	}
 	bytes, err := d.get(ctx, postRepliesQuery, vars)
 	if err != nil {
@@ -247,8 +247,8 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 
 func (d *Dgraph) GetRecentReplies(ctx context.Context, postUid string, before int64) ([]string, error) {
 	vars := map[string]string{
-		"post_uid": postUid,
-		"before":   strconv.FormatInt(before, 10),
+		"$post_uid": postUid,
+		"$before":   strconv.FormatInt(before, 10),
 	}
 	bytes, err := d.get(ctx, recentRepliesQuery, vars)
 	if err != nil {
@@ -273,7 +273,7 @@ func (d *Dgraph) GetRecentReplies(ctx context.Context, postUid string, before in
 
 func (d *Dgraph) GetPostReplies(ctx context.Context, postUid string) ([]string, error) {
 	vars := map[string]string{
-		"post_uid": postUid,
+		"$post_uid": postUid,
 	}
 	bytes, err := d.get(ctx, postRepliesQuery, vars)
 	if err != nil {

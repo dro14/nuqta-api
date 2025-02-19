@@ -10,7 +10,7 @@ import (
 
 func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User, error) {
 	vars := map[string]string{
-		"user_uid": userUid,
+		"$user_uid": userUid,
 	}
 	bytes, err := d.get(ctx, userByUidQuery, vars)
 	if err != nil {
@@ -29,8 +29,8 @@ func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User
 	}
 
 	vars = map[string]string{
-		"uid":      uid,
-		"user_uid": userUid,
+		"$uid":      uid,
+		"$user_uid": userUid,
 	}
 	bytes, err = d.get(ctx, userEdgesQuery, vars)
 	if err != nil {
