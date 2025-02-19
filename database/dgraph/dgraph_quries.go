@@ -40,7 +40,6 @@ query Query($firebase_uid: string) {
 const userEdgesQuery = `
 query Query($uid: string, $user_uid: string) {
 	users(func: uid($uid)) {
-		uid
 		is_following: ~follow @filter(uid($user_uid)) {
 			uid
 		}
