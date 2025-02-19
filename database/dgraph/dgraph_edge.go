@@ -3,7 +3,6 @@ package dgraph
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"slices"
 	"time"
 
@@ -27,8 +26,8 @@ func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target string) er
 	object := map[string]any{
 		"uid": source,
 		edge: map[string]any{
-			"uid":                             target,
-			fmt.Sprintf("%s|timestamp", edge): time.Now().Unix(),
+			"uid":               target,
+			edge + "|timestamp": time.Now().Unix(),
 		},
 	}
 	_, err := d.setJson(ctx, object)
@@ -39,8 +38,11 @@ func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target string) er
 	if !slices.Contains(edges, edge) {
 		return e.ErrUnknownEdge
 	}
-	query := fmt.Sprintf("<%s> <%s> <%s> .", source, edge, target)
-	return d.deleteNquads(ctx, query)
+	object := map[string]any{
+		"uid": source,
+		edge:  target,
+	}
+	return d.deleteJson(ctx, object)
 }
 
 func (d *Dgraph) IsPostViewed(ctx context.Context, uid, postUid string) (bool, error) {
@@ -48,7 +50,7 @@ func (d *Dgraph) IsPostViewed(ctx context.Context, uid, postUid string) (bool, e
 		"$uid":      uid,
 		"$post_uid": postUid,
 	}
-	bytes, err := d.get(ctx, isViewedQuery, vars)
+	bytes, err := d.getJson(ctx, isViewedQuery, vars)
 	if err != nil {
 		return false, err
 	}

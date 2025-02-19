@@ -3,7 +3,6 @@ package dgraph
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"slices"
 	"strings"
 	"time"
@@ -40,7 +39,7 @@ func (d *Dgraph) GetProfile(ctx context.Context, firebaseUid string) (*models.Us
 	vars := map[string]string{
 		"$firebase_uid": firebaseUid,
 	}
-	bytes, err := d.get(ctx, userByFirebaseUidQuery, vars)
+	bytes, err := d.getJson(ctx, userByFirebaseUidQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -82,6 +81,9 @@ func (d *Dgraph) DeleteProfileAttribute(ctx context.Context, userUid, attribute,
 	if !slices.Contains(attributes, attribute) {
 		return e.ErrUnknownAttribute
 	}
-	query := fmt.Sprintf(`<%s> <%s> "%s" .`, userUid, attribute, value)
-	return d.deleteNquads(ctx, query)
+	object := map[string]any{
+		"uid":     userUid,
+		attribute: value,
+	}
+	return d.deleteJson(ctx, object)
 }

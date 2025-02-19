@@ -10,7 +10,7 @@ import (
 
 const retryAttempts = 5
 
-func (d *Dgraph) get(ctx context.Context, query string, vars map[string]string) ([]byte, error) {
+func (d *Dgraph) getJson(ctx context.Context, query string, vars map[string]string) ([]byte, error) {
 	var lastErr error
 	for i := 0; i < retryAttempts; i++ {
 		txn := d.client.NewReadOnlyTxn().BestEffort()
@@ -23,24 +23,6 @@ func (d *Dgraph) get(ctx context.Context, query string, vars map[string]string) 
 	}
 	log.Printf("failed to get nquads after %d attempts", retryAttempts)
 	return nil, lastErr
-}
-
-func (d *Dgraph) deleteNquads(ctx context.Context, query string) error {
-	mutation := &api.Mutation{
-		DelNquads: []byte(query),
-		CommitNow: true,
-	}
-	var lastErr error
-	for i := 0; i < retryAttempts; i++ {
-		_, err := d.client.NewTxn().Mutate(ctx, mutation)
-		if err == nil {
-			return nil
-		}
-		lastErr = err
-		log.Printf("can't delete nquads: %s\n%s", err, query)
-	}
-	log.Printf("failed to delete nquads after %d attempts", retryAttempts)
-	return lastErr
 }
 
 func (d *Dgraph) setJson(ctx context.Context, object any) (*api.Response, error) {
@@ -63,4 +45,26 @@ func (d *Dgraph) setJson(ctx context.Context, object any) (*api.Response, error)
 	}
 	log.Printf("failed to set json after %d attempts", retryAttempts)
 	return nil, lastErr
+}
+
+func (d *Dgraph) deleteJson(ctx context.Context, object any) error {
+	bytes, err := json.Marshal(object)
+	if err != nil {
+		return err
+	}
+	mutation := &api.Mutation{
+		DeleteJson: bytes,
+		CommitNow:  true,
+	}
+	var lastErr error
+	for i := 0; i < retryAttempts; i++ {
+		_, err := d.client.NewTxn().Mutate(ctx, mutation)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		log.Printf("can't delete json: %s\n%s", err, bytes)
+	}
+	log.Printf("failed to delete json after %d attempts", retryAttempts)
+	return lastErr
 }

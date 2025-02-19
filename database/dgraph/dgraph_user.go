@@ -12,7 +12,7 @@ func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User
 	vars := map[string]string{
 		"$user_uid": userUid,
 	}
-	bytes, err := d.get(ctx, userByUidQuery, vars)
+	bytes, err := d.getJson(ctx, userByUidQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User
 		"$uid":      uid,
 		"$user_uid": userUid,
 	}
-	bytes, err = d.get(ctx, userEdgesQuery, vars)
+	bytes, err = d.getJson(ctx, userEdgesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
