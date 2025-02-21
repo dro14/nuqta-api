@@ -76,7 +76,7 @@ func (h *Handler) searchUser(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-func (h *Handler) updateUser(c *gin.Context) {
+func (h *Handler) hitUser(c *gin.Context) {
 	request := &models.Request{}
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
@@ -89,7 +89,7 @@ func (h *Handler) updateUser(c *gin.Context) {
 		return
 	}
 
-	err = h.index.IncrementHits(request.UserUid)
+	err = h.index.HitUser(request.UserUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

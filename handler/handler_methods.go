@@ -30,7 +30,7 @@ func (h *Handler) Run(port string) error {
 	group = authorized.Group("/user")
 	group.GET("", h.getUser)
 	group.GET("/search", h.searchUser)
-	group.PATCH("", h.updateUser)
+	group.PATCH("", h.hitUser)
 
 	group = authorized.Group("/post")
 	group.POST("", h.createPost)

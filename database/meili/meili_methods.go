@@ -77,7 +77,7 @@ func (m *Meili) UpdateUser(user *models.User) error {
 	return err
 }
 
-func (m *Meili) IncrementHits(userUid string) error {
+func (m *Meili) HitUser(userUid string) error {
 	request := &meilisearch.DocumentQuery{}
 	var doc map[string]any
 	err := m.users.GetDocument(userUid, request, &doc)

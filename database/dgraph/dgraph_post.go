@@ -237,7 +237,7 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 		},
 	)
 
-	if 0 < offset && offset < len(replies) {
+	if offset > 0 {
 		replies = replies[offset:]
 	}
 
