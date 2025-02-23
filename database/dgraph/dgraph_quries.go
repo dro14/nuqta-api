@@ -13,9 +13,12 @@ query Query($firebase_uid: string) {
 		banner
 		avatars
 		thumbnails
-		posts: count(~author)
 		following: count(follow)
 		followers: count(~follow)
+		posts: count(~author @filter(not has(in_reply_to)))
+		replies: count(~author @filter(has(in_reply_to)))
+		reposts: count(~repost)
+		likes: count(~like)
 	}
 }`
 
@@ -31,9 +34,12 @@ query Query($user_uid: string) {
 		banner
 		avatars
 		thumbnails
-		posts: count(~author)
 		following: count(follow)
 		followers: count(~follow)
+		posts: count(~author @filter(not has(in_reply_to)))
+		replies: count(~author @filter(has(in_reply_to)))
+		reposts: count(~repost)
+		likes: count(~like)
 	}
 }`
 

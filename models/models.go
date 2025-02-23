@@ -13,9 +13,12 @@ type User struct {
 	Banner      string   `json:"banner,omitempty"`
 	Avatars     []string `json:"avatars,omitempty"`
 	Thumbnails  []string `json:"thumbnails,omitempty"`
-	Posts       int      `json:"posts,omitempty"`
 	Following   int      `json:"following,omitempty"`
 	Followers   int      `json:"followers,omitempty"`
+	Posts       int      `json:"posts,omitempty"`
+	Replies     int      `json:"replies,omitempty"`
+	Reposts     int      `json:"reposts,omitempty"`
+	Likes       int      `json:"likes,omitempty"`
 	IsFollowing bool     `json:"is_following,omitempty"`
 	IsFollowed  bool     `json:"is_followed,omitempty"`
 }
