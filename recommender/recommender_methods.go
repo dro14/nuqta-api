@@ -26,7 +26,7 @@ func (r *Recommender) UpdateRecs() {
 			continue
 		}
 
-		posts, err := r.db.GetRecentPosts(context.Background())
+		posts, err := r.db.GetLatestPosts(context.Background())
 		if err != nil {
 			log.Println(err)
 			time.Sleep(time.Minute)

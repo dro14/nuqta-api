@@ -91,6 +91,17 @@ func (h *Handler) getPost(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, posts)
 		return
+	case "replies_feed":
+		withInReplyTo = true
+		if request.Before == 0 {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		postUids, err = h.db.GetReplies(ctx, request.Uid, request.Before)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
 	case "saved_feed":
 		withInReplyTo = true
 		if request.Before == 0 {

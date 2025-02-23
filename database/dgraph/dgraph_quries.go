@@ -109,7 +109,7 @@ query Query($uid: string, $post_uid: string) {
 	}
 }`
 
-const recentPostsQuery = `
+const latestPostsQuery = `
 query Query($after: int) {
 	posts(func: gt(posted_at, $after)) @filter(not has(in_reply_to)) {
 		uid
@@ -137,6 +137,17 @@ query Query($uid: string, $before: int) {
 		uid
 		reposted: repost @filter(uid(follow_uids)) @facets(orderasc: timestamp, first: 1) {
 			uid
+		}
+	}
+}`
+
+const repliesQuery = `
+query Query($uid: string, $before: int) {
+	users(func: uid($uid)) {
+		posts: ~author {
+			replies: ~in_reply_to @filter(lt(posted_at, $before)) (orderdesc: posted_at, first: 20) {
+				uid
+			}
 		}
 	}
 }`

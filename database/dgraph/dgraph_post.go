@@ -94,12 +94,12 @@ func (d *Dgraph) GetPosts(ctx context.Context, uid string, postUids []string, wi
 	return posts, nil
 }
 
-func (d *Dgraph) GetRecentPosts(ctx context.Context) ([]*models.Post, error) {
+func (d *Dgraph) GetLatestPosts(ctx context.Context) ([]*models.Post, error) {
 	after := time.Now().AddDate(0, 0, -2).Unix()
 	vars := map[string]string{
 		"$after": strconv.FormatInt(after, 10),
 	}
-	bytes, err := d.get(ctx, recentPostsQuery, vars)
+	bytes, err := d.get(ctx, latestPostsQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -130,6 +130,34 @@ func (d *Dgraph) GetFollowingPosts(ctx context.Context, uid string, before int64
 	}
 
 	return response["posts"], nil
+}
+
+func (d *Dgraph) GetReplies(ctx context.Context, uid string, before int64) ([]string, error) {
+	vars := map[string]string{
+		"$uid":    uid,
+		"$before": strconv.FormatInt(before, 10),
+	}
+	bytes, err := d.get(ctx, repliesQuery, vars)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]map[string][]map[string][]*models.Post
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var postUids []string
+	for _, user := range response["users"] {
+		for _, post := range user["posts"] {
+			for _, reply := range post["replies"] {
+				postUids = append(postUids, reply.Uid)
+			}
+		}
+	}
+
+	return postUids, nil
 }
 
 func (d *Dgraph) GetSavedPosts(ctx context.Context, uid string, before int64) ([]string, error) {
