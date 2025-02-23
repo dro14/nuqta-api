@@ -200,7 +200,7 @@ query Query($post_uid: string) {
 	}
 }`
 
-const recentRepliesQuery = `
+const latestRepliesQuery = `
 query Query($post_uid: string, $before: int) {
 	posts(func: uid($post_uid)) {
 		replies: ~in_reply_to @filter(lt(posted_at, $before)) (orderdesc: posted_at, first: 20) {

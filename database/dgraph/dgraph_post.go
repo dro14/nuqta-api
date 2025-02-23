@@ -253,12 +253,12 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 	return replyUids, nil
 }
 
-func (d *Dgraph) GetRecentReplies(ctx context.Context, postUid string, before int64) ([]string, error) {
+func (d *Dgraph) GetLatestReplies(ctx context.Context, postUid string, before int64) ([]string, error) {
 	vars := map[string]string{
 		"$post_uid": postUid,
 		"$before":   strconv.FormatInt(before, 10),
 	}
-	bytes, err := d.get(ctx, recentRepliesQuery, vars)
+	bytes, err := d.get(ctx, latestRepliesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
