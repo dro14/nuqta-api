@@ -53,6 +53,7 @@ birthday: int .
 banner: string .
 avatars: [string] .
 thumbnails: [string] .
+color: string .
 follow: [uid] @count @reverse .
 
 text: string .
@@ -78,6 +79,7 @@ type User {
 	banner
 	avatars
 	thumbnails
+	color
 	follow
 }
 

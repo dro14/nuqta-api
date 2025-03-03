@@ -13,6 +13,7 @@ type User struct {
 	Banner      string   `json:"banner,omitempty"`
 	Avatars     []string `json:"avatars,omitempty"`
 	Thumbnails  []string `json:"thumbnails,omitempty"`
+	Color       string   `json:"color,omitempty"`
 	Followers   int      `json:"followers,omitempty"`
 	Following   int      `json:"following,omitempty"`
 	Posts       int      `json:"posts,omitempty"`
