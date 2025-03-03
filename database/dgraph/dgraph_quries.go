@@ -13,6 +13,7 @@ query Query($firebase_uid: string) {
 		banner
 		avatars
 		thumbnails
+		color
 		followers: count(~follow)
 		following: count(follow)
 		posts: count(~author @filter(not has(in_reply_to)))
@@ -34,6 +35,7 @@ query Query($user_uid: string) {
 		banner
 		avatars
 		thumbnails
+		color
 		followers: count(~follow)
 		following: count(follow)
 		posts: count(~author @filter(not has(in_reply_to)))
