@@ -45,6 +45,24 @@ query Query($user_uid: string) {
 	}
 }`
 
+const userFollowersQuery = `
+query Query($user_uid: string) {
+	users(func: uid($user_uid)) {
+		followers: ~follow {
+			uid
+		}
+	}
+}`
+
+const userFollowingQuery = `
+query Query($user_uid: string) {
+	users(func: uid($user_uid)) {
+		following: follow {
+			uid
+		}
+	}
+}`
+
 const userEdgesQuery = `
 query Query($uid: string, $user_uid: string) {
 	users(func: uid($uid)) {

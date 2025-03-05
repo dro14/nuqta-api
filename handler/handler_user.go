@@ -76,6 +76,70 @@ func (h *Handler) searchUser(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
+func (h *Handler) getUserFollowers(c *gin.Context) {
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request.Uid == "" || request.UserUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	ctx := c.Request.Context()
+	userUids, err := h.db.GetUserFollowers(ctx, request.UserUid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	users := make([]*models.User, 0, len(userUids))
+	for i := range userUids {
+		user, err := h.db.GetUser(ctx, request.Uid, userUids[i])
+		if err != nil {
+			continue
+		}
+		users = append(users, user)
+	}
+
+	c.JSON(http.StatusOK, users)
+}
+
+func (h *Handler) getUserFollowing(c *gin.Context) {
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request.Uid == "" || request.UserUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	ctx := c.Request.Context()
+	userUids, err := h.db.GetUserFollowing(ctx, request.UserUid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	users := make([]*models.User, 0, len(userUids))
+	for i := range userUids {
+		user, err := h.db.GetUser(ctx, request.Uid, userUids[i])
+		if err != nil {
+			continue
+		}
+		users = append(users, user)
+	}
+
+	c.JSON(http.StatusOK, users)
+}
+
 func (h *Handler) hitUser(c *gin.Context) {
 	request := &models.Request{}
 	err := c.ShouldBindJSON(&request)

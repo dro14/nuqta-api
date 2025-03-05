@@ -51,3 +51,53 @@ func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User
 
 	return user, nil
 }
+
+func (d *Dgraph) GetUserFollowers(ctx context.Context, userUid string) ([]string, error) {
+	vars := map[string]string{
+		"$user_uid": userUid,
+	}
+	bytes, err := d.get(ctx, userFollowersQuery, vars)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]map[string][]*models.User
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var userUids []string
+	for _, user := range response["users"] {
+		for _, follower := range user["followers"] {
+			userUids = append(userUids, follower.Uid)
+		}
+	}
+
+	return userUids, nil
+}
+
+func (d *Dgraph) GetUserFollowing(ctx context.Context, userUid string) ([]string, error) {
+	vars := map[string]string{
+		"$user_uid": userUid,
+	}
+	bytes, err := d.get(ctx, userFollowingQuery, vars)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]map[string][]*models.User
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var userUids []string
+	for _, user := range response["users"] {
+		for _, following := range user["following"] {
+			userUids = append(userUids, following.Uid)
+		}
+	}
+
+	return userUids, nil
+}

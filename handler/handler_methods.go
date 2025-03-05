@@ -29,6 +29,8 @@ func (h *Handler) Run(port string) error {
 
 	group = authorized.Group("/user")
 	group.GET("", h.getUser)
+	group.GET("/followers", h.getUserFollowers)
+	group.GET("/following", h.getUserFollowing)
 	group.GET("/search", h.searchUser)
 	group.PATCH("", h.hitUser)
 
