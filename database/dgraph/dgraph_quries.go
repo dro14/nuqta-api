@@ -46,18 +46,18 @@ query Query($user_uid: string) {
 }`
 
 const userFollowersQuery = `
-query Query($user_uid: string) {
+query Query($user_uid: string, $after: string) {
 	users(func: uid($user_uid)) {
-		followers: ~follow {
+		followers: ~follow (first: 20, after: $after) {
 			uid
 		}
 	}
 }`
 
 const userFollowingQuery = `
-query Query($user_uid: string) {
+query Query($user_uid: string, $after: string) {
 	users(func: uid($user_uid)) {
-		following: follow {
+		following: follow (first: 20, after: $after) {
 			uid
 		}
 	}

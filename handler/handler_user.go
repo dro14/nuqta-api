@@ -90,7 +90,7 @@ func (h *Handler) getUserFollowers(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	userUids, err := h.db.GetUserFollowers(ctx, request.UserUid)
+	userUids, err := h.db.GetUserFollowers(ctx, request.UserUid, request.After)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -122,7 +122,7 @@ func (h *Handler) getUserFollowing(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	userUids, err := h.db.GetUserFollowing(ctx, request.UserUid)
+	userUids, err := h.db.GetUserFollowing(ctx, request.UserUid, request.After)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

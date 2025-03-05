@@ -59,6 +59,7 @@ type Request struct {
 	Attribute string `json:"attribute"`
 	Value     string `json:"value"`
 	Tab       string `json:"tab"`
+	After     string `json:"after"`
 	Before    int64  `json:"before"`
 	Offset    int    `json:"offset"`
 	Edge      string `json:"edge"`

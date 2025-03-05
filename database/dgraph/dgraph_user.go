@@ -52,9 +52,13 @@ func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User
 	return user, nil
 }
 
-func (d *Dgraph) GetUserFollowers(ctx context.Context, userUid string) ([]string, error) {
+func (d *Dgraph) GetUserFollowers(ctx context.Context, userUid, after string) ([]string, error) {
+	if after == "" {
+		after = "0x0"
+	}
 	vars := map[string]string{
 		"$user_uid": userUid,
+		"$after":    after,
 	}
 	bytes, err := d.get(ctx, userFollowersQuery, vars)
 	if err != nil {
@@ -77,9 +81,13 @@ func (d *Dgraph) GetUserFollowers(ctx context.Context, userUid string) ([]string
 	return userUids, nil
 }
 
-func (d *Dgraph) GetUserFollowing(ctx context.Context, userUid string) ([]string, error) {
+func (d *Dgraph) GetUserFollowing(ctx context.Context, userUid, after string) ([]string, error) {
+	if after == "" {
+		after = "0x0"
+	}
 	vars := map[string]string{
 		"$user_uid": userUid,
+		"$after":    after,
 	}
 	bytes, err := d.get(ctx, userFollowingQuery, vars)
 	if err != nil {
