@@ -65,7 +65,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		userUids, err = h.index.SearchUser(request.Query)
+		userUids, err = h.index.SearchUser(request.Query, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return

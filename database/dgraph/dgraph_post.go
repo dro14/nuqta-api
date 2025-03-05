@@ -224,7 +224,7 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before i
 	return postUids, nil
 }
 
-func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset int) ([]string, error) {
+func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset int64) ([]string, error) {
 	vars := map[string]string{
 		"$post_uid": postUid,
 	}

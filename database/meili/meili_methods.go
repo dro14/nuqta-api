@@ -18,8 +18,8 @@ func (m *Meili) AddUser(user *models.User) error {
 	return err
 }
 
-func (m *Meili) SearchUser(query string) ([]string, error) {
-	request := &meilisearch.SearchRequest{Limit: 20}
+func (m *Meili) SearchUser(query string, offset int64) ([]string, error) {
+	request := &meilisearch.SearchRequest{Limit: 20, Offset: offset}
 	results, err := m.users.Search(query, request)
 	if err != nil {
 		return nil, err
