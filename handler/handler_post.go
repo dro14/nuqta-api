@@ -35,6 +35,29 @@ func (h *Handler) getPost(c *gin.Context) {
 		return
 	}
 
+	if request.Uid == "" || request.PostUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	ctx := c.Request.Context()
+	post, err := h.db.GetPost(ctx, request.Uid, request.PostUid, false)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, post)
+}
+
+func (h *Handler) getPostList(c *gin.Context) {
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
 	if request.Uid == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return

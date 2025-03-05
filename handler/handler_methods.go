@@ -29,14 +29,13 @@ func (h *Handler) Run(port string) error {
 
 	group = authorized.Group("/user")
 	group.GET("", h.getUser)
-	group.GET("/followers", h.getUserFollowers)
-	group.GET("/following", h.getUserFollowing)
-	group.GET("/search", h.searchUser)
+	group.GET("/list", h.getUserList)
 	group.PATCH("", h.hitUser)
 
 	group = authorized.Group("/post")
 	group.POST("", h.createPost)
 	group.GET("", h.getPost)
+	group.GET("/list", h.getPostList)
 	group.DELETE("", h.deletePost)
 
 	group = authorized.Group("/edge")
