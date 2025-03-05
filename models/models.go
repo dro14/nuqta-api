@@ -52,16 +52,16 @@ type Post struct {
 
 type Request struct {
 	Uid       string `json:"uid"`
+	Tab       string `json:"tab"`
 	UserUid   string `json:"user_uid"`
 	PostUid   string `json:"post_uid"`
 	Username  string `json:"username"`
 	Query     string `json:"query"`
-	Attribute string `json:"attribute"`
-	Value     string `json:"value"`
-	Tab       string `json:"tab"`
 	After     string `json:"after"`
 	Before    int64  `json:"before"`
 	Offset    int    `json:"offset"`
+	Attribute string `json:"attribute"`
+	Value     string `json:"value"`
 	Edge      string `json:"edge"`
 	Target    string `json:"target"`
 }

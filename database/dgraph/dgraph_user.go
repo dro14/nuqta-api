@@ -28,6 +28,10 @@ func (d *Dgraph) GetUser(ctx context.Context, uid, userUid string) (*models.User
 		return nil, e.ErrNotFound
 	}
 
+	if uid == userUid {
+		return user, nil
+	}
+
 	vars = map[string]string{
 		"$uid":      uid,
 		"$user_uid": userUid,
