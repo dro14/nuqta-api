@@ -227,6 +227,7 @@ query Query($post_uid: string) {
 			likes: count(like)
 			clicks: count(click)
 			views: count(view)
+			removes: count(remove)
 		}
 	}
 }`

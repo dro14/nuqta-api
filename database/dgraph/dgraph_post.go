@@ -249,7 +249,8 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 			1.5*float64(reply.Reposts) +
 			1.0*float64(reply.Likes) +
 			0.5*float64(reply.Clicks) +
-			0.1*float64(reply.Views)
+			0.1*float64(reply.Views) -
+			1.0*float64(reply.Removes)
 	}
 
 	slices.SortFunc(
