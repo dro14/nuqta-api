@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) getUser(c *gin.Context) {
+func (h *Handler) getUserByUsername(c *gin.Context) {
 	request := &models.Request{}
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
@@ -16,17 +16,15 @@ func (h *Handler) getUser(c *gin.Context) {
 		return
 	}
 
-	if request.Uid == "" {
+	if request.Uid == "" || request.Username == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
-	if request.Username != "" {
-		request.UserUid, err = h.index.GetUidByUsername(request.Username)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
+	request.UserUid, err = h.index.GetUidByUsername(request.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
 	}
 
 	if request.UserUid == "" {
