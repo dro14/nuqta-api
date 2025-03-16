@@ -166,8 +166,13 @@ func (h *Handler) getPostList(c *gin.Context) {
 		}
 		withInReplyTo = false
 	default:
-		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
-		return
+		if len(request.PostUids) > 0 {
+			postUids = request.PostUids
+		} else {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		withInReplyTo = false
 	}
 
 	posts, err := h.db.GetPosts(ctx, request.Uid, postUids, withInReplyTo)

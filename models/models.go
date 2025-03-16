@@ -56,6 +56,7 @@ type Request struct {
 	UserUid   string   `json:"user_uid"`
 	UserUids  []string `json:"user_uids"`
 	PostUid   string   `json:"post_uid"`
+	PostUids  []string `json:"post_uids"`
 	Username  string   `json:"username"`
 	Query     string   `json:"query"`
 	After     string   `json:"after"`
