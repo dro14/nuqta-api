@@ -64,11 +64,10 @@ func (h *Handler) getPostList(c *gin.Context) {
 	}
 
 	var postUids []string
-	var withInReplyTo bool
+	withInReplyTo := true
 	ctx := c.Request.Context()
 	switch request.Tab {
 	case "feed_for_you":
-		withInReplyTo = false
 		postUids = h.rec.GetRecs()
 		posts := make([]*models.Post, 0, 20)
 		for _, postUid := range postUids {
@@ -92,7 +91,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 		c.JSON(http.StatusOK, posts)
 		return
 	case "feed_following":
-		withInReplyTo = true
 		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -115,7 +113,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 		c.JSON(http.StatusOK, posts)
 		return
 	case "feed_replies":
-		withInReplyTo = true
 		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -126,7 +123,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 			return
 		}
 	case "feed_saved":
-		withInReplyTo = true
 		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -137,7 +133,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 			return
 		}
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
-		withInReplyTo = true
 		request.Tab = strings.TrimPrefix(request.Tab, "user_")
 		if request.UserUid == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
@@ -149,7 +144,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 			return
 		}
 	case "replies_popular":
-		withInReplyTo = false
 		if request.PostUid == "" {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -159,8 +153,8 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-	case "replies_latest":
 		withInReplyTo = false
+	case "replies_latest":
 		if request.PostUid == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -170,6 +164,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
+		withInReplyTo = false
 	default:
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
 		return

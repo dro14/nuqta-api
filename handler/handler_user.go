@@ -91,8 +91,12 @@ func (h *Handler) getUserList(c *gin.Context) {
 			return
 		}
 	default:
-		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
-		return
+		if len(request.UserUids) > 0 {
+			userUids = request.UserUids
+		} else {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
 	}
 
 	users := make([]*models.User, 0, len(userUids))
