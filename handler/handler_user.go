@@ -8,40 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) getUserByUsername(c *gin.Context) {
-	request := &models.Request{}
-	err := c.ShouldBindJSON(&request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	if request.Uid == "" || request.Username == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	request.UserUid, err = h.index.GetUidByUsername(request.Username)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	if request.UserUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	ctx := c.Request.Context()
-	user, err := h.db.GetUser(ctx, request.Uid, request.UserUid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	c.JSON(http.StatusOK, user)
-}
-
 func (h *Handler) getUserList(c *gin.Context) {
 	request := &models.Request{}
 	err := c.ShouldBindJSON(&request)
@@ -107,6 +73,35 @@ func (h *Handler) getUserList(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, users)
+}
+
+func (h *Handler) getUserByUsername(c *gin.Context) {
+	request := &models.Request{}
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request.Uid == "" || request.Username == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	userUid, err := h.index.GetUidByUsername(request.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	ctx := c.Request.Context()
+	user, err := h.db.GetUser(ctx, request.Uid, userUid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) hitUser(c *gin.Context) {

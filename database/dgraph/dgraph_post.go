@@ -70,12 +70,7 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string, withInReplyTo
 		post.IsSaved = len(user["is_saved"]) > 0
 	}
 
-	if withInReplyTo && post.InReplyTo != nil {
-		post.InReplyTo, err = d.GetPost(ctx, uid, post.InReplyTo.Uid, false)
-		if err != nil {
-			return nil, err
-		}
-	} else {
+	if !withInReplyTo {
 		post.InReplyTo = nil
 	}
 
