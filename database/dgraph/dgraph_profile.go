@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/dro14/nuqta-service/e"
@@ -13,8 +12,8 @@ import (
 
 var attributes = []string{
 	"name",
-	"bio",
 	"birthday",
+	"bio",
 	"banner",
 	"avatars",
 	"thumbnails",
@@ -23,8 +22,7 @@ var attributes = []string{
 func (d *Dgraph) CreateProfile(ctx context.Context, user *models.User) (*models.User, error) {
 	user.DType = []string{"User"}
 	user.Uid = "_:user"
-	user.Username = strings.Split(user.Email, "@")[0]
-	user.JoinedAt = time.Now().Unix()
+	user.Registered = time.Now().Unix()
 
 	assigned, err := d.set(ctx, user)
 	if err != nil {
@@ -62,18 +60,6 @@ func (d *Dgraph) GetProfile(ctx context.Context, firebaseUid string) (*models.Us
 func (d *Dgraph) UpdateProfile(ctx context.Context, user *models.User) error {
 	user.DType = []string{"User"}
 	_, err := d.set(ctx, user)
-	return err
-}
-
-func (d *Dgraph) UpdateProfileAttribute(ctx context.Context, userUid, attribute, value string) error {
-	if !slices.Contains(attributes, attribute) {
-		return e.ErrUnknownAttribute
-	}
-	object := map[string]any{
-		"uid":     userUid,
-		attribute: value,
-	}
-	_, err := d.set(ctx, object)
 	return err
 }
 

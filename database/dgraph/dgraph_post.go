@@ -14,7 +14,7 @@ import (
 func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Post, error) {
 	post.DType = []string{"Post"}
 	post.Uid = "_:post"
-	post.PostedAt = time.Now().Unix()
+	post.Timestamp = time.Now().Unix()
 
 	assigned, err := d.set(ctx, post)
 	if err != nil {
@@ -41,7 +41,7 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string, withInReplyTo
 	}
 
 	post := response["posts"][0]
-	if post.PostedAt == 0 {
+	if post.Timestamp == 0 {
 		return nil, e.ErrNotFound
 	}
 
@@ -245,7 +245,7 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 			1.0*float64(reply.Likes) +
 			0.5*float64(reply.Clicks) +
 			0.1*float64(reply.Views) -
-			1.0*float64(reply.Removes)
+			1.0*float64(reply.Reports)
 	}
 
 	slices.SortFunc(

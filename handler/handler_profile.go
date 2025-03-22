@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
@@ -39,6 +40,25 @@ func (h *Handler) createProfile(c *gin.Context) {
 	if existingUser != nil {
 		c.JSON(http.StatusOK, existingUser)
 		return
+	}
+
+	username := strings.Split(user.Email, "@")[0]
+	for {
+		userUid, err := h.index.GetUidByUsername(username)
+		if userUid != "" {
+			lastCharIndex := len(username) - 1
+			if lastCharIndex >= 0 && username[lastCharIndex] >= '0' && username[lastCharIndex] < '9' {
+				username = username[:lastCharIndex] + string(username[lastCharIndex]+1)
+			} else {
+				username = username + "0"
+			}
+		} else if errors.Is(err, e.ErrNotFound) {
+			user.Username = username
+			break
+		} else {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
 	}
 
 	user, err = h.db.CreateProfile(ctx, user)
@@ -101,44 +121,6 @@ func (h *Handler) updateProfile(c *gin.Context) {
 	err = h.index.UpdateUser(user)
 	if err != nil {
 		log.Printf("user %s: can't update user in search index: %s", user.Uid, err)
-	}
-}
-
-func (h *Handler) updateProfileAttribute(c *gin.Context) {
-	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	request := &models.Request{}
-	err := c.ShouldBindJSON(&request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	if request.Uid == "" || request.Attribute == "" || request.Value == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	ctx := c.Request.Context()
-	profile, err := h.db.GetProfile(ctx, firebaseUid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	if profile.Uid != request.Uid {
-		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
-		return
-	}
-
-	err = h.db.UpdateProfileAttribute(ctx, request.Uid, request.Attribute, request.Value)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
 	}
 }
 

@@ -45,54 +45,54 @@ func (d *Dgraph) DeletePredicate(ctx context.Context, predicate string) error {
 const schema = `
 firebase_uid: string @index(hash) .
 email: string .
+registered: int .
 name: string .
 username: string .
-bio: string .
-joined_at: int .
 birthday: int .
+color: string .
+bio: string .
 banner: string .
 avatars: [string] .
 thumbnails: [string] .
-color: string .
 follow: [uid] @count @reverse .
 
 text: string .
-posted_at: int @index(int) .
+timestamp: int @index(int) .
+who_can_reply: string .
 author: uid @count @reverse .
-reply_control: string .
 in_reply_to: uid @count @reverse .
 repost: [uid] @count @reverse .
 like: [uid] @count @reverse .
 click: [uid] @count @reverse .
 view: [uid] @count @reverse .
 save: [uid] @count @reverse .
-remove: [uid] @count @reverse .
+report: [uid] @count @reverse .
 
 type User {
 	firebase_uid
 	email
+	registered
 	name
 	username
-	bio
-	joined_at
 	birthday
+	color
+	bio
 	banner
 	avatars
 	thumbnails
-	color
 	follow
 }
 
 type Post {
 	text
-	posted_at
+	timestamp
+	who_can_reply
 	author
-	reply_control
 	in_reply_to
 	repost
 	like
 	click
 	view
 	save
-	remove
+	report
 }`

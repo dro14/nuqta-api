@@ -45,31 +45,22 @@ query Query($user_uid: string) {
 	}
 }`
 
-const userFollowersQuery = `
-query Query($user_uid: string, $after: string) {
-	users(func: uid($user_uid)) {
-		followers: ~follow (first: 20, after: $after) {
-			uid
-		}
-	}
-}`
-
-const userFollowingQuery = `
-query Query($user_uid: string, $after: string) {
-	users(func: uid($user_uid)) {
-		following: follow (first: 20, after: $after) {
-			uid
-		}
-	}
-}`
-
 const userEdgesQuery = `
 query Query($uid: string, $user_uid: string) {
 	users(func: uid($uid)) {
+		is_followed: follow @filter(uid($user_uid)) {
+			uid
+		}
 		is_following: ~follow @filter(uid($user_uid)) {
 			uid
 		}
-		is_followed: follow @filter(uid($user_uid)) {
+	}
+}`
+
+const userFollowsQuery = `
+query Query($user_uid: string, $after: string) {
+	users(func: uid($user_uid)) {
+		%sfollow (first: 20, after: $after) {
 			uid
 		}
 	}

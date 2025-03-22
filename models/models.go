@@ -5,15 +5,15 @@ type User struct {
 	Uid         string   `json:"uid,omitempty"`
 	FirebaseUid string   `json:"firebase_uid,omitempty"`
 	Email       string   `json:"email,omitempty"`
+	Registered  int64    `json:"registered,omitempty"`
 	Name        string   `json:"name,omitempty"`
 	Username    string   `json:"username,omitempty"`
-	Bio         string   `json:"bio,omitempty"`
-	JoinedAt    int64    `json:"joined_at,omitempty"`
 	Birthday    int64    `json:"birthday,omitempty"`
+	Color       string   `json:"color,omitempty"`
+	Bio         string   `json:"bio,omitempty"`
 	Banner      string   `json:"banner,omitempty"`
 	Avatars     []string `json:"avatars,omitempty"`
 	Thumbnails  []string `json:"thumbnails,omitempty"`
-	Color       string   `json:"color,omitempty"`
 	Followers   int      `json:"followers,omitempty"`
 	Following   int      `json:"following,omitempty"`
 	Posts       int      `json:"posts,omitempty"`
@@ -25,29 +25,29 @@ type User struct {
 }
 
 type Post struct {
-	DType        []string `json:"dgraph.type,omitempty"`
-	Uid          string   `json:"uid,omitempty"`
-	Text         string   `json:"text,omitempty"`
-	PostedAt     int64    `json:"posted_at,omitempty"`
-	Author       *User    `json:"author,omitempty"`
-	ReplyControl string   `json:"reply_control,omitempty"`
-	InReplyTo    *Post    `json:"in_reply_to,omitempty"`
-	RepostedBy   *User    `json:"reposted_by,omitempty"`
-	Reposted     []*User  `json:"reposted,omitempty"`
-	Replies      int      `json:"replies,omitempty"`
-	Reposts      int      `json:"reposts,omitempty"`
-	Likes        int      `json:"likes,omitempty"`
-	Clicks       int      `json:"clicks,omitempty"`
-	Views        int      `json:"views,omitempty"`
-	Saves        int      `json:"saves,omitempty"`
-	Removes      int      `json:"removes,omitempty"`
-	IsReplied    bool     `json:"is_replied,omitempty"`
-	IsReposted   bool     `json:"is_reposted,omitempty"`
-	IsLiked      bool     `json:"is_liked,omitempty"`
-	IsClicked    bool     `json:"is_clicked,omitempty"`
-	IsViewed     bool     `json:"is_viewed,omitempty"`
-	IsSaved      bool     `json:"is_saved,omitempty"`
-	Score        float64  `json:"score,omitempty"`
+	DType       []string `json:"dgraph.type,omitempty"`
+	Uid         string   `json:"uid,omitempty"`
+	Text        string   `json:"text,omitempty"`
+	Timestamp   int64    `json:"timestamp,omitempty"`
+	WhoCanReply string   `json:"who_can_reply,omitempty"`
+	Author      *User    `json:"author,omitempty"`
+	InReplyTo   *Post    `json:"in_reply_to,omitempty"`
+	RepostedBy  *User    `json:"reposted_by,omitempty"`
+	Reposted    []*User  `json:"reposted,omitempty"`
+	Replies     int      `json:"replies,omitempty"`
+	Reposts     int      `json:"reposts,omitempty"`
+	Likes       int      `json:"likes,omitempty"`
+	Clicks      int      `json:"clicks,omitempty"`
+	Views       int      `json:"views,omitempty"`
+	Saves       int      `json:"saves,omitempty"`
+	Reports     int      `json:"reports,omitempty"`
+	IsReplied   bool     `json:"is_replied,omitempty"`
+	IsReposted  bool     `json:"is_reposted,omitempty"`
+	IsLiked     bool     `json:"is_liked,omitempty"`
+	IsClicked   bool     `json:"is_clicked,omitempty"`
+	IsViewed    bool     `json:"is_viewed,omitempty"`
+	IsSaved     bool     `json:"is_saved,omitempty"`
+	Score       float64  `json:"score,omitempty"`
 }
 
 type Request struct {

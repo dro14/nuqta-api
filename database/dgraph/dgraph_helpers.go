@@ -12,7 +12,7 @@ const retryAttempts = 5
 
 func (d *Dgraph) get(ctx context.Context, query string, vars map[string]string) ([]byte, error) {
 	var lastErr error
-	for i := 0; i < retryAttempts; i++ {
+	for range retryAttempts {
 		txn := d.client.NewReadOnlyTxn().BestEffort()
 		resp, err := txn.QueryWithVars(ctx, query, vars)
 		if err == nil {
@@ -35,7 +35,7 @@ func (d *Dgraph) set(ctx context.Context, object any) (*api.Response, error) {
 		CommitNow: true,
 	}
 	var lastErr error
-	for i := 0; i < retryAttempts; i++ {
+	for range retryAttempts {
 		txn := d.client.NewTxn()
 		resp, err := txn.Mutate(ctx, mutation)
 		if err == nil {
@@ -58,7 +58,7 @@ func (d *Dgraph) delete(ctx context.Context, object any) error {
 		CommitNow:  true,
 	}
 	var lastErr error
-	for i := 0; i < retryAttempts; i++ {
+	for range retryAttempts {
 		txn := d.client.NewTxn()
 		_, err := txn.Mutate(ctx, mutation)
 		if err == nil {

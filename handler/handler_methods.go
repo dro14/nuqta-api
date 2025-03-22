@@ -23,7 +23,6 @@ func (h *Handler) Run(port string) error {
 	group.POST("", h.createProfile)
 	group.GET("", h.getProfile)
 	group.PUT("", h.updateProfile)
-	group.PATCH("", h.updateProfileAttribute)
 	group.DELETE("", h.deleteProfileAttribute)
 	group.OPTIONS("", h.isAvailable)
 

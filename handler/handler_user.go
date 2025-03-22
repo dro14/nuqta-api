@@ -34,22 +34,13 @@ func (h *Handler) getUserList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-	case "followers":
+	case "followers", "following":
 		if request.UserUid == "" {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		userUids, err = h.db.GetUserFollowers(ctx, request.UserUid, request.After)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-	case "following":
-		if request.UserUid == "" {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-			return
-		}
-		userUids, err = h.db.GetUserFollowing(ctx, request.UserUid, request.After)
+		reverse := request.Tab == "followers"
+		userUids, err = h.db.GetUserFollows(ctx, request.UserUid, request.After, reverse)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return

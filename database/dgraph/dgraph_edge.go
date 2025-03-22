@@ -15,8 +15,8 @@ var edges = []string{
 	"like",
 	"click",
 	"view",
-	"remove",
 	"save",
+	"report",
 }
 
 func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target string) error {
