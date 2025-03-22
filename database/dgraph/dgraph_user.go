@@ -84,7 +84,7 @@ func (d *Dgraph) GetUserFollows(ctx context.Context, userUid, after string, reve
 
 	var userUids []string
 	for _, user := range response["users"] {
-		for _, follower := range user["followers"] {
+		for _, follower := range user["follow"] {
 			userUids = append(userUids, follower.Uid)
 		}
 	}

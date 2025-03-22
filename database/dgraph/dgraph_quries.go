@@ -5,15 +5,15 @@ query Query($firebase_uid: string) {
 	users(func: eq(firebase_uid, $firebase_uid)) {
 		uid
 		firebase_uid
+		registered
 		name
 		username
-		bio
-		joined_at
 		birthday
+		color
+		bio
 		banner
 		avatars
 		thumbnails
-		color
 		followers: count(~follow)
 		following: count(follow)
 		posts: count(~author @filter(not has(in_reply_to)))
@@ -27,15 +27,15 @@ const userByUidQuery = `
 query Query($user_uid: string) {
 	users(func: uid($user_uid)) {
 		uid
+		registered
 		name
 		username
-		bio
-		joined_at
 		birthday
+		color
+		bio
 		banner
 		avatars
 		thumbnails
-		color
 		followers: count(~follow)
 		following: count(follow)
 		posts: count(~author @filter(not has(in_reply_to)))
@@ -71,11 +71,11 @@ query Query($post_uid: string) {
 	posts(func: uid($post_uid)) {
 		uid
 		text
-		posted_at
+		timestamp
+		who_can_reply
 		author {
 			uid
 		}
-		reply_control
 		in_reply_to {
 			uid
 		}
@@ -130,7 +130,7 @@ query Query($after: int) {
 		likes: count(like)
 		clicks: count(click)
 		views: count(view)
-		removes: count(remove)
+		reports: count(report)
 	}
 }`
 
@@ -218,7 +218,7 @@ query Query($post_uid: string) {
 			likes: count(like)
 			clicks: count(click)
 			views: count(view)
-			removes: count(remove)
+			reports: count(report)
 		}
 	}
 }`
