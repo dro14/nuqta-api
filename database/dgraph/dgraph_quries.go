@@ -122,9 +122,9 @@ query Query($uid: string, $post_uid: string) {
 
 const latestPostsQuery = `
 query Query($after: int) {
-	posts(func: gt(posted_at, $after)) @filter(not has(in_reply_to)) {
+	posts(func: gt(timestamp, $after)) @filter(not has(in_reply_to)) {
 		uid
-		posted_at
+		timestamp
 		replies: count(~in_reply_to)
 		reposts: count(repost)
 		likes: count(like)
@@ -140,11 +140,11 @@ query Query($uid: string, $before: int) {
 		follow_uids as follow
 	}
 
-	var(func: lt(posted_at, $before)) @filter(uid_in(author, uid(follow_uids)) OR uid_in(repost, uid(follow_uids))) {
+	var(func: lt(timestamp, $before)) @filter(uid_in(author, uid(follow_uids)) OR uid_in(repost, uid(follow_uids))) {
 		post_uids as uid
 	}
 
-	posts(func: uid(post_uids), orderdesc: posted_at, first: 20) {
+	posts(func: uid(post_uids), orderdesc: timestamp, first: 20) {
 		uid
 		reposted: repost @filter(uid(follow_uids)) @facets(orderasc: timestamp, first: 1) {
 			uid
@@ -156,7 +156,7 @@ const repliesQuery = `
 query Query($uid: string, $before: int) {
 	users(func: uid($uid)) {
 		posts: ~author {
-			replies: ~in_reply_to @filter(lt(posted_at, $before)) (orderdesc: posted_at, first: 20) {
+			replies: ~in_reply_to @filter(lt(timestamp, $before)) (orderdesc: timestamp, first: 20) {
 				uid
 			}
 		}
@@ -175,7 +175,7 @@ query Query($uid: string, $before: int) {
 const userPostsQuery = `
 query Query($user_uid: string, $before: int) {
 	users(func: uid($user_uid)) {
-		posts: ~author @filter(lt(posted_at, $before) AND not has(in_reply_to)) (orderdesc: posted_at, first: 20) {
+		posts: ~author @filter(lt(timestamp, $before) AND not has(in_reply_to)) (orderdesc: timestamp, first: 20) {
 			uid
 		}
 	}
@@ -184,7 +184,7 @@ query Query($user_uid: string, $before: int) {
 const userRepliesQuery = `
 query Query($user_uid: string, $before: int) {
 	users(func: uid($user_uid)) {
-		posts: ~author @filter(lt(posted_at, $before) AND has(in_reply_to)) (orderdesc: posted_at, first: 20) {
+		posts: ~author @filter(lt(timestamp, $before) AND has(in_reply_to)) (orderdesc: timestamp, first: 20) {
 			uid
 		}
 	}
@@ -226,7 +226,7 @@ query Query($post_uid: string) {
 const latestRepliesQuery = `
 query Query($post_uid: string, $before: int) {
 	posts(func: uid($post_uid)) {
-		replies: ~in_reply_to @filter(lt(posted_at, $before)) (orderdesc: posted_at, first: 20) {
+		replies: ~in_reply_to @filter(lt(timestamp, $before)) (orderdesc: timestamp, first: 20) {
 			uid
 		}
 	}
