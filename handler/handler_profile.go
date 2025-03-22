@@ -84,12 +84,13 @@ func (h *Handler) getProfile(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	user, err := h.db.GetProfile(ctx, firebaseUid)
-	if err != nil {
+	if errors.Is(err, e.ErrNotFound) {
+		c.JSON(http.StatusNotFound, failure(err))
+	} else if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
-		return
+	} else {
+		c.JSON(http.StatusOK, user)
 	}
-
-	c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) updateProfile(c *gin.Context) {
