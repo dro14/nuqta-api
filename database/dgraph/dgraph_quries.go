@@ -140,7 +140,7 @@ query Query($uid: string, $before: int) {
 		follow_uids as follow
 	}
 
-	var(func: lt(timestamp, $before)) @filter((uid_in(author, uid(follow_uids)) OR uid_in(repost, uid(follow_uids))) AND not has(in_reply_to)) {
+	var(func: lt(timestamp, $before)) @filter((uid_in(author, uid(follow_uids)) AND not has(in_reply_to)) OR uid_in(repost, uid(follow_uids))) {
 		post_uids as uid
 	}
 
