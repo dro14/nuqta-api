@@ -140,7 +140,7 @@ query Query($uid: string, $before: int) {
 		follow_uids as follow
 	}
 
-	var(func: lt(timestamp, $before)) @filter(uid_in(author, uid(follow_uids)) OR uid_in(repost, uid(follow_uids))) {
+	var(func: lt(timestamp, $before)) @filter((uid_in(author, uid(follow_uids)) OR uid_in(repost, uid(follow_uids))) AND not has(in_reply_to)) {
 		post_uids as uid
 	}
 
@@ -154,12 +154,16 @@ query Query($uid: string, $before: int) {
 
 const repliesQuery = `
 query Query($uid: string, $before: int) {
-	users(func: uid($uid)) {
-		posts: ~author {
-			replies: ~in_reply_to @filter(lt(timestamp, $before)) (orderdesc: timestamp, first: 20) {
-				uid
+	var(func: uid($uid)) {
+		~author {
+			~in_reply_to @filter(lt(timestamp, $before)) {
+				reply_uids as uid
 			}
 		}
+	}
+
+	replies(func: uid(reply_uids), orderdesc: timestamp, first: 20) {
+		uid
 	}
 }`
 
