@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
@@ -42,15 +41,21 @@ func (h *Handler) createProfile(c *gin.Context) {
 		return
 	}
 
-	username := strings.Split(user.Email, "@")[0]
+	suffixMinLength := 4
+	username, err := GenerateUsername(user.Name, user.Email, suffixMinLength)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
 	for {
 		userUid, err := h.index.GetUidByUsername(username)
 		if userUid != "" {
-			lastCharIndex := len(username) - 1
-			if lastCharIndex >= 0 && username[lastCharIndex] >= '0' && username[lastCharIndex] < '9' {
-				username = username[:lastCharIndex] + string(username[lastCharIndex]+1)
-			} else {
-				username = username + "0"
+			suffixMinLength++
+			username, err = GenerateUsername(user.Name, user.Email, suffixMinLength)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, failure(err))
+				return
 			}
 		} else if errors.Is(err, e.ErrNotFound) {
 			user.Username = username
