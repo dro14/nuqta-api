@@ -137,19 +137,15 @@ func (d *Dgraph) GetReplies(ctx context.Context, uid string, before int64) ([]st
 		return nil, err
 	}
 
-	var response map[string][]map[string][]map[string][]*models.Post
+	var response map[string][]*models.Post
 	err = json.Unmarshal(bytes, &response)
 	if err != nil {
 		return nil, err
 	}
 
 	var postUids []string
-	for _, user := range response["users"] {
-		for _, post := range user["posts"] {
-			for _, reply := range post["replies"] {
-				postUids = append(postUids, reply.Uid)
-			}
-		}
+	for _, reply := range response["replies"] {
+		postUids = append(postUids, reply.Uid)
 	}
 
 	return postUids, nil
