@@ -42,7 +42,7 @@ func (h *Handler) createProfile(c *gin.Context) {
 	}
 
 	suffixMinLength := 4
-	username, err := GenerateUsername(user.Name, user.Email, suffixMinLength)
+	username, err := GenerateUsername(user.Email, suffixMinLength)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -52,7 +52,7 @@ func (h *Handler) createProfile(c *gin.Context) {
 		userUid, err := h.index.GetUidByUsername(username)
 		if userUid != "" {
 			suffixMinLength++
-			username, err = GenerateUsername(user.Name, user.Email, suffixMinLength)
+			username, err = GenerateUsername(user.Email, suffixMinLength)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return

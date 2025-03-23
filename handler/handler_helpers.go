@@ -60,13 +60,8 @@ func generateRandomUsername() (string, error) {
 	return generateRandomSuffix(length)
 }
 
-func GenerateUsername(name, email string, suffixMinLength int) (string, error) {
-	base := strings.TrimSpace(name)
-	if base == "" {
-		localPart := strings.Split(email, "@")[0]
-		base = localPart
-	}
-
+func GenerateUsername(email string, suffixMinLength int) (string, error) {
+	base := strings.Split(email, "@")[0]
 	sanitized := sanitizeBase(base)
 	if sanitized == "" {
 		return generateRandomUsername()
