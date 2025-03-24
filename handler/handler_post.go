@@ -95,7 +95,10 @@ func (h *Handler) getPostList(c *gin.Context) {
 				}
 			},
 		)
-		for i, post := range posts[:min(len(posts), 20)] {
+		if len(posts) > 20 {
+			posts = posts[:20]
+		}
+		for i, post := range posts {
 			posts[i], err = h.db.GetPost(ctx, request.Uid, post.Uid, withInReplyTo)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
