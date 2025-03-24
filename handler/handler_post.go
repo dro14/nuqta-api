@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/dro14/nuqta-service/e"
@@ -78,6 +79,23 @@ func (h *Handler) getPostList(c *gin.Context) {
 			return
 		}
 		for i, post := range posts {
+			if len(post.Reposted) > 0 {
+				posts[i].Timestamp = post.Reposted[0].RepostedTimestamp
+			}
+		}
+		slices.SortFunc(
+			posts,
+			func(a, b *models.Post) int {
+				if a.Timestamp < b.Timestamp {
+					return 1
+				} else if a.Timestamp > b.Timestamp {
+					return -1
+				} else {
+					return 0
+				}
+			},
+		)
+		for i, post := range posts[:min(len(posts), 20)] {
 			posts[i], err = h.db.GetPost(ctx, request.Uid, post.Uid, withInReplyTo)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))

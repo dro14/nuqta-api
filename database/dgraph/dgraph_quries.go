@@ -140,13 +140,10 @@ query Query($uid: string, $before: int) {
 		follow_uids as follow
 	}
 
-	var(func: lt(timestamp, $before)) @filter((uid_in(author, uid(follow_uids)) AND not has(in_reply_to)) OR uid_in(repost, uid(follow_uids))) {
-		post_uids as uid
-	}
-
-	posts(func: uid(post_uids), orderdesc: timestamp, first: 20) {
+	posts(func: lt(timestamp, $before)) @filter((uid_in(author, uid(follow_uids)) AND not has(in_reply_to)) OR uid_in(repost, uid(follow_uids))) {
 		uid
-		reposted: repost @filter(uid(follow_uids)) @facets(orderasc: timestamp, first: 1) {
+		timestamp
+		reposted: repost @filter(uid(follow_uids)) @facets(orderdesc: timestamp) {
 			uid
 		}
 	}
