@@ -60,7 +60,7 @@ query Query($uid: string, $user_uid: string) {
 const userFollowsQuery = `
 query Query($user_uid: string, $after: string) {
 	users(func: uid($user_uid)) {
-		%sfollow (first: 20, after: $after) {
+		%s (first: 20, after: $after) {
 			uid
 		}
 	}

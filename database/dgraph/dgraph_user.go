@@ -67,9 +67,9 @@ func (d *Dgraph) GetUserFollows(ctx context.Context, userUid, after string, reve
 	}
 	var query string
 	if reverse {
-		query = fmt.Sprintf(userFollowsQuery, "~")
+		query = fmt.Sprintf(userFollowsQuery, "~follow")
 	} else {
-		query = fmt.Sprintf(userFollowsQuery, "")
+		query = fmt.Sprintf(userFollowsQuery, "follow")
 	}
 	bytes, err := d.get(ctx, query, vars)
 	if err != nil {
