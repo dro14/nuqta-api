@@ -65,12 +65,13 @@ func (d *Dgraph) GetUserFollows(ctx context.Context, userUid, after string, reve
 		"$user_uid": userUid,
 		"$after":    after,
 	}
-	var query string
+	var edge string
 	if reverse {
-		query = fmt.Sprintf(userFollowsQuery, "~follow")
+		edge = "~follow"
 	} else {
-		query = fmt.Sprintf(userFollowsQuery, "follow")
+		edge = "follow"
 	}
+	query := fmt.Sprintf(userFollowsQuery, edge)
 	bytes, err := d.get(ctx, query, vars)
 	if err != nil {
 		return nil, err
@@ -84,7 +85,7 @@ func (d *Dgraph) GetUserFollows(ctx context.Context, userUid, after string, reve
 
 	var userUids []string
 	for _, user := range response["users"] {
-		for _, follower := range user["follow"] {
+		for _, follower := range user[edge] {
 			userUids = append(userUids, follower.Uid)
 		}
 	}
