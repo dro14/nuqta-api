@@ -30,6 +30,7 @@ func (d *Dgraph) set(ctx context.Context, object any) (*api.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("%s\n", bytes)
 	mutation := &api.Mutation{
 		SetJson:   bytes,
 		CommitNow: true,
