@@ -26,10 +26,24 @@ func (d *Dgraph) get(ctx context.Context, query string, vars map[string]string) 
 }
 
 func (d *Dgraph) set(ctx context.Context, object any) (*api.Response, error) {
-	bytes, err := json.Marshal(object)
-	if err != nil {
-		return nil, err
+	var bytes []byte
+	objects, ok := object.([]map[string]any)
+	if ok {
+		for _, object := range objects {
+			b, err := json.Marshal(object)
+			if err != nil {
+				return nil, err
+			}
+			bytes = append(bytes, b...)
+		}
+	} else {
+		var err error
+		bytes, err = json.Marshal(object)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	log.Printf("%s\n", bytes)
 	mutation := &api.Mutation{
 		SetJson:   bytes,
