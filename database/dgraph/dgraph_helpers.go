@@ -48,22 +48,6 @@ func (d *Dgraph) set(ctx context.Context, object any) (*api.Response, error) {
 	return nil, lastErr
 }
 
-func (d *Dgraph) setList(ctx context.Context, objects []map[string]any) error {
-	txn := d.client.NewTxn()
-	for _, object := range objects {
-		bytes, err := json.Marshal(object)
-		if err != nil {
-			return err
-		}
-		mutation := &api.Mutation{SetJson: bytes}
-		_, err = txn.Mutate(ctx, mutation)
-		if err != nil {
-			return err
-		}
-	}
-	return txn.Commit(ctx)
-}
-
 func (d *Dgraph) delete(ctx context.Context, object any) error {
 	bytes, err := json.Marshal(object)
 	if err != nil {

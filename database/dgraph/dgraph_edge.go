@@ -33,7 +33,8 @@ func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target []string) 
 			},
 		})
 	}
-	return d.setList(ctx, objects)
+	_, err := d.set(ctx, objects)
+	return err
 }
 
 func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target []string) error {
