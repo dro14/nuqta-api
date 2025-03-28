@@ -65,6 +65,7 @@ type Request struct {
 	Offset    int64    `json:"offset"`
 	Attribute string   `json:"attribute"`
 	Value     string   `json:"value"`
-	Edge      string   `json:"edge"`
-	Target    string   `json:"target"`
+	Source    []string `json:"source"`
+	Edge      []string `json:"edge"`
+	Target    []string `json:"target"`
 }

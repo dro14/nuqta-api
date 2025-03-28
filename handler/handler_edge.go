@@ -16,13 +16,19 @@ func (h *Handler) createEdge(c *gin.Context) {
 		return
 	}
 
-	if request.Uid == "" || request.Edge == "" || request.Target == "" {
+	if len(request.Source) != len(request.Edge) ||
+		len(request.Source) != len(request.Target) ||
+		len(request.Edge) != len(request.Target) {
+		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
+		return
+	}
+	if len(request.Source) == 0 {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	err = h.db.CreateEdge(ctx, request.Uid, request.Edge, request.Target)
+	err = h.db.CreateEdge(ctx, request.Source, request.Edge, request.Target)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -37,13 +43,19 @@ func (h *Handler) deleteEdge(c *gin.Context) {
 		return
 	}
 
-	if request.Uid == "" || request.Edge == "" || request.Target == "" {
+	if len(request.Source) != len(request.Edge) ||
+		len(request.Source) != len(request.Target) ||
+		len(request.Edge) != len(request.Target) {
+		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
+		return
+	}
+	if len(request.Source) == 0 {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	err = h.db.DeleteEdge(ctx, request.Uid, request.Edge, request.Target)
+	err = h.db.DeleteEdge(ctx, request.Source, request.Edge, request.Target)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
