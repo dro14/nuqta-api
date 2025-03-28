@@ -26,25 +26,10 @@ func (d *Dgraph) get(ctx context.Context, query string, vars map[string]string) 
 }
 
 func (d *Dgraph) set(ctx context.Context, object any) (*api.Response, error) {
-	var bytes []byte
-	objects, ok := object.([]map[string]any)
-	if ok {
-		for _, object := range objects {
-			b, err := json.Marshal(object)
-			if err != nil {
-				return nil, err
-			}
-			bytes = append(bytes, b...)
-		}
-	} else {
-		var err error
-		bytes, err = json.Marshal(object)
-		if err != nil {
-			return nil, err
-		}
+	bytes, err := json.Marshal(object)
+	if err != nil {
+		return nil, err
 	}
-
-	log.Printf("%s\n", bytes)
 	mutation := &api.Mutation{
 		SetJson:   bytes,
 		CommitNow: true,
@@ -61,6 +46,22 @@ func (d *Dgraph) set(ctx context.Context, object any) (*api.Response, error) {
 	}
 	log.Printf("failed to set after %d attempts", retryAttempts)
 	return nil, lastErr
+}
+
+func (d *Dgraph) setList(ctx context.Context, objects []map[string]any) error {
+	txn := d.client.NewTxn()
+	for _, object := range objects {
+		bytes, err := json.Marshal(object)
+		if err != nil {
+			return err
+		}
+		mutation := &api.Mutation{SetJson: bytes}
+		_, err = txn.Mutate(ctx, mutation)
+		if err != nil {
+			return err
+		}
+	}
+	return txn.Commit(ctx)
 }
 
 func (d *Dgraph) delete(ctx context.Context, object any) error {
