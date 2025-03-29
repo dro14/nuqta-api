@@ -39,6 +39,7 @@ func (h *Handler) createProfile(c *gin.Context) {
 	}
 
 	if existingUser != nil {
+		existingUser.Version = version
 		c.JSON(http.StatusOK, existingUser)
 		return
 	}
