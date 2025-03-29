@@ -2,8 +2,9 @@ package models
 
 type User struct {
 	DType             []string `json:"dgraph.type,omitempty"`
-	Uid               string   `json:"uid,omitempty"`
 	FirebaseUid       string   `json:"firebase_uid,omitempty"`
+	Version           string   `json:"version,omitempty"`
+	Uid               string   `json:"uid,omitempty"`
 	Email             string   `json:"email,omitempty"`
 	Registered        int64    `json:"registered,omitempty"`
 	Name              string   `json:"name,omitempty"`

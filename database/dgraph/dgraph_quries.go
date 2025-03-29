@@ -3,8 +3,8 @@ package dgraph
 const userByFirebaseUidQuery = `
 query Query($firebase_uid: string) {
 	users(func: eq(firebase_uid, $firebase_uid)) {
-		uid
 		firebase_uid
+		uid
 		registered
 		name
 		username

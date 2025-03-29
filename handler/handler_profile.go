@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const version = "1.0.1"
+
 func (h *Handler) createProfile(c *gin.Context) {
 	firebaseUid := c.GetString("firebase_uid")
 	if firebaseUid == "" {
@@ -77,6 +79,7 @@ func (h *Handler) createProfile(c *gin.Context) {
 		log.Printf("user %s: can't add user to search index: %s", user.Uid, err)
 	}
 
+	user.Version = version
 	c.JSON(http.StatusOK, user)
 }
 
@@ -94,6 +97,7 @@ func (h *Handler) getProfile(c *gin.Context) {
 	} else if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 	} else {
+		user.Version = version
 		c.JSON(http.StatusOK, user)
 	}
 }

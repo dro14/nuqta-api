@@ -1,6 +1,6 @@
 module github.com/dro14/nuqta-service
 
-go 1.24.0
+go 1.24
 
 require (
 	firebase.google.com/go/v4 v4.15.2
