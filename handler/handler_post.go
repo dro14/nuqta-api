@@ -142,6 +142,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			return
 		}
 	case "replies_popular":
+		withInReplyTo = false
 		if request.PostUid == "" {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -151,8 +152,8 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-		withInReplyTo = false
 	case "replies_latest":
+		withInReplyTo = false
 		if request.PostUid == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -162,7 +163,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-		withInReplyTo = false
 	default:
 		if len(request.PostUids) > 0 {
 			postUids = request.PostUids
@@ -170,7 +170,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		withInReplyTo = false
 	}
 
 	posts, err := h.db.GetPosts(ctx, request.Uid, postUids, withInReplyTo)

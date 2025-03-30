@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.1"
+const version = "1.0.2"
 
 func (h *Handler) createProfile(c *gin.Context) {
 	firebaseUid := c.GetString("firebase_uid")
