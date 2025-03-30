@@ -49,13 +49,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 		postUids = h.rec.GetRecs()
 		posts := make([]*models.Post, 0, 20)
 		for _, postUid := range postUids {
-			isViewed, err := h.db.IsPostViewed(ctx, request.Uid, postUid)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, failure(err))
-				return
-			} else if isViewed {
-				continue
-			}
 			post, err := h.db.GetPost(ctx, request.Uid, postUid, withInReplyTo)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
