@@ -329,19 +329,11 @@ func (d *Dgraph) DeletePost(ctx context.Context, postUid string) error {
 	if err != nil {
 		return err
 	}
-
 	var objects []map[string]any
-	for _, replyUid := range replyUids {
+	for _, replyUid := range append(replyUids, postUid) {
 		objects = append(objects, map[string]any{
 			"uid": replyUid,
-			"in_reply_to": map[string]any{
-				"uid": postUid,
-			},
 		})
 	}
-
-	objects = append(objects, map[string]any{
-		"uid": postUid,
-	})
 	return d.delete(ctx, objects)
 }
