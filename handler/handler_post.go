@@ -45,22 +45,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 	withInReplyTo := true
 	ctx := c.Request.Context()
 	switch request.Tab {
-	case "feed_for_you":
-		postUids = h.rec.GetRecs()
-		posts := make([]*models.Post, 0, 20)
-		for _, postUid := range postUids {
-			post, err := h.db.GetPost(ctx, request.Uid, postUid, withInReplyTo)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, failure(err))
-				return
-			}
-			posts = append(posts, post)
-			if len(posts) == 20 {
-				break
-			}
-		}
-		c.JSON(http.StatusOK, posts)
-		return
 	case "feed_following":
 		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
