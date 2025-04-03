@@ -16,9 +16,6 @@ func (h *Handler) Run(port string) error {
 	group.DELETE("", h.deleteSchema)
 	group.DELETE("/:predicate", h.deletePredicate)
 
-	group = h.engine.Group("/yordamchi")
-	group.POST("", h.createResponse)
-
 	authorized := h.engine.Group("")
 	authorized.Use(h.authMiddleware)
 
@@ -42,6 +39,9 @@ func (h *Handler) Run(port string) error {
 	group = authorized.Group("/edge")
 	group.POST("", h.createEdge)
 	group.DELETE("", h.deleteEdge)
+
+	group = authorized.Group("/yordamchi")
+	group.POST("", h.createResponse)
 
 	return h.engine.Run(":" + port)
 }
