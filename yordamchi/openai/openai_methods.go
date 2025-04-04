@@ -10,7 +10,7 @@ import (
 
 func (o *OpenAI) Completions(ctx context.Context, conversation []string) (string, error) {
 	var messages []Message
-	for i, message := range conversation {
+	for i, text := range conversation {
 		var role string
 		if i == 0 {
 			role = "system"
@@ -20,8 +20,8 @@ func (o *OpenAI) Completions(ctx context.Context, conversation []string) (string
 			role = "assistant"
 		}
 		messages = append(messages, Message{
+			Content: text,
 			Role:    role,
-			Content: message,
 		})
 	}
 

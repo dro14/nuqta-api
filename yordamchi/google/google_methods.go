@@ -14,15 +14,17 @@ func (g *Google) GenerateContent(ctx context.Context, conversation []string) (st
 			Parts: []Part{{Text: conversation[0]}},
 		},
 	}
-	for i, message := range conversation[1:] {
+	for i, text := range conversation {
 		var role string
-		if i%2 == 0 {
+		if i == 0 {
+			continue
+		} else if i%2 != 0 {
 			role = "user"
 		} else {
 			role = "model"
 		}
 		request.Contents = append(request.Contents, Content{
-			Parts: []Part{{Text: message}},
+			Parts: []Part{{Text: text}},
 			Role:  role,
 		})
 	}
