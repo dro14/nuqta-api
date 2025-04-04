@@ -27,6 +27,7 @@ func (g *Google) GenerateContent(ctx context.Context, conversation []string) (st
 		})
 	}
 
+	ctx = context.WithValue(ctx, "model", "gemini-2.0-flash-001")
 	resp, err := g.send(ctx, request)
 	if err != nil {
 		return "", err
