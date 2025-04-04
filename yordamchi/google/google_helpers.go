@@ -26,6 +26,7 @@ func decodeResponse(ctx context.Context, resp *http.Response) (*Response, error)
 		return nil, err
 	}
 
+	log.Printf("response:\n%s", bts)
 	response := &Response{}
 	err = json.Unmarshal(bts, response)
 	if err != nil {

@@ -9,25 +9,26 @@ import (
 )
 
 func (g *Google) GenerateContent(ctx context.Context, conversation []string) (string, error) {
-	request := &Request{
-		SystemInstruction: Content{
-			Parts: []Part{{Text: conversation[0]}},
-		},
-	}
+	request := &Request{}
 	for i, text := range conversation {
-		var role string
 		if i == 0 {
-			continue
+			request.SystemInstruction = Content{
+				Parts: []Part{{Text: text}},
+			}
 		} else if i%2 != 0 {
-			role = "user"
+			request.Contents = append(request.Contents, Content{
+				Parts: []Part{{Text: text}},
+				Role:  "user",
+			})
 		} else {
-			role = "model"
+			request.Contents = append(request.Contents, Content{
+				Parts: []Part{{Text: text}},
+				Role:  "model",
+			})
 		}
-		request.Contents = append(request.Contents, Content{
-			Parts: []Part{{Text: text}},
-			Role:  role,
-		})
 	}
+
+	log.Println(*request)
 
 	ctx = context.WithValue(ctx, "model", "gemini-2.0-flash-001")
 	resp, err := g.send(ctx, request)
