@@ -30,7 +30,6 @@ func (o *OpenAI) Completions(ctx context.Context, conversation []string) (string
 		Messages:    messages,
 		MaxTokens:   3072,
 		Temperature: 0.5,
-		User:        id(ctx),
 	}
 
 	resp, err := o.send(ctx, request)

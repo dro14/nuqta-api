@@ -1,8 +1,9 @@
 package google
 
 type Request struct {
-	Contents          []Content `json:"contents,omitempty"`
-	SystemInstruction Content   `json:"systemInstruction,omitempty"`
+	Contents          []Content         `json:"contents,omitempty"`
+	SystemInstruction *Content          `json:"systemInstruction,omitempty"`
+	GenerationConfig  *GenerationConfig `json:"generationConfig,omitempty"`
 }
 
 type Content struct {
@@ -12,6 +13,11 @@ type Content struct {
 
 type Part struct {
 	Text string `json:"text,omitempty"`
+}
+
+type GenerationConfig struct {
+	MaxOutputTokens int     `json:"maxOutputTokens"`
+	Temperature     float64 `json:"temperature"`
 }
 
 type Response struct {
