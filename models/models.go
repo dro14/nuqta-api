@@ -71,4 +71,5 @@ type Request struct {
 	Target       []string `json:"target"`
 	Conversation []string `json:"conversation"`
 	Language     string   `json:"language"`
+	Provider     string   `json:"provider"`
 }

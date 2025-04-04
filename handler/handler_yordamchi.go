@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/dro14/nuqta-service/e"
@@ -22,15 +23,17 @@ func (h *Handler) createResponse(c *gin.Context) {
 		return
 	}
 
-	if len(request.Conversation) == 0 || request.Language == "" {
+	if len(request.Conversation) == 0 || request.Language == "" || request.Provider == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
+	ctx = context.WithValue(ctx, "firebase_uid", firebaseUid)
 	conversation := request.Conversation
 	language := request.Language
-	response, err := h.yordamchi.ProcessCompletions(ctx, conversation, language, firebaseUid)
+	provider := request.Provider
+	response, err := h.yordamchi.Respond(ctx, conversation, language, provider)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

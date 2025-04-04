@@ -1,4 +1,4 @@
-package types
+package openai
 
 type Completions struct {
 	Model          string          `json:"model"`

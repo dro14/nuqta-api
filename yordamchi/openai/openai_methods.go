@@ -1,15 +1,31 @@
-package yordamchi
+package openai
 
 import (
 	"context"
 	"log"
 	"strings"
 
-	"github.com/dro14/nuqta-service/yordamchi/types"
+	"github.com/dro14/nuqta-service/e"
 )
 
-func (y *Yordamchi) Completions(ctx context.Context, messages []types.Message) (*types.Response, error) {
-	request := &types.Completions{
+func (o *OpenAI) Completions(ctx context.Context, conversation []string) (string, error) {
+	var messages []Message
+	for i, message := range conversation {
+		var role string
+		if i == 0 {
+			role = "system"
+		} else if i%2 != 0 {
+			role = "user"
+		} else {
+			role = "assistant"
+		}
+		messages = append(messages, Message{
+			Role:    role,
+			Content: message,
+		})
+	}
+
+	request := &Completions{
 		Model:       "gpt-4o-mini-2024-07-18",
 		Messages:    messages,
 		MaxTokens:   3072,
@@ -17,21 +33,21 @@ func (y *Yordamchi) Completions(ctx context.Context, messages []types.Message) (
 		User:        id(ctx),
 	}
 
-	resp, err := y.send(ctx, request)
+	resp, err := o.send(ctx, request)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	response, err := decodeResponse(ctx, resp)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	completion := getCompletion(response)
 	completion = strings.TrimSpace(completion)
 	if len(completion) == 0 {
-		return nil, ErrEmpty
+		return "", e.ErrEmpty
 	}
 
 	finishReason := response.Choices[0].FinishReason
@@ -40,9 +56,9 @@ func (y *Yordamchi) Completions(ctx context.Context, messages []types.Message) (
 			log.Printf("user %s: finish reason is %q", id(ctx), finishReason)
 		}
 		if didModelSpit(completion) {
-			return nil, ErrSpit
+			return "", e.ErrSpit
 		}
 	}
 
-	return response, nil
+	return completion, nil
 }

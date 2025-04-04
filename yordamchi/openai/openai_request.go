@@ -1,4 +1,4 @@
-package yordamchi
+package openai
 
 import (
 	"bytes"
@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dro14/nuqta-service/yordamchi/types"
+	"github.com/dro14/nuqta-service/e"
 )
 
-func (y *Yordamchi) send(ctx context.Context, request any) (*http.Response, error) {
-	resp, err := y.makeRequest(ctx, request)
+func (o *OpenAI) send(ctx context.Context, request any) (*http.Response, error) {
+	resp, err := o.makeRequest(ctx, request)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (y *Yordamchi) send(ctx context.Context, request any) (*http.Response, erro
 	default:
 		bts, _ := io.ReadAll(resp.Body)
 		_ = resp.Body.Close()
-		response := &types.Response{}
+		response := &Response{}
 		err = json.Unmarshal(bts, response)
 		if err != nil {
 			log.Printf("user %s: %s\ncan't decode response: %s\nbody: %s", id(ctx), resp.Status, err, bts)
@@ -37,15 +37,15 @@ func (y *Yordamchi) send(ctx context.Context, request any) (*http.Response, erro
 
 		switch {
 		case strings.Contains(response.Error.Message, "This model's maximum context length is"):
-			err = ErrContextLength
+			err = e.ErrContextLength
 		case strings.Contains(response.Error.Message, "Your request was rejected as a result of our safety system"):
-			err = ErrInappropriate
+			err = e.ErrInappropriate
 		case strings.Contains(response.Error.Message, "Timeout while downloading"):
-			return nil, ErrTimeout
+			return nil, e.ErrTimeout
 		case strings.Contains(response.Error.Message, "Error while downloading"):
-			return nil, ErrDownload
+			return nil, e.ErrDownload
 		case resp.StatusCode == http.StatusBadRequest:
-			err = ErrBadRequest
+			err = e.ErrBadRequest
 		}
 
 		log.Printf("user %s: %s\ntype: %s\nmessage: %s", id(ctx), resp.Status, response.Error.Type, response.Error.Message)
@@ -57,7 +57,7 @@ func (y *Yordamchi) send(ctx context.Context, request any) (*http.Response, erro
 	}
 }
 
-func (y *Yordamchi) makeRequest(ctx context.Context, request any) (*http.Response, error) {
+func (o *OpenAI) makeRequest(ctx context.Context, request any) (*http.Response, error) {
 	var buffer bytes.Buffer
 	err := json.NewEncoder(&buffer).Encode(request)
 	if err != nil {
@@ -65,14 +65,14 @@ func (y *Yordamchi) makeRequest(ctx context.Context, request any) (*http.Respons
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, y.endpoint, &buffer)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, o.endpoint, &buffer)
 	if err != nil {
 		log.Printf("user %s: can't create request: %s", id(ctx), err)
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", y.key)
+	req.Header.Set("Authorization", o.key)
 
 	var client http.Client
 	client.Timeout = 10 * time.Minute

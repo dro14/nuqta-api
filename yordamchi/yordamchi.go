@@ -1,23 +1,18 @@
 package yordamchi
 
 import (
-	"log"
-	"os"
+	"github.com/dro14/nuqta-service/yordamchi/google"
+	"github.com/dro14/nuqta-service/yordamchi/openai"
 )
 
 type Yordamchi struct {
-	key      string
-	endpoint string
+	google *google.Google
+	openai *openai.OpenAI
 }
 
 func New() *Yordamchi {
-	key, ok := os.LookupEnv("OPENAI_API_KEY")
-	if !ok {
-		log.Fatal("openai api key is not specified")
-	}
-
 	return &Yordamchi{
-		key:      "Bearer " + key,
-		endpoint: "https://api.openai.com/v1/chat/completions",
+		google: google.New(),
+		openai: openai.New(),
 	}
 }
