@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -21,7 +22,7 @@ func (y *Yordamchi) Respond(ctx context.Context, conversation []string, language
 	if len(conversation) > 3 {
 		conversation = conversation[len(conversation)-3:]
 	}
-	now := time.Now().Format(time.DateTime)
+	now := time.Now().Add(5 * time.Hour).Format(time.DateTime)
 	conversation = append(
 		[]string{now + SystemMessage[language]},
 		conversation...,
@@ -35,10 +36,12 @@ Retry:
 	var response string
 	var err error
 	switch provider {
-	case "openai":
-		response, err = y.openai.Completions(ctx, conversation)
 	case "google":
 		response, err = y.google.GenerateContent(ctx, conversation)
+	case "openai":
+		response, err = y.openai.Completions(ctx, conversation)
+	default:
+		return "", e.ErrInvalidParams
 	}
 	if err != nil {
 		errMsg = err.Error()
@@ -56,7 +59,7 @@ Retry:
 			retryDelay = 0
 		case errors.Is(err, e.ErrDownload):
 			if len(conversation) > 2 {
-				conversation = append(conversation[:1], conversation[3:]...)
+				conversation = slices.Delete(conversation, 1, 3)
 				attempts--
 			}
 			retryDelay = 0
