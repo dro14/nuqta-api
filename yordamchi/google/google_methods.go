@@ -16,7 +16,7 @@ func (g *Google) GenerateContent(ctx context.Context, conversation []string) (st
 	}
 	for i, message := range conversation[1:] {
 		var role string
-		if i%2 != 0 {
+		if i%2 == 0 {
 			role = "user"
 		} else {
 			role = "model"
