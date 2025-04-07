@@ -26,7 +26,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 	switch request.Tab {
 	case "search":
 		if request.Query == "" {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			c.JSON(http.StatusOK, make([]*models.User, 0))
 			return
 		}
 		userUids, err = h.index.SearchUser(request.Query, request.Offset)

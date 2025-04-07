@@ -34,25 +34,3 @@ func decodeResponse(ctx context.Context, resp *http.Response) (*Response, error)
 	}
 	return response, nil
 }
-
-func didModelSpit(completion string) bool {
-	runes := []rune(completion)
-	Length := len(runes)
-	maxSubLength := Length / 10
-	for SubLength := 2; SubLength <= maxSubLength; SubLength++ {
-		i := 0
-		for i <= Length-SubLength {
-			substring := string(runes[i : i+SubLength])
-			count := 1
-			for i+SubLength < Length && string(runes[i+SubLength:min(i+2*SubLength, cap(runes))]) == substring {
-				count++
-				i += SubLength
-				if count > 10 {
-					return true
-				}
-			}
-			i += SubLength
-		}
-	}
-	return false
-}

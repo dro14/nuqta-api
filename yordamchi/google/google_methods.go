@@ -52,9 +52,6 @@ func (g *Google) GenerateContent(ctx context.Context, conversation []string) (st
 	finishReason := response.Candidates[0].FinishReason
 	if finishReason != "STOP" {
 		log.Printf("user %s: finish reason is %q", id(ctx), finishReason)
-		if didModelSpit(completion) {
-			return "", e.ErrSpit
-		}
 	}
 
 	return completion, nil
