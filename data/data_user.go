@@ -11,6 +11,7 @@ import (
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
+	"github.com/lib/pq"
 )
 
 func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, error) {
@@ -31,13 +32,39 @@ func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, 
 	user := response["users"][0]
 	user.Uid = userUid
 
+	var nullName sql.NullString
+	var nullLocation sql.NullString
+	var nullBirthday sql.NullInt64
+	var nullColor sql.NullString
+	var nullBio sql.NullString
+	var nullBanner sql.NullString
+
 	err = d.dbQueryRow(ctx,
 		"SELECT registered, username, name, location, birthday, color, bio, banner, avatars, thumbnails FROM users WHERE id = $1",
 		userUid,
-		&user.Registered, &user.Username, &user.Name, &user.Location, &user.Birthday, &user.Color, &user.Bio, &user.Banner, &user.Avatars, &user.Thumbnails,
+		&user.Registered, &user.Username, &nullName, &nullLocation, &nullBirthday, &nullColor, &nullBio, &nullBanner, pq.Array(&user.Avatars), pq.Array(&user.Thumbnails),
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if nullName.Valid {
+		user.Name = nullName.String
+	}
+	if nullLocation.Valid {
+		user.Location = nullLocation.String
+	}
+	if nullBirthday.Valid {
+		user.Birthday = nullBirthday.Int64
+	}
+	if nullColor.Valid {
+		user.Color = nullColor.String
+	}
+	if nullBio.Valid {
+		user.Bio = nullBio.String
+	}
+	if nullBanner.Valid {
+		user.Banner = nullBanner.String
 	}
 
 	if uid == userUid {
