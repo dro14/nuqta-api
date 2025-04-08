@@ -17,7 +17,7 @@ func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, 
 	vars := map[string]string{
 		"$user_uid": userUid,
 	}
-	bytes, err := d.graphGet(ctx, userByUidQuery, vars)
+	bytes, err := d.graphGet(ctx, userQuery, vars)
 	if err != nil {
 		return nil, err
 	}

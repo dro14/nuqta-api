@@ -8,6 +8,7 @@ import (
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
+	"github.com/lib/pq"
 )
 
 func (d *Data) CreateProfile(ctx context.Context, user *models.User) error {
@@ -79,6 +80,6 @@ func (d *Data) GetProfile(ctx context.Context, firebaseUid string) (*models.User
 func (d *Data) UpdateProfile(ctx context.Context, user *models.User) error {
 	return d.dbExec(ctx,
 		"UPDATE users SET username = $1, name = $2, location = $3, birthday = $4, color = $5, bio = $6, banner = $7, avatars = $8, thumbnails = $9 WHERE id = $10",
-		user.Username, user.Name, user.Location, user.Birthday, user.Color, user.Bio, user.Banner, user.Avatars, user.Thumbnails, user.Uid,
+		user.Username, user.Name, user.Location, user.Birthday, user.Color, user.Bio, user.Banner, pq.Array(user.Avatars), pq.Array(user.Thumbnails), user.Uid,
 	)
 }

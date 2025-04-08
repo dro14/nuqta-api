@@ -7,6 +7,7 @@ import (
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/dgraph-io/dgo/v240"
+	_ "github.com/lib/pq"
 )
 
 const retryAttempts = 5

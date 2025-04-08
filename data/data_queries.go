@@ -1,29 +1,6 @@
 package data
 
-const userByFirebaseUidQuery = `
-query Query($firebase_uid: string) {
-	users(func: eq(firebase_uid, $firebase_uid)) {
-		firebase_uid
-		uid
-		registered
-		name
-		username
-		birthday
-		color
-		bio
-		banner
-		avatars
-		thumbnails
-		followers: count(~follow)
-		following: count(follow)
-		posts: count(~author @filter(not has(in_reply_to)))
-		replies: count(~author @filter(has(in_reply_to)))
-		reposts: count(~repost)
-		likes: count(~like)
-	}
-}`
-
-const userByUidQuery = `
+const userQuery = `
 query Query($user_uid: string) {
 	users(func: uid($user_uid)) {
 		followers: count(~follow)
