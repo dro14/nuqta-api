@@ -111,9 +111,11 @@ func (d *Data) GetUidByUsername(ctx context.Context, username string) (string, e
 }
 
 func (d *Data) SearchUser(ctx context.Context, query string, offset int64) ([]string, error) {
+	terms := strings.Fields(query)
+	query = strings.Join(terms, ":* & ") + ":*"
 	rows, err := d.dbQuery(ctx, `
 		SELECT id, ts_rank(search_vector, query) AS rank
-		FROM users, websearch_to_tsquery('simple', $1) query
+		FROM users, to_tsquery('simple', $1) query
 		WHERE search_vector @@ query
 		ORDER BY rank DESC
 		LIMIT 20
