@@ -6,10 +6,24 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/dgraph-io/dgo/v240/protos/api"
 	"github.com/dro14/nuqta-service/e"
 )
+
+const retryAttempts = 5
+
+func getSearchVector(name, username string) string {
+	searchVector := ""
+	if name != "" {
+		searchVector += strings.TrimSpace(name) + " "
+	}
+	if username != "" {
+		searchVector += "@" + strings.TrimSpace(username)
+	}
+	return searchVector
+}
 
 func (d *Data) graphGet(ctx context.Context, query string, vars map[string]string) ([]byte, error) {
 	var lastErr error

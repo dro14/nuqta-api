@@ -10,8 +10,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const retryAttempts = 5
-
 type Data struct {
 	db    *sql.DB
 	graph *dgo.Dgraph

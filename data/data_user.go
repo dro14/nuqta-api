@@ -40,9 +40,9 @@ func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, 
 	var nullBanner sql.NullString
 
 	err = d.dbQueryRow(ctx,
-		"SELECT registered, username, name, location, birthday, color, bio, banner, avatars, thumbnails FROM users WHERE id = $1",
+		"SELECT registered, name, username, location, birthday, color, bio, banner, avatars, thumbnails FROM users WHERE id = $1",
 		userUid,
-		&user.Registered, &user.Username, &nullName, &nullLocation, &nullBirthday, &nullColor, &nullBio, &nullBanner, pq.Array(&user.Avatars), pq.Array(&user.Thumbnails),
+		&user.Registered, &nullName, &user.Username, &nullLocation, &nullBirthday, &nullColor, &nullBio, &nullBanner, pq.Array(&user.Avatars), pq.Array(&user.Thumbnails),
 	)
 	if err != nil {
 		return nil, err
@@ -111,8 +111,7 @@ func (d *Data) GetUidByUsername(ctx context.Context, username string) (string, e
 }
 
 func (d *Data) SearchUser(ctx context.Context, query string, offset int64) ([]string, error) {
-	terms := strings.Fields(query)
-	query = strings.Join(terms, ":* & ") + ":*"
+	query = strings.Join(strings.Fields(query), ":* & ") + ":*"
 	rows, err := d.dbQuery(ctx, `
 		SELECT id, ts_rank(search_vector, query) AS rank
 		FROM users, to_tsquery('simple', $1) query

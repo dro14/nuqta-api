@@ -43,8 +43,8 @@ func (d *Data) CreateProfile(ctx context.Context, user *models.User) error {
 	user.Uid = assigned.Uids["user"]
 
 	err = d.dbExec(ctx,
-		"INSERT INTO users (id, firebase_uid, email, registered, username, name) VALUES ($1, $2, $3, $4, $5, $6)",
-		user.Uid, user.FirebaseUid, user.Email, user.Registered, user.Username, user.Name,
+		"INSERT INTO users (id, firebase_uid, email, registered, name, username, search_vector) VALUES ($1, $2, $3, $4, $5, $6, to_tsvector('simple', $7))",
+		user.Uid, user.FirebaseUid, user.Email, user.Registered, user.Name, user.Username, getSearchVector(user.Name, user.Username),
 	)
 	if err != nil {
 		object = map[string]any{"uid": user.Uid}
@@ -79,7 +79,7 @@ func (d *Data) GetProfile(ctx context.Context, firebaseUid string) (*models.User
 
 func (d *Data) UpdateProfile(ctx context.Context, user *models.User) error {
 	return d.dbExec(ctx,
-		"UPDATE users SET username = $1, name = $2, location = $3, birthday = $4, color = $5, bio = $6, banner = $7, avatars = $8, thumbnails = $9 WHERE id = $10",
-		user.Username, user.Name, user.Location, user.Birthday, user.Color, user.Bio, user.Banner, pq.Array(user.Avatars), pq.Array(user.Thumbnails), user.Uid,
+		"UPDATE users SET name = $1, username = $2, location = $3, birthday = $4, color = $5, bio = $6, banner = $7, avatars = $8, thumbnails = $9, search_vector = to_tsvector('simple', $10) WHERE id = $11",
+		user.Name, user.Username, user.Location, user.Birthday, user.Color, user.Bio, user.Banner, pq.Array(user.Avatars), pq.Array(user.Thumbnails), getSearchVector(user.Name, user.Username), user.Uid,
 	)
 }

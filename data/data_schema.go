@@ -103,8 +103,8 @@ CREATE TABLE users (
     firebase_uid VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     registered BIGINT NOT NULL,
-    username VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(255),
+    username VARCHAR(255) UNIQUE NOT NULL,
     location VARCHAR(255),
     birthday BIGINT,
     color VARCHAR(50),
@@ -112,25 +112,12 @@ CREATE TABLE users (
     banner VARCHAR(255),
     avatars VARCHAR(255)[],
     thumbnails VARCHAR(255)[],
-    search_vector TSVECTOR
+    search_vector TSVECTOR NOT NULL
 );
 
 CREATE INDEX users_firebase_uid_idx ON users(firebase_uid);
 CREATE INDEX users_username_lower_idx ON users(LOWER(username));
 CREATE INDEX users_search_idx ON users USING GIN(search_vector);
-
-CREATE OR REPLACE FUNCTION users_search_update_trigger() RETURNS TRIGGER AS $$
-BEGIN
-    IF TG_OP = 'INSERT' OR NEW.username IS DISTINCT FROM OLD.username OR NEW.name IS DISTINCT FROM OLD.name THEN
-        NEW.search_vector = to_tsvector('simple', '@' || COALESCE(NEW.username, '') || ' ' || COALESCE(NEW.name, ''));
-    END IF;
-    RETURN NEW;
-END
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER users_search_vector_update
-BEFORE INSERT OR UPDATE OF username, name ON users
-FOR EACH ROW EXECUTE FUNCTION users_search_update_trigger();
 
 CREATE TABLE posts (
     id VARCHAR(255) PRIMARY KEY,
