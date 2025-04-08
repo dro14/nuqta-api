@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"slices"
 	"strings"
 
 	"github.com/dro14/nuqta-service/e"
@@ -19,7 +18,7 @@ func (h *Handler) createPost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	post, err = h.db.CreatePost(ctx, post)
+	err = h.data.CreatePost(ctx, post)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -50,40 +49,10 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		posts, err := h.db.GetFollowingPosts(ctx, request.Uid, request.Before)
+		posts, err := h.data.GetFollowingPosts(ctx, request.Uid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
-		}
-		for i, post := range posts {
-			if len(post.Reposted) > 0 {
-				posts[i].Timestamp = post.Reposted[0].RepostedTimestamp
-			}
-		}
-		slices.SortFunc(
-			posts,
-			func(a, b *models.Post) int {
-				if a.Timestamp < b.Timestamp {
-					return 1
-				} else if a.Timestamp > b.Timestamp {
-					return -1
-				} else {
-					return 0
-				}
-			},
-		)
-		if len(posts) > 20 {
-			posts = posts[:20]
-		}
-		for i, post := range posts {
-			posts[i], err = h.db.GetPost(ctx, request.Uid, post.Uid, withInReplyTo)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, failure(err))
-				return
-			}
-			if len(post.Reposted) > 0 {
-				posts[i].RepostedBy = &models.User{Uid: post.Reposted[0].Uid}
-			}
 		}
 		c.JSON(http.StatusOK, posts)
 		return
@@ -92,7 +61,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.db.GetReplies(ctx, request.Uid, request.Before)
+		postUids, err = h.data.GetReplies(ctx, request.Uid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -102,7 +71,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.db.GetSavedPosts(ctx, request.Uid, request.Before)
+		postUids, err = h.data.GetSavedPosts(ctx, request.Uid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -113,7 +82,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.db.GetUserPosts(ctx, request.Tab, request.UserUid, request.Before)
+		postUids, err = h.data.GetUserPosts(ctx, request.Tab, request.UserUid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -124,7 +93,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.db.GetPopularReplies(ctx, request.PostUid, request.Offset)
+		postUids, err = h.data.GetPopularReplies(ctx, request.PostUid, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -135,7 +104,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.db.GetLatestReplies(ctx, request.PostUid, request.Before)
+		postUids, err = h.data.GetLatestReplies(ctx, request.PostUid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -149,10 +118,13 @@ func (h *Handler) getPostList(c *gin.Context) {
 		}
 	}
 
-	posts, err := h.db.GetPosts(ctx, request.Uid, postUids, withInReplyTo)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
+	posts := make([]*models.Post, 0, len(postUids))
+	for _, postUid := range postUids {
+		post, err := h.data.GetPost(ctx, request.Uid, postUid, withInReplyTo)
+		if err != nil {
+			continue
+		}
+		posts = append(posts, post)
 	}
 
 	c.JSON(http.StatusOK, posts)
@@ -178,7 +150,7 @@ func (h *Handler) deletePost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	post, err := h.db.GetPost(ctx, request.Uid, request.PostUid, false)
+	post, err := h.data.GetPost(ctx, request.Uid, request.PostUid, false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -189,7 +161,7 @@ func (h *Handler) deletePost(c *gin.Context) {
 		return
 	}
 
-	author, err := h.db.GetProfile(ctx, firebaseUid)
+	author, err := h.data.GetProfile(ctx, firebaseUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -200,7 +172,7 @@ func (h *Handler) deletePost(c *gin.Context) {
 		return
 	}
 
-	err = h.db.DeletePost(ctx, request.PostUid)
+	err = h.data.DeletePost(ctx, request.PostUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

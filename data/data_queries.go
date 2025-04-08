@@ -1,4 +1,4 @@
-package dgraph
+package data
 
 const userByFirebaseUidQuery = `
 query Query($firebase_uid: string) {
@@ -26,16 +26,6 @@ query Query($firebase_uid: string) {
 const userByUidQuery = `
 query Query($user_uid: string) {
 	users(func: uid($user_uid)) {
-		uid
-		registered
-		name
-		username
-		birthday
-		color
-		bio
-		banner
-		avatars
-		thumbnails
 		followers: count(~follow)
 		following: count(follow)
 		posts: count(~author @filter(not has(in_reply_to)))
@@ -69,10 +59,6 @@ query Query($user_uid: string, $after: string) {
 const postQuery = `
 query Query($post_uid: string) {
 	posts(func: uid($post_uid)) {
-		uid
-		text
-		timestamp
-		who_can_reply
 		author {
 			uid
 		}
@@ -111,42 +97,23 @@ query Query($uid: string, $post_uid: string) {
 	}
 }`
 
-const isViewedQuery = `
-query Query($uid: string, $post_uid: string) {
-	is_viewed(func: uid($uid)) {
-		~view @filter(uid($post_uid)) {
-			uid
-		}
-	}
-}`
-
-const latestPostsQuery = `
-query Query($after: int) {
-	posts(func: gt(timestamp, $after)) @filter(not has(in_reply_to)) {
-		uid
-		timestamp
-		replies: count(~in_reply_to)
-		reposts: count(repost)
-		likes: count(like)
-		clicks: count(click)
-		views: count(view)
-		reports: count(report)
-	}
-}`
-
 const followingPostsQuery = `
 query Query($uid: string, $before: int) {
 	var(func: uid($uid)) {
 		follow_uids as follow
 	}
 
-	posts(func: lt(timestamp, $before)) @filter((uid_in(author, uid(follow_uids)) AND not has(in_reply_to)) OR uid_in(repost, uid(follow_uids))) {
+	posts(func: lt(timestamp, $before)) @filter(uid_in(author, uid(follow_uids)) AND not has(in_reply_to)) {
 		uid
 		timestamp
-		reposted: repost @filter(uid(follow_uids)) @facets(orderdesc: timestamp) {
+	}
+
+	reposts(func: type(Post)) @filter(uid_in(repost, uid(follow_uids))) {
+		uid
+		reposted: repost @filter(uid(follow_uids)) @facets(lt(timestamp, $before)) @facets(orderdesc: timestamp) {
 			uid
 		}
-	}
+    }
 }`
 
 const repliesQuery = `

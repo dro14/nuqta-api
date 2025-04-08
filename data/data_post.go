@@ -1,4 +1,4 @@
-package dgraph
+package data
 
 import (
 	"context"
@@ -7,29 +7,51 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
 )
 
-func (d *Dgraph) CreatePost(ctx context.Context, post *models.Post) (*models.Post, error) {
-	post.DType = []string{"Post"}
-	post.Uid = "_:post"
+func (d *Data) CreatePost(ctx context.Context, post *models.Post) error {
 	post.Timestamp = time.Now().Unix()
 
-	assigned, err := d.set(ctx, post)
-	if err != nil {
-		return nil, err
+	object := map[string]any{
+		"dgraph.type": "Post",
+		"uid":         "_:post",
+		"timestamp":   post.Timestamp,
+		"author": map[string]string{
+			"uid": post.Author.Uid,
+		},
 	}
 
+	if post.InReplyTo != nil {
+		object["in_reply_to"] = map[string]string{
+			"uid": post.InReplyTo.Uid,
+		}
+	}
+
+	assigned, err := d.graphSet(ctx, object)
+	if err != nil {
+		return err
+	}
 	post.Uid = assigned.Uids["post"]
-	return post, nil
+
+	err = d.dbExec(ctx,
+		"INSERT INTO posts (id, timestamp, text, who_can_reply) VALUES ($1, $2, $3, $4)",
+		post.Uid, post.Timestamp, post.Text, post.WhoCanReply,
+	)
+	if err != nil {
+		object = map[string]any{"uid": post.Uid}
+		d.graphDelete(ctx, object)
+		return err
+	}
+
+	return nil
 }
 
-func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string, withInReplyTo bool) (*models.Post, error) {
+func (d *Data) GetPost(ctx context.Context, uid, postUid string, withInReplyTo bool) (*models.Post, error) {
 	vars := map[string]string{
 		"$post_uid": postUid,
 	}
-	bytes, err := d.get(ctx, postQuery, vars)
+	bytes, err := d.graphGet(ctx, postQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -39,17 +61,23 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string, withInReplyTo
 	if err != nil {
 		return nil, err
 	}
-
 	post := response["posts"][0]
-	if post.Timestamp == 0 {
-		return nil, e.ErrNotFound
+	post.Uid = postUid
+
+	err = d.dbQueryRow(ctx,
+		"SELECT timestamp, text, who_can_reply FROM posts WHERE id = $1",
+		postUid,
+		&post.Timestamp, &post.Text, &post.WhoCanReply,
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	vars = map[string]string{
 		"$uid":      uid,
 		"$post_uid": postUid,
 	}
-	bytes, err = d.get(ctx, postEdgesQuery, vars)
+	bytes, err = d.graphGet(ctx, postEdgesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -77,62 +105,79 @@ func (d *Dgraph) GetPost(ctx context.Context, uid, postUid string, withInReplyTo
 	return post, nil
 }
 
-func (d *Dgraph) GetPosts(ctx context.Context, uid string, postUids []string, withInReplyTo bool) ([]*models.Post, error) {
-	posts := make([]*models.Post, 0, len(postUids))
-	for _, postUid := range postUids {
-		post, err := d.GetPost(ctx, uid, postUid, withInReplyTo)
+func (d *Data) GetFollowingPosts(ctx context.Context, uid string, before int64) ([]*models.Post, error) {
+	vars := map[string]string{
+		"$uid":    uid,
+		"$before": strconv.FormatInt(before, 10),
+	}
+	bytes, err := d.graphGet(ctx, followingPostsQuery, vars)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]*models.Post
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	posts := response["posts"]
+	for _, repost := range response["reposts"] {
+		if len(repost.Reposted) > 0 {
+			posts = append(posts, &models.Post{
+				Uid:       repost.Uid,
+				Timestamp: repost.Reposted[0].RepostedTimestamp,
+				RepostedBy: &models.User{
+					Uid: repost.Reposted[0].Uid,
+				},
+			})
+		}
+	}
+
+	slices.SortFunc(
+		posts,
+		func(a, b *models.Post) int {
+			if a.Timestamp < b.Timestamp {
+				return 1
+			} else if a.Timestamp > b.Timestamp {
+				return -1
+			} else {
+				return 0
+			}
+		},
+	)
+
+	var added []string
+	var result []*models.Post
+	for i := range posts {
+		if slices.Contains(added, posts[i].Uid) {
+			continue
+		}
+		post, err := d.GetPost(ctx, uid, posts[i].Uid, true)
 		if err != nil {
 			return nil, err
 		}
-		posts = append(posts, post)
+		if posts[i].RepostedBy != nil {
+			post.RepostedBy = &models.User{
+				Uid: posts[i].RepostedBy.Uid,
+			}
+		}
+		added = append(added, post.Uid)
+		result = append(result, post)
+		if len(result) == 20 {
+			break
+		}
 	}
-	return posts, nil
+
+	return result, nil
 }
 
-func (d *Dgraph) GetLatestPosts(ctx context.Context) ([]*models.Post, error) {
-	after := time.Now().AddDate(0, 0, -2).Unix()
-	vars := map[string]string{
-		"$after": strconv.FormatInt(after, 10),
-	}
-	bytes, err := d.get(ctx, latestPostsQuery, vars)
-	if err != nil {
-		return nil, err
-	}
-
-	var response map[string][]*models.Post
-	err = json.Unmarshal(bytes, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response["posts"], nil
-}
-
-func (d *Dgraph) GetFollowingPosts(ctx context.Context, uid string, before int64) ([]*models.Post, error) {
+func (d *Data) GetReplies(ctx context.Context, uid string, before int64) ([]string, error) {
 	vars := map[string]string{
 		"$uid":    uid,
 		"$before": strconv.FormatInt(before, 10),
 	}
-	bytes, err := d.get(ctx, followingPostsQuery, vars)
-	if err != nil {
-		return nil, err
-	}
-
-	var response map[string][]*models.Post
-	err = json.Unmarshal(bytes, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response["posts"], nil
-}
-
-func (d *Dgraph) GetReplies(ctx context.Context, uid string, before int64) ([]string, error) {
-	vars := map[string]string{
-		"$uid":    uid,
-		"$before": strconv.FormatInt(before, 10),
-	}
-	bytes, err := d.get(ctx, repliesQuery, vars)
+	bytes, err := d.graphGet(ctx, repliesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -151,12 +196,12 @@ func (d *Dgraph) GetReplies(ctx context.Context, uid string, before int64) ([]st
 	return postUids, nil
 }
 
-func (d *Dgraph) GetSavedPosts(ctx context.Context, uid string, before int64) ([]string, error) {
+func (d *Data) GetSavedPosts(ctx context.Context, uid string, before int64) ([]string, error) {
 	vars := map[string]string{
 		"$uid":    uid,
 		"$before": strconv.FormatInt(before, 10),
 	}
-	bytes, err := d.get(ctx, savedPostsQuery, vars)
+	bytes, err := d.graphGet(ctx, savedPostsQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +222,7 @@ func (d *Dgraph) GetSavedPosts(ctx context.Context, uid string, before int64) ([
 	return postUids, nil
 }
 
-func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before int64) ([]string, error) {
+func (d *Data) GetUserPosts(ctx context.Context, tab, userUid string, before int64) ([]string, error) {
 	var query string
 	switch tab {
 	case "posts":
@@ -194,7 +239,7 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before i
 		"$user_uid": userUid,
 		"$before":   strconv.FormatInt(before, 10),
 	}
-	bytes, err := d.get(ctx, query, vars)
+	bytes, err := d.graphGet(ctx, query, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -215,11 +260,11 @@ func (d *Dgraph) GetUserPosts(ctx context.Context, tab, userUid string, before i
 	return postUids, nil
 }
 
-func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset int64) ([]string, error) {
+func (d *Data) GetPopularReplies(ctx context.Context, postUid string, offset int64) ([]string, error) {
 	vars := map[string]string{
 		"$post_uid": postUid,
 	}
-	bytes, err := d.get(ctx, postRepliesQuery, vars)
+	bytes, err := d.graphGet(ctx, postRepliesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -273,12 +318,12 @@ func (d *Dgraph) GetPopularReplies(ctx context.Context, postUid string, offset i
 	return replyUids, nil
 }
 
-func (d *Dgraph) GetLatestReplies(ctx context.Context, postUid string, before int64) ([]string, error) {
+func (d *Data) GetLatestReplies(ctx context.Context, postUid string, before int64) ([]string, error) {
 	vars := map[string]string{
 		"$post_uid": postUid,
 		"$before":   strconv.FormatInt(before, 10),
 	}
-	bytes, err := d.get(ctx, latestRepliesQuery, vars)
+	bytes, err := d.graphGet(ctx, latestRepliesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -299,11 +344,11 @@ func (d *Dgraph) GetLatestReplies(ctx context.Context, postUid string, before in
 	return replyUids, nil
 }
 
-func (d *Dgraph) GetPostReplies(ctx context.Context, postUid string) ([]string, error) {
+func (d *Data) GetPostReplies(ctx context.Context, postUid string) ([]string, error) {
 	vars := map[string]string{
 		"$post_uid": postUid,
 	}
-	bytes, err := d.get(ctx, postRepliesQuery, vars)
+	bytes, err := d.graphGet(ctx, postRepliesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +369,7 @@ func (d *Dgraph) GetPostReplies(ctx context.Context, postUid string) ([]string, 
 	return replyUids, nil
 }
 
-func (d *Dgraph) DeletePost(ctx context.Context, postUid string) error {
+func (d *Data) DeletePost(ctx context.Context, postUid string) error {
 	replyUids, err := d.GetPostReplies(ctx, postUid)
 	if err != nil {
 		return err
@@ -336,5 +381,9 @@ func (d *Dgraph) DeletePost(ctx context.Context, postUid string) error {
 		}
 	}
 	object := map[string]any{"uid": postUid}
-	return d.delete(ctx, object)
+	err = d.graphDelete(ctx, object)
+	if err != nil {
+		return err
+	}
+	return d.dbExec(ctx, "DELETE FROM posts WHERE id = $1", postUid)
 }

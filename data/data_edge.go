@@ -1,8 +1,7 @@
-package dgraph
+package data
 
 import (
 	"context"
-	"encoding/json"
 	"slices"
 	"time"
 
@@ -19,7 +18,7 @@ var edges = []string{
 	"report",
 }
 
-func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target []string) error {
+func (d *Data) CreateEdge(ctx context.Context, source, edge, target []string) error {
 	var objects []map[string]any
 	for i := range source {
 		if !slices.Contains(edges, edge[i]) {
@@ -33,11 +32,11 @@ func (d *Dgraph) CreateEdge(ctx context.Context, source, edge, target []string) 
 			},
 		})
 	}
-	_, err := d.set(ctx, objects)
+	_, err := d.graphSet(ctx, objects)
 	return err
 }
 
-func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target []string) error {
+func (d *Data) DeleteEdge(ctx context.Context, source, edge, target []string) error {
 	var objects []map[string]any
 	for i := range source {
 		if !slices.Contains(edges, edge[i]) {
@@ -50,24 +49,5 @@ func (d *Dgraph) DeleteEdge(ctx context.Context, source, edge, target []string) 
 			},
 		})
 	}
-	return d.delete(ctx, objects)
-}
-
-func (d *Dgraph) IsPostViewed(ctx context.Context, uid, postUid string) (bool, error) {
-	vars := map[string]string{
-		"$uid":      uid,
-		"$post_uid": postUid,
-	}
-	bytes, err := d.get(ctx, isViewedQuery, vars)
-	if err != nil {
-		return false, err
-	}
-
-	var response map[string][]any
-	err = json.Unmarshal(bytes, &response)
-	if err != nil {
-		return false, err
-	}
-
-	return len(response["is_viewed"]) > 0, nil
+	return d.graphDelete(ctx, objects)
 }

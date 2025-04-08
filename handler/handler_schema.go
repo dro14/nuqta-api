@@ -7,7 +7,7 @@ import (
 )
 
 func (h *Handler) getSchema(c *gin.Context) {
-	schema, err := h.db.GetSchema(c.Request.Context())
+	schema, err := h.data.GetSchema(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -17,7 +17,7 @@ func (h *Handler) getSchema(c *gin.Context) {
 }
 
 func (h *Handler) updateSchema(c *gin.Context) {
-	err := h.db.UpdateSchema(c.Request.Context())
+	err := h.data.UpdateSchema(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -25,7 +25,7 @@ func (h *Handler) updateSchema(c *gin.Context) {
 }
 
 func (h *Handler) deleteSchema(c *gin.Context) {
-	err := h.db.DeleteSchema(c.Request.Context())
+	err := h.data.DeleteSchema(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -33,7 +33,7 @@ func (h *Handler) deleteSchema(c *gin.Context) {
 }
 
 func (h *Handler) deletePredicate(c *gin.Context) {
-	err := h.db.DeletePredicate(c.Request.Context(), c.Param("predicate"))
+	err := h.data.DeletePredicate(c.Request.Context(), c.Param("predicate"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

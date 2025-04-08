@@ -23,13 +23,11 @@ func (h *Handler) Run(port string) error {
 	group.POST("", h.createProfile)
 	group.GET("", h.getProfile)
 	group.PUT("", h.updateProfile)
-	group.DELETE("", h.deleteProfileAttribute)
 	group.OPTIONS("", h.isAvailable)
 
 	group = authorized.Group("/user")
 	group.GET("", h.getUserList)
 	group.GET("/username", h.getUserByUsername)
-	group.PATCH("", h.hitUser)
 
 	group = authorized.Group("/post")
 	group.POST("", h.createPost)

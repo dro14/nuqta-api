@@ -29,7 +29,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 			c.JSON(http.StatusOK, make([]*models.User, 0))
 			return
 		}
-		userUids, err = h.index.SearchUser(request.Query, request.Offset)
+		userUids, err = h.data.SearchUser(ctx, request.Query, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -40,7 +40,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 			return
 		}
 		reverse := request.Tab == "followers"
-		userUids, err = h.db.GetUserFollows(ctx, request.UserUid, request.After, reverse)
+		userUids, err = h.data.GetUserFollows(ctx, request.UserUid, request.After, reverse)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -56,7 +56,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 
 	users := make([]*models.User, 0, len(userUids))
 	for i := range userUids {
-		user, err := h.db.GetUser(ctx, request.Uid, userUids[i])
+		user, err := h.data.GetUser(ctx, request.Uid, userUids[i])
 		if err != nil {
 			continue
 		}
@@ -79,38 +79,18 @@ func (h *Handler) getUserByUsername(c *gin.Context) {
 		return
 	}
 
-	userUid, err := h.index.GetUidByUsername(request.Username)
+	ctx := c.Request.Context()
+	userUid, err := h.data.GetUidByUsername(ctx, request.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	ctx := c.Request.Context()
-	user, err := h.db.GetUser(ctx, request.Uid, userUid)
+	user, err := h.data.GetUser(ctx, request.Uid, userUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
 	c.JSON(http.StatusOK, user)
-}
-
-func (h *Handler) hitUser(c *gin.Context) {
-	request := &models.Request{}
-	err := c.ShouldBindJSON(&request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	if request.UserUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	err = h.index.HitUser(request.UserUid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
 }

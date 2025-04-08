@@ -28,7 +28,7 @@ func (h *Handler) createEdge(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	err = h.db.CreateEdge(ctx, request.Source, request.Edge, request.Target)
+	err = h.data.CreateEdge(ctx, request.Source, request.Edge, request.Target)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -55,7 +55,7 @@ func (h *Handler) deleteEdge(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	err = h.db.DeleteEdge(ctx, request.Source, request.Edge, request.Target)
+	err = h.data.DeleteEdge(ctx, request.Source, request.Edge, request.Target)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

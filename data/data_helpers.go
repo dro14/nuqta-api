@@ -1,0 +1,124 @@
+package data
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"log"
+
+	"github.com/dgraph-io/dgo/v240/protos/api"
+	"github.com/dro14/nuqta-service/e"
+)
+
+func (d *Data) graphGet(ctx context.Context, query string, vars map[string]string) ([]byte, error) {
+	var lastErr error
+	for range retryAttempts {
+		txn := d.graph.NewReadOnlyTxn().BestEffort()
+		resp, err := txn.QueryWithVars(ctx, query, vars)
+		if err == nil {
+			return resp.Json, nil
+		}
+		lastErr = err
+		log.Printf("can't get: %s%s", err, query)
+	}
+	log.Printf("failed to get after %d attempts", retryAttempts)
+	return nil, lastErr
+}
+
+func (d *Data) graphSet(ctx context.Context, object any) (*api.Response, error) {
+	bytes, err := json.Marshal(object)
+	if err != nil {
+		return nil, err
+	}
+	mutation := &api.Mutation{
+		SetJson:   bytes,
+		CommitNow: true,
+	}
+	var lastErr error
+	for range retryAttempts {
+		txn := d.graph.NewTxn()
+		resp, err := txn.Mutate(ctx, mutation)
+		if err == nil {
+			return resp, nil
+		}
+		lastErr = err
+		log.Printf("can't set: %s\n%s", err, bytes)
+	}
+	log.Printf("failed to set after %d attempts", retryAttempts)
+	return nil, lastErr
+}
+
+func (d *Data) graphDelete(ctx context.Context, object any) error {
+	bytes, err := json.Marshal(object)
+	if err != nil {
+		return err
+	}
+	mutation := &api.Mutation{
+		DeleteJson: bytes,
+		CommitNow:  true,
+	}
+	var lastErr error
+	for range retryAttempts {
+		txn := d.graph.NewTxn()
+		_, err := txn.Mutate(ctx, mutation)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		log.Printf("can't delete: %s\n%s", err, bytes)
+	}
+	log.Printf("failed to delete after %d attempts", retryAttempts)
+	return lastErr
+}
+
+func (d *Data) dbExec(ctx context.Context, query string, args ...any) error {
+	var lastErr error
+	for range retryAttempts {
+		_, err := d.db.ExecContext(ctx, query, args...)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		log.Printf("can't exec: %s\n%s", err, query)
+		if errors.Is(err, sql.ErrNoRows) {
+			return e.ErrNotFound
+		}
+	}
+	log.Printf("failed to exec after %d attempts", retryAttempts)
+	return lastErr
+}
+
+func (d *Data) dbQueryRow(ctx context.Context, query, arg string, dest ...any) error {
+	var lastErr error
+	for range retryAttempts {
+		err := d.db.QueryRowContext(ctx, query, arg).Scan(dest...)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		log.Printf("can't query row: %s\n%s", err, query)
+		if errors.Is(err, sql.ErrNoRows) {
+			return e.ErrNotFound
+		}
+	}
+	log.Printf("failed to query row after %d attempts", retryAttempts)
+	return lastErr
+}
+
+func (d *Data) dbQuery(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+	var lastErr error
+	for range retryAttempts {
+		rows, err := d.db.QueryContext(ctx, query, args...)
+		if err == nil {
+			return rows, nil
+		}
+		lastErr = err
+		log.Printf("can't query: %s\n%s", err, query)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, e.ErrNotFound
+		}
+	}
+	log.Printf("failed to query after %d attempts", retryAttempts)
+	return nil, lastErr
+}
