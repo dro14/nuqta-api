@@ -10,7 +10,10 @@ import (
 func (h *Handler) Run(port string) error {
 	h.engine.GET("/", h.root)
 
-	group := h.engine.Group("/schema")
+	group := h.engine.Group("/client")
+	group.GET("", h.getClientInfo)
+
+	group = h.engine.Group("/schema")
 	group.GET("", h.getSchema)
 	group.PUT("", h.updateSchema)
 	group.DELETE("", h.deleteSchema)
@@ -64,4 +67,11 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 	}
 
 	c.Set("firebase_uid", firebaseUid)
+}
+
+func (h *Handler) getClientInfo(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"ip_address": c.ClientIP(),
+		"user_agent": c.Request.UserAgent(),
+	})
 }
