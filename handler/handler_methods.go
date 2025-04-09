@@ -5,6 +5,7 @@ import (
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/gin-gonic/gin"
+	"github.com/mssola/useragent"
 )
 
 func (h *Handler) Run(port string) error {
@@ -70,8 +71,9 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 }
 
 func (h *Handler) getClientInfo(c *gin.Context) {
+	ua := useragent.New(c.Request.UserAgent())
 	c.JSON(http.StatusOK, gin.H{
 		"ip_address": c.ClientIP(),
-		"user_agent": c.Request.UserAgent(),
+		"user_agent": ua.OS(),
 	})
 }
