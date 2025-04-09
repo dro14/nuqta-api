@@ -2,10 +2,11 @@ package handler
 
 import (
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/gin-gonic/gin"
-	"github.com/mssola/useragent"
 )
 
 func (h *Handler) Run(port string) error {
@@ -71,9 +72,90 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 }
 
 func (h *Handler) getClientInfo(c *gin.Context) {
-	ua := useragent.New(c.Request.UserAgent())
+	ua := c.Request.UserAgent()
+	os, version := ExtractOSAndVersion(ua)
+	if version != "" {
+		os += " " + version
+	}
 	c.JSON(http.StatusOK, gin.H{
-		"ip_address": c.ClientIP(),
-		"user_agent": ua.OS(),
+		"ip": c.ClientIP(),
+		"os": os,
+		"ua": ua,
 	})
+}
+
+// ExtractOSAndVersion extracts the operating system and its version from a user-agent string.
+// It returns two strings: the OS name and the version. If either cannot be determined,
+// an empty string is returned for that component.
+func ExtractOSAndVersion(ua string) (string, string) {
+	// Extract the first parenthesized section
+	osPart := extractOSPart(ua)
+	if osPart == "" {
+		return "", ""
+	}
+
+	// Parse the OS and version from the extracted section
+	return parseOS(osPart)
+}
+
+// extractOSPart extracts the content within the first set of parentheses in the user-agent string.
+func extractOSPart(ua string) string {
+	start := strings.Index(ua, "(")
+	if start == -1 {
+		return ""
+	}
+	end := strings.Index(ua[start:], ")")
+	if end == -1 {
+		return ""
+	}
+	return ua[start+1 : start+end]
+}
+
+// parseOS determines the OS name and version from the extracted OS part.
+func parseOS(osPart string) (string, string) {
+	// Windows
+	if strings.Contains(osPart, "Windows") {
+		re := regexp.MustCompile(`Windows NT (\d+\.\d+)`)
+		if match := re.FindStringSubmatch(osPart); match != nil {
+			return "Windows", match[1] // e.g., "10.0"
+		}
+		return "Windows", ""
+	}
+
+	// macOS
+	if strings.Contains(osPart, "Mac OS X") {
+		re := regexp.MustCompile(`Mac OS X (\d+_\d+(_\d+)?)`)
+		if match := re.FindStringSubmatch(osPart); match != nil {
+			version := strings.Replace(match[1], "_", ".", -1) // e.g., "10_15_7" -> "10.15.7"
+			return "Mac OS X", version
+		}
+		return "Mac OS X", ""
+	}
+
+	// Android
+	if strings.Contains(osPart, "Android") {
+		re := regexp.MustCompile(`Android (\d+(\.\d+)?)`)
+		if match := re.FindStringSubmatch(osPart); match != nil {
+			return "Android", match[1] // e.g., "10" or "4.4"
+		}
+		return "Android", ""
+	}
+
+	// iOS (iPhone or iPad)
+	if strings.Contains(osPart, "iPhone") || strings.Contains(osPart, "iPad") {
+		re := regexp.MustCompile(`OS (\d+_\d+(_\d+)?)`)
+		if match := re.FindStringSubmatch(osPart); match != nil {
+			version := strings.Replace(match[1], "_", ".", -1) // e.g., "14_4" -> "14.4"
+			return "iOS", version
+		}
+		return "iOS", ""
+	}
+
+	// Linux
+	if strings.Contains(osPart, "Linux") {
+		return "Linux", "" // Version often not specified
+	}
+
+	// Unknown OS
+	return "", ""
 }
