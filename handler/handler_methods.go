@@ -11,7 +11,7 @@ import (
 )
 
 func (h *Handler) Run(port string) error {
-	h.engine.SetTrustedProxies([]string{"127.0.0.1", "10.0.0.4"})
+	h.engine.SetTrustedProxies([]string{"127.0.0.1"})
 
 	h.engine.GET("", h.root)
 
