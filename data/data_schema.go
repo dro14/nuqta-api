@@ -1,92 +1,25 @@
 package data
 
-import (
-	"context"
-
-	"github.com/dgraph-io/dgo/v240/protos/api"
-)
-
-func (d *Data) GetSchema(ctx context.Context) (string, error) {
-	query := "schema {}"
-	bytes, err := d.graphGet(ctx, query, nil)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-func (d *Data) UpdateSchema(ctx context.Context) error {
-	operation := &api.Operation{Schema: GraphSchema}
-	err := d.graph.Alter(ctx, operation)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (d *Data) DeleteSchema(ctx context.Context) error {
-	operation := &api.Operation{DropAll: true}
-	err := d.graph.Alter(ctx, operation)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (d *Data) DeletePredicate(ctx context.Context, predicate string) error {
-	operation := &api.Operation{DropOp: api.Operation_ATTR, DropValue: predicate}
-	err := d.graph.Alter(ctx, operation)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 const GraphSchema = `
-firebase_uid: string @index(hash) .
-email: string .
-registered: int .
-name: string .
-username: string .
-birthday: int .
-color: string .
-bio: string .
-banner: string .
-avatars: [string] .
-thumbnails: [string] .
-follow: [uid] @count @reverse .
-
-text: string .
-timestamp: int @index(int) .
-who_can_reply: string .
 author: uid @count @reverse .
-in_reply_to: uid @count @reverse .
-repost: [uid] @count @reverse .
-like: [uid] @count @reverse .
 click: [uid] @count @reverse .
-view: [uid] @count @reverse .
-save: [uid] @count @reverse .
+follow: [uid] @count @reverse .
+in_reply_to: uid @count @reverse .
+invited_by: uid @count @reverse .
+like: [uid] @count @reverse .
 report: [uid] @count @reverse .
+repost: [uid] @count @reverse .
+save: [uid] @count @reverse .
+timestamp: int @index(int) .
+view: [uid] @count @reverse .
 
 type User {
-	firebase_uid
-	email
-	registered
-	name
-	username
-	birthday
-	color
-	bio
-	banner
-	avatars
-	thumbnails
+	invited_by
 	follow
 }
 
 type Post {
-	text
 	timestamp
-	who_can_reply
 	author
 	in_reply_to
 	repost

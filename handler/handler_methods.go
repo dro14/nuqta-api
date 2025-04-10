@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/dro14/nuqta-service/e"
@@ -12,14 +13,8 @@ import (
 func (h *Handler) Run(port string) error {
 	h.engine.GET("/", h.root)
 
-	group := h.engine.Group("/client")
-	group.GET("", h.getClientInfo)
-
-	group = h.engine.Group("/schema")
-	group.GET("", h.getSchema)
-	group.PUT("", h.updateSchema)
-	group.DELETE("", h.deleteSchema)
-	group.DELETE("/:predicate", h.deletePredicate)
+	group := h.engine.Group("/download")
+	group.GET("/:referrer", h.download)
 
 	authorized := h.engine.Group("")
 	authorized.Use(h.authMiddleware)
@@ -71,91 +66,38 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 	c.Set("firebase_uid", firebaseUid)
 }
 
-func (h *Handler) getClientInfo(c *gin.Context) {
-	ua := c.Request.UserAgent()
-	os, version := ExtractOSAndVersion(ua)
-	if version != "" {
-		os += " " + version
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"ip": c.ClientIP(),
-		"os": os,
-		"ua": ua,
-	})
-}
+var pattern = regexp.MustCompile(`iPhone; CPU iPhone OS (\d+_\d+(_\d+)?) like Mac OS X`)
 
-// ExtractOSAndVersion extracts the operating system and its version from a user-agent string.
-// It returns two strings: the OS name and the version. If either cannot be determined,
-// an empty string is returned for that component.
-func ExtractOSAndVersion(ua string) (string, string) {
-	// Extract the first parenthesized section
-	osPart := extractOSPart(ua)
-	if osPart == "" {
-		return "", ""
-	}
+func (h *Handler) download(c *gin.Context) {
+	userAgent := c.Request.UserAgent()
+	referrer := c.Param("referrer")
+	referrer = strings.TrimSpace(referrer)
 
-	// Parse the OS and version from the extracted section
-	return parseOS(osPart)
-}
-
-// extractOSPart extracts the content within the first set of parentheses in the user-agent string.
-func extractOSPart(ua string) string {
-	start := strings.Index(ua, "(")
-	if start == -1 {
-		return ""
-	}
-	end := strings.Index(ua[start:], ")")
-	if end == -1 {
-		return ""
-	}
-	return ua[start+1 : start+end]
-}
-
-// parseOS determines the OS name and version from the extracted OS part.
-func parseOS(osPart string) (string, string) {
-	// Windows
-	if strings.Contains(osPart, "Windows") {
-		re := regexp.MustCompile(`Windows NT (\d+\.\d+)`)
-		if match := re.FindStringSubmatch(osPart); match != nil {
-			return "Windows", match[1] // e.g., "10.0"
+	if strings.HasPrefix(referrer, "0x") {
+		_, err := strconv.ParseInt(referrer[2:], 16, 64)
+		if err == nil {
+			osVersion := ""
+			match := pattern.FindStringSubmatch(userAgent)
+			if match != nil {
+				osVersion = strings.ReplaceAll(match[1], "_", ".")
+			}
+			h.data.SetReferrer(c.Request.Context(), c.ClientIP(), osVersion, referrer)
+		} else {
+			referrer = ""
 		}
-		return "Windows", ""
+	} else {
+		referrer = ""
 	}
 
-	// macOS
-	if strings.Contains(osPart, "Mac OS X") {
-		re := regexp.MustCompile(`Mac OS X (\d+_\d+(_\d+)?)`)
-		if match := re.FindStringSubmatch(osPart); match != nil {
-			version := strings.Replace(match[1], "_", ".", -1) // e.g., "10_15_7" -> "10.15.7"
-			return "Mac OS X", version
+	var url string
+	if strings.Contains(userAgent, "Mac OS X") {
+		url = "https://apps.apple.com/us/app/nuqta/id6743650655"
+	} else {
+		url = "https://play.google.com/store/apps/details?id=uz.chuqurtech.nuqta"
+		if referrer != "" {
+			url += "&referrer=" + referrer
 		}
-		return "Mac OS X", ""
 	}
 
-	// Android
-	if strings.Contains(osPart, "Android") {
-		re := regexp.MustCompile(`Android (\d+(\.\d+)?)`)
-		if match := re.FindStringSubmatch(osPart); match != nil {
-			return "Android", match[1] // e.g., "10" or "4.4"
-		}
-		return "Android", ""
-	}
-
-	// iOS (iPhone or iPad)
-	if strings.Contains(osPart, "iPhone") || strings.Contains(osPart, "iPad") {
-		re := regexp.MustCompile(`OS (\d+_\d+(_\d+)?)`)
-		if match := re.FindStringSubmatch(osPart); match != nil {
-			version := strings.Replace(match[1], "_", ".", -1) // e.g., "14_4" -> "14.4"
-			return "iOS", version
-		}
-		return "iOS", ""
-	}
-
-	// Linux
-	if strings.Contains(osPart, "Linux") {
-		return "Linux", "" // Version often not specified
-	}
-
-	// Unknown OS
-	return "", ""
+	c.Redirect(http.StatusFound, url)
 }

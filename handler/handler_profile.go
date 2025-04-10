@@ -2,7 +2,10 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
@@ -41,6 +44,30 @@ func (h *Handler) createProfile(c *gin.Context) {
 		existingUser.Version = version
 		c.JSON(http.StatusOK, existingUser)
 		return
+	}
+
+	if user.InvitedBy != nil {
+		if user.InvitedBy.Uid != "" {
+			if strings.HasPrefix(user.InvitedBy.Uid, "0x") {
+				_, err = strconv.ParseInt(user.InvitedBy.Uid[2:], 16, 64)
+				if err != nil {
+					user.InvitedBy = nil
+				}
+			} else {
+				osVersion := user.InvitedBy.Uid
+				userUid, err := h.data.GetReferrer(ctx, c.ClientIP(), osVersion)
+				if userUid != "" {
+					user.InvitedBy = &models.User{Uid: userUid}
+				} else {
+					if err != nil {
+						log.Printf("can't get referrer: %s", err)
+					}
+					user.InvitedBy = nil
+				}
+			}
+		} else {
+			user.InvitedBy = nil
+		}
 	}
 
 	err = h.data.CreateProfile(ctx, user)

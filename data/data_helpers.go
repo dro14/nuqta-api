@@ -7,7 +7,9 @@ import (
 	"errors"
 	"log"
 	"strings"
+	"time"
 
+	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/dgraph-io/dgo/v240/protos/api"
 	"github.com/dro14/nuqta-service/e"
 )
@@ -135,4 +137,22 @@ func (d *Data) dbQuery(ctx context.Context, query string, args ...any) (*sql.Row
 	}
 	log.Printf("failed to query after %d attempts", retryAttempts)
 	return nil, lastErr
+}
+
+func (d *Data) cacheGet(key string) ([]byte, error) {
+	item, err := d.cache.Get(key)
+	if errors.Is(err, memcache.ErrCacheMiss) {
+		return nil, e.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+	return item.Value, nil
+}
+
+func (d *Data) cacheSet(key string, value []byte, ttl time.Duration) error {
+	return d.cache.Set(&memcache.Item{
+		Key:        key,
+		Value:      value,
+		Expiration: int32(ttl.Seconds()),
+	})
 }

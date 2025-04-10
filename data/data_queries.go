@@ -3,6 +3,9 @@ package data
 const userQuery = `
 query Query($user_uid: string) {
 	users(func: uid($user_uid)) {
+		invited_by {
+			uid
+		}
 		followers: count(~follow)
 		following: count(follow)
 		posts: count(~author @filter(not has(in_reply_to)))

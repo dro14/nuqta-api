@@ -1,11 +1,12 @@
 package models
 
 type User struct {
-	FirebaseUid       string   `json:"firebase_uid,omitempty"`
 	Version           string   `json:"version,omitempty"`
 	Uid               string   `json:"uid,omitempty"`
+	FirebaseUid       string   `json:"firebase_uid,omitempty"`
 	Email             string   `json:"email,omitempty"`
 	Registered        int64    `json:"registered,omitempty"`
+	InvitedBy         *User    `json:"invited_by,omitempty"`
 	Name              string   `json:"name,omitempty"`
 	Username          string   `json:"username,omitempty"`
 	Location          string   `json:"location,omitempty"`
