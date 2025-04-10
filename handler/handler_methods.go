@@ -16,6 +16,7 @@ func (h *Handler) Run(port string) error {
 	h.engine.GET("", h.root)
 
 	group := h.engine.Group("/download")
+	group.GET("", h.download)
 	group.GET("/:referrer", h.download)
 
 	authorized := h.engine.Group("")
