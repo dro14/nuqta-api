@@ -11,7 +11,9 @@ import (
 )
 
 func (h *Handler) Run(port string) error {
-	h.engine.GET("/", h.root)
+	h.engine.SetTrustedProxies([]string{"127.0.0.1", "10.0.0.4"})
+
+	h.engine.GET("", h.root)
 
 	group := h.engine.Group("/download")
 	group.GET("/:referrer", h.download)
