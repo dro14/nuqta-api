@@ -18,6 +18,7 @@ func (d *Data) CreatePost(ctx context.Context, post *models.Post) error {
 		"dgraph.type": "Post",
 		"uid":         "_:post",
 		"timestamp":   post.Timestamp,
+		"has_media":   len(post.Images) > 0,
 		"author": map[string]string{
 			"uid": post.Author.Uid,
 		},
