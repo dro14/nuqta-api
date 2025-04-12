@@ -4,9 +4,11 @@ const GraphSchema = `
 author: uid @count @reverse .
 click: [uid] @count @reverse .
 follow: [uid] @count @reverse .
+has_media: bool .
 in_reply_to: uid @count @reverse .
 invited_by: uid @count @reverse .
 like: [uid] @count @reverse .
+registered: int @index(int) .
 report: [uid] @count @reverse .
 repost: [uid] @count @reverse .
 save: [uid] @count @reverse .
@@ -14,12 +16,14 @@ timestamp: int @index(int) .
 view: [uid] @count @reverse .
 
 type User {
+	registered
 	invited_by
 	follow
 }
 
 type Post {
 	timestamp
+    has_media
 	author
 	in_reply_to
 	repost
@@ -56,5 +60,6 @@ CREATE TABLE posts (
     id VARCHAR(255) PRIMARY KEY,
     timestamp BIGINT NOT NULL,
     text TEXT NOT NULL,
-    who_can_reply VARCHAR(50) NOT NULL 
+    who_can_reply VARCHAR(50) NOT NULL,
+    images VARCHAR(255)[]
 );`

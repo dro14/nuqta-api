@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dro14/nuqta-service/models"
+	"github.com/lib/pq"
 )
 
 func (d *Data) CreatePost(ctx context.Context, post *models.Post) error {
@@ -34,9 +35,13 @@ func (d *Data) CreatePost(ctx context.Context, post *models.Post) error {
 	}
 	post.Uid = assigned.Uids["post"]
 
+	if len(post.Images) > 5 {
+		post.Images = post.Images[:5]
+	}
+
 	err = d.dbExec(ctx,
-		"INSERT INTO posts (id, timestamp, text, who_can_reply) VALUES ($1, $2, $3, $4)",
-		post.Uid, post.Timestamp, post.Text, post.WhoCanReply,
+		"INSERT INTO posts (id, timestamp, text, who_can_reply, images) VALUES ($1, $2, $3, $4, $5)",
+		post.Uid, post.Timestamp, post.Text, post.WhoCanReply, pq.Array(post.Images),
 	)
 	if err != nil {
 		object = map[string]any{"uid": post.Uid}
@@ -65,9 +70,9 @@ func (d *Data) GetPost(ctx context.Context, uid, postUid string, withInReplyTo b
 	post.Uid = postUid
 
 	err = d.dbQueryRow(ctx,
-		"SELECT timestamp, text, who_can_reply FROM posts WHERE id = $1",
+		"SELECT timestamp, text, who_can_reply, images FROM posts WHERE id = $1",
 		postUid,
-		&post.Timestamp, &post.Text, &post.WhoCanReply,
+		&post.Timestamp, &post.Text, &post.WhoCanReply, pq.Array(&post.Images),
 	)
 	if err != nil {
 		return nil, err

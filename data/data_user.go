@@ -32,7 +32,6 @@ func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, 
 	user := response["users"][0]
 	user.Uid = userUid
 
-	var nullName sql.NullString
 	var nullLocation sql.NullString
 	var nullBirthday sql.NullInt64
 	var nullColor sql.NullString
@@ -42,15 +41,12 @@ func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, 
 	err = d.dbQueryRow(ctx,
 		"SELECT registered, name, username, location, birthday, color, bio, banner, avatars, thumbnails FROM users WHERE id = $1",
 		userUid,
-		&user.Registered, &nullName, &user.Username, &nullLocation, &nullBirthday, &nullColor, &nullBio, &nullBanner, pq.Array(&user.Avatars), pq.Array(&user.Thumbnails),
+		&user.Registered, &user.Name, &user.Username, &nullLocation, &nullBirthday, &nullColor, &nullBio, &nullBanner, pq.Array(&user.Avatars), pq.Array(&user.Thumbnails),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if nullName.Valid {
-		user.Name = nullName.String
-	}
 	if nullLocation.Valid {
 		user.Location = nullLocation.String
 	}

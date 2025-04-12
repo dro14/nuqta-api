@@ -34,6 +34,13 @@ func (d *Data) CreateProfile(ctx context.Context, user *models.User) error {
 	object := map[string]any{
 		"dgraph.type": "User",
 		"uid":         "_:user",
+		"registered":  user.Registered,
+	}
+
+	if user.InvitedBy != nil {
+		object["invited_by"] = map[string]string{
+			"uid": user.InvitedBy.Uid,
+		}
 	}
 
 	assigned, err := d.graphSet(ctx, object)
