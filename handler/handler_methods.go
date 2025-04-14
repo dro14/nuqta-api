@@ -15,7 +15,7 @@ func (h *Handler) Run(port string) error {
 
 	h.engine.GET("", h.root)
 
-	h.engine.DELETE("/type", h.deleteType)
+	h.engine.DELETE("/type/:name", h.deleteType)
 
 	group := h.engine.Group("/download")
 	group.GET("", h.download)
