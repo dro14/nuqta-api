@@ -29,9 +29,9 @@ type User struct {
 
 type Post struct {
 	Uid         string   `json:"uid,omitempty"`
-	Text        string   `json:"text,omitempty"`
 	Timestamp   int64    `json:"timestamp,omitempty"`
 	WhoCanReply string   `json:"who_can_reply,omitempty"`
+	Text        string   `json:"text,omitempty"`
 	Images      []string `json:"images,omitempty"`
 	Author      *User    `json:"author,omitempty"`
 	InReplyTo   *Post    `json:"in_reply_to,omitempty"`

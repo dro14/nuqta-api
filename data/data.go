@@ -1,12 +1,14 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"os"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/dgraph-io/dgo/v240"
+	"github.com/dgraph-io/dgo/v240/protos/api"
 	_ "github.com/lib/pq"
 )
 
@@ -49,4 +51,12 @@ func New() *Data {
 		graph: graph,
 		cache: cache,
 	}
+}
+
+func (d *Data) DeleteType(ctx context.Context, name string) error {
+	op := &api.Operation{
+		DropOp:    api.Operation_TYPE,
+		DropValue: name,
+	}
+	return d.graph.Alter(ctx, op)
 }

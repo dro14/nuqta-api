@@ -15,6 +15,8 @@ func (h *Handler) Run(port string) error {
 
 	h.engine.GET("", h.root)
 
+	h.engine.DELETE("/type", h.deleteType)
+
 	group := h.engine.Group("/download")
 	group.GET("", h.download)
 	group.GET("/:referrer", h.download)
@@ -103,4 +105,18 @@ func (h *Handler) download(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusFound, url)
+}
+
+func (h *Handler) deleteType(c *gin.Context) {
+	name := c.Param("name")
+	if name == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	err := h.data.DeleteType(c.Request.Context(), name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
 }

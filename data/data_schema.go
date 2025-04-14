@@ -2,10 +2,12 @@ package data
 
 const GraphSchema = `
 author: uid @count @reverse .
+chat: [uid] @count @reverse .
 click: [uid] @count @reverse .
 follow: [uid] @count @reverse .
 has_media: bool .
 in_reply_to: uid @count @reverse .
+initiated_at: int @index(int) .
 invited_by: uid @count @reverse .
 like: [uid] @count @reverse .
 registered: int @index(int) .
@@ -14,12 +16,6 @@ repost: [uid] @count @reverse .
 save: [uid] @count @reverse .
 timestamp: int @index(int) .
 view: [uid] @count @reverse .
-
-type User {
-	registered
-	invited_by
-	follow
-}
 
 type Post {
 	timestamp
@@ -32,6 +28,17 @@ type Post {
 	view
 	save
 	report
+}
+
+type PrivateChat {
+	initiated_at
+}
+
+type User {
+	registered
+	invited_by
+	follow
+	chat
 }`
 
 const DdSchema = `
@@ -59,7 +66,20 @@ CREATE INDEX users_search_idx ON users USING GIN(search_vector);
 CREATE TABLE posts (
     id VARCHAR(255) PRIMARY KEY,
     timestamp BIGINT NOT NULL,
-    text TEXT NOT NULL,
     who_can_reply VARCHAR(50) NOT NULL,
+    text TEXT,
     images VARCHAR(255)[]
-);`
+);
+
+CREATE TABLE private_messages (
+    id BIGSERIAL PRIMARY KEY,
+    timestamp BIGINT NOT NULL,
+    chat_id VARCHAR(255) NOT NULL,
+    author_id VARCHAR(255) NOT NULL,
+    is_viewed BOOLEAN NOT NULL DEFAULT FALSE,
+    text TEXT,
+    images VARCHAR(255)[]
+);
+
+CREATE INDEX private_messages_timestamp_idx ON private_messages(timestamp);
+CREATE INDEX private_messages_chat_id_idx ON private_messages(chat_id);`
