@@ -10,7 +10,7 @@ import (
 	"github.com/lib/pq"
 )
 
-func (d *Data) CreatePrivateChat(ctx context.Context, uid, userUid string) (string, error) {
+func (d *Data) CreateChat(ctx context.Context, uid, userUid string) (*models.Chat, error) {
 	object := map[string]any{
 		"dgraph.type": "private_chat",
 		"uid":         "_:private_chat",
@@ -21,7 +21,7 @@ func (d *Data) CreatePrivateChat(ctx context.Context, uid, userUid string) (stri
 	}
 	assigned, err := d.graphSet(ctx, object)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	chatUid := assigned.Uids["private_chat"]
 	source := []string{uid, userUid}
@@ -31,12 +31,16 @@ func (d *Data) CreatePrivateChat(ctx context.Context, uid, userUid string) (stri
 	if err != nil {
 		object = map[string]any{"uid": chatUid}
 		d.graphDelete(ctx, object)
-		return "", err
+		return nil, err
 	}
-	return chatUid, nil
+	chat := &models.Chat{
+		Uid:     chatUid,
+		UserUid: userUid,
+	}
+	return chat, nil
 }
 
-func (d *Data) GetPrivateChats(ctx context.Context, uid string) ([]*models.Chat, error) {
+func (d *Data) GetChats(ctx context.Context, uid string) ([]*models.Chat, error) {
 	vars := map[string]string{
 		"$uid": uid,
 	}
@@ -53,7 +57,10 @@ func (d *Data) GetPrivateChats(ctx context.Context, uid string) ([]*models.Chat,
 	for _, user := range response["users"] {
 		for _, chat := range user["chats"] {
 			if len(chat.Members) == 1 {
-				chats = append(chats, chat)
+				chats = append(chats, &models.Chat{
+					Uid:     chat.Uid,
+					UserUid: chat.Members[0].Uid,
+				})
 			}
 		}
 	}
@@ -112,7 +119,7 @@ func (d *Data) GetMessages(ctx context.Context, chatUid string, before int64) ([
 func (d *Data) ViewMessage(ctx context.Context, message *models.Message) error {
 	message.Viewed = time.Now().Unix()
 	return d.dbExec(ctx,
-		"UPDATE private_messages SET viewed = $1 WHERE id = $2 AND author_uid != $3",
+		"UPDATE private_messages SET viewed = $1 WHERE id = $2 AND author_uid = $3",
 		[]any{message.Viewed, message.Id, message.AuthorUid},
 	)
 }

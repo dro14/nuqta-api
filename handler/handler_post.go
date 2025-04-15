@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PostRequest struct {
+type postRequest struct {
 	Uid      string   `json:"uid"`
 	Tab      string   `json:"tab"`
 	UserUid  string   `json:"user_uid"`
@@ -38,7 +38,7 @@ func (h *Handler) createPost(c *gin.Context) {
 }
 
 func (h *Handler) getPostList(c *gin.Context) {
-	request := &PostRequest{}
+	request := &postRequest{}
 	err := c.ShouldBindJSON(request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))

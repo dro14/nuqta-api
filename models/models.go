@@ -55,6 +55,7 @@ type Post struct {
 
 type Chat struct {
 	Uid     string  `json:"uid,omitempty"`
+	UserUid string  `json:"user_uid,omitempty"`
 	Members []*User `json:"members,omitempty"`
 }
 

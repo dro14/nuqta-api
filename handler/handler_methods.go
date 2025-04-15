@@ -46,6 +46,15 @@ func (h *Handler) Run(port string) error {
 	group = authorized.Group("/yordamchi")
 	group.POST("", h.createResponse)
 
+	group = authorized.Group("/private")
+	group.POST("/chat", h.createChat)
+	group.GET("/chat", h.getChatList)
+	group.POST("", h.createMessage)
+	group.GET("", h.getMessageList)
+	group.PATCH("", h.viewMessage)
+	group.PUT("", h.editMessage)
+	group.DELETE("", h.deleteMessage)
+
 	return h.engine.Run(":" + port)
 }
 

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UserRequest struct {
+type userRequest struct {
 	Uid      string   `json:"uid"`
 	Tab      string   `json:"tab"`
 	Query    string   `json:"query"`
@@ -19,7 +19,7 @@ type UserRequest struct {
 }
 
 func (h *Handler) getUserList(c *gin.Context) {
-	request := &UserRequest{}
+	request := &userRequest{}
 	err := c.ShouldBindJSON(request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
