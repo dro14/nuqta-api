@@ -9,6 +9,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type PostRequest struct {
+	Uid      string   `json:"uid"`
+	Tab      string   `json:"tab"`
+	UserUid  string   `json:"user_uid"`
+	PostUid  string   `json:"post_uid"`
+	PostUids []string `json:"post_uids"`
+	Before   int64    `json:"before"`
+	Offset   int64    `json:"offset"`
+}
+
 func (h *Handler) createPost(c *gin.Context) {
 	post := &models.Post{}
 	err := c.ShouldBindJSON(post)
@@ -28,15 +38,14 @@ func (h *Handler) createPost(c *gin.Context) {
 }
 
 func (h *Handler) getPostList(c *gin.Context) {
-	var request map[string]any
-	err := c.ShouldBindJSON(&request)
+	request := &PostRequest{}
+	err := c.ShouldBindJSON(request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	uid, ok := request["uid"].(string)
-	if !ok {
+	if request.Uid == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
@@ -44,14 +53,13 @@ func (h *Handler) getPostList(c *gin.Context) {
 	var postUids []string
 	withInReplyTo := true
 	ctx := c.Request.Context()
-	switch request["tab"] {
+	switch request.Tab {
 	case "feed_following":
-		before, ok := request["before"].(int64)
-		if !ok {
+		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		posts, err := h.data.GetFollowingPosts(ctx, uid, before)
+		posts, err := h.data.GetFollowingPosts(ctx, request.Uid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -59,89 +67,61 @@ func (h *Handler) getPostList(c *gin.Context) {
 		c.JSON(http.StatusOK, posts)
 		return
 	case "feed_replies":
-		before, ok := request["before"].(int64)
-		if !ok {
+		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.data.GetReplies(ctx, uid, before)
+		postUids, err = h.data.GetReplies(ctx, request.Uid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "feed_saved":
-		before, ok := request["before"].(int64)
-		if !ok {
+		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.data.GetSavedPosts(ctx, uid, before)
+		postUids, err = h.data.GetSavedPosts(ctx, request.Uid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
-		tab, ok := request["tab"].(string)
-		if !ok {
+		request.Tab = strings.TrimPrefix(request.Tab, "user_")
+		if request.UserUid == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		tab = strings.TrimPrefix(tab, "user_")
-		userUid, ok := request["user_uid"].(string)
-		if !ok {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-			return
-		}
-		before, ok := request["before"].(int64)
-		if !ok {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-			return
-		}
-		postUids, err = h.data.GetUserPosts(ctx, tab, userUid, before)
+		postUids, err = h.data.GetUserPosts(ctx, request.Tab, request.UserUid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "replies_popular":
 		withInReplyTo = false
-		postUid, ok := request["post_uid"].(string)
-		if !ok {
+		if request.PostUid == "" {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		offset, ok := request["offset"].(int64)
-		if !ok {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-			return
-		}
-		postUids, err = h.data.GetPopularReplies(ctx, postUid, offset)
+		postUids, err = h.data.GetPopularReplies(ctx, request.PostUid, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "replies_latest":
 		withInReplyTo = false
-		postUid, ok := request["post_uid"].(string)
-		if !ok {
+		if request.PostUid == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		before, ok := request["before"].(int64)
-		if !ok {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-			return
-		}
-		postUids, err = h.data.GetLatestReplies(ctx, postUid, before)
+		postUids, err = h.data.GetLatestReplies(ctx, request.PostUid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	default:
-		list, ok := request["post_uids"].([]any)
-		if ok && len(list) > 0 {
-			for _, postUid := range list {
-				postUids = append(postUids, postUid.(string))
-			}
+		if len(request.PostUids) > 0 {
+			postUids = request.PostUids
 		} else {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -150,7 +130,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 
 	posts := make([]*models.Post, 0, len(postUids))
 	for _, postUid := range postUids {
-		post, err := h.data.GetPost(ctx, uid, postUid, withInReplyTo)
+		post, err := h.data.GetPost(ctx, request.Uid, postUid, withInReplyTo)
 		if err != nil {
 			continue
 		}

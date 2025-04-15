@@ -8,62 +8,56 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type UserRequest struct {
+	Uid      string   `json:"uid"`
+	Tab      string   `json:"tab"`
+	Query    string   `json:"query"`
+	UserUid  string   `json:"user_uid"`
+	UserUids []string `json:"user_uids"`
+	After    string   `json:"after"`
+	Offset   int64    `json:"offset"`
+}
+
 func (h *Handler) getUserList(c *gin.Context) {
-	var request map[string]any
-	err := c.ShouldBindJSON(&request)
+	request := &UserRequest{}
+	err := c.ShouldBindJSON(request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	uid, ok := request["uid"].(string)
-	if !ok {
+	if request.Uid == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	var userUids []string
 	ctx := c.Request.Context()
-	switch request["tab"] {
+	switch request.Tab {
 	case "search":
-		query, ok := request["query"].(string)
-		if !ok {
+		if request.Query == "" {
 			c.JSON(http.StatusOK, make([]*models.User, 0))
 			return
 		}
-		offset, ok := request["offset"].(int64)
-		if !ok {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-			return
-		}
-		userUids, err = h.data.SearchUser(ctx, query, offset)
+		userUids, err = h.data.SearchUser(ctx, request.Query, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "followers", "following":
-		userUid, ok := request["user_uid"].(string)
-		if !ok {
+		if request.UserUid == "" {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		after, ok := request["after"].(string)
-		if !ok {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-			return
-		}
-		reverse := request["tab"] == "followers"
-		userUids, err = h.data.GetUserFollows(ctx, userUid, after, reverse)
+		reverse := request.Tab == "followers"
+		userUids, err = h.data.GetUserFollows(ctx, request.UserUid, request.After, reverse)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	default:
-		list, ok := request["user_uids"].([]any)
-		if ok && len(list) > 0 {
-			for _, userUid := range list {
-				userUids = append(userUids, userUid.(string))
-			}
+		if len(request.UserUids) > 0 {
+			userUids = request.UserUids
 		} else {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -72,7 +66,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 
 	users := make([]*models.User, 0, len(userUids))
 	for _, userUid := range userUids {
-		user, err := h.data.GetUser(ctx, uid, userUid)
+		user, err := h.data.GetUser(ctx, request.Uid, userUid)
 		if err != nil {
 			continue
 		}
