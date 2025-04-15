@@ -127,20 +127,20 @@ func (h *Handler) updateProfile(c *gin.Context) {
 }
 
 func (h *Handler) isAvailable(c *gin.Context) {
-	request := &models.Request{}
+	var request map[string]string
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	if request.Username == "" {
+	if request["username"] == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	uid, err := h.data.GetUidByUsername(ctx, request.Username)
+	uid, err := h.data.GetUidByUsername(ctx, request["username"])
 	if uid != "" {
 		c.JSON(http.StatusOK, gin.H{"available": false})
 	} else if errors.Is(err, e.ErrNotFound) {

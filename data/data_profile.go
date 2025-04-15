@@ -32,7 +32,7 @@ func (d *Data) CreateProfile(ctx context.Context, user *models.User) error {
 	user.Registered = time.Now().Unix()
 
 	object := map[string]any{
-		"dgraph.type": "User",
+		"dgraph.type": "user",
 		"uid":         "_:user",
 		"registered":  user.Registered,
 	}
@@ -66,7 +66,7 @@ func (d *Data) GetProfile(ctx context.Context, firebaseUid string) (*models.User
 	var uid string
 	err := d.dbQueryRow(ctx,
 		"SELECT id FROM users WHERE firebase_uid = $1",
-		firebaseUid,
+		[]any{firebaseUid},
 		&uid,
 	)
 	if errors.Is(err, sql.ErrNoRows) {

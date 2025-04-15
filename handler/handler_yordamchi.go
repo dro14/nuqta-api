@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/dro14/nuqta-service/e"
-	"github.com/dro14/nuqta-service/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,23 +15,35 @@ func (h *Handler) createResponse(c *gin.Context) {
 		return
 	}
 
-	request := &models.Request{}
-	err := c.ShouldBindJSON(request)
+	var request map[string]any
+	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	if len(request.Conversation) == 0 || request.Language == "" || request.Provider == "" {
+	list, ok := request["conversation"].([]any)
+	if !ok || len(list) == 0 {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+	var conversation []string
+	for _, text := range list {
+		conversation = append(conversation, text.(string))
+	}
+	language, ok := request["language"].(string)
+	if !ok {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+	provider, ok := request["provider"].(string)
+	if !ok {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
 	ctx = context.WithValue(ctx, "firebase_uid", firebaseUid)
-	conversation := request.Conversation
-	language := request.Language
-	provider := request.Provider
 	response, err := h.yordamchi.Respond(ctx, conversation, language, provider)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))

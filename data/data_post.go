@@ -15,7 +15,7 @@ func (d *Data) CreatePost(ctx context.Context, post *models.Post) error {
 	post.Timestamp = time.Now().Unix()
 
 	object := map[string]any{
-		"dgraph.type": "Post",
+		"dgraph.type": "post",
 		"uid":         "_:post",
 		"timestamp":   post.Timestamp,
 		"author": map[string]string{
@@ -75,7 +75,7 @@ func (d *Data) GetPost(ctx context.Context, uid, postUid string, withInReplyTo b
 
 	err = d.dbQueryRow(ctx,
 		"SELECT timestamp, text, who_can_reply, images FROM posts WHERE id = $1",
-		postUid,
+		[]any{postUid},
 		&post.Timestamp, &post.Text, &post.WhoCanReply, pq.Array(&post.Images),
 	)
 	if err != nil {

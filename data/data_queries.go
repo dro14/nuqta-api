@@ -88,7 +88,7 @@ query Query($uid: string, $before: int) {
 		timestamp
 	}
 
-	reposts(func: type(Post)) @filter(uid_in(repost, uid(follow_uids))) {
+	reposts(func: type(post)) @filter(uid_in(repost, uid(follow_uids))) {
 		uid
 		reposted: repost @filter(uid(follow_uids)) @facets(lt(timestamp, $before)) @facets(orderdesc: timestamp) {
 			uid
@@ -166,7 +166,6 @@ query Query($post_uid: string) {
 			likes: count(like)
 			clicks: count(click)
 			views: count(view)
-			reports: count(report)
 		}
 	}
 }`
@@ -176,6 +175,18 @@ query Query($post_uid: string, $before: int) {
 	posts(func: uid($post_uid)) {
 		replies: ~in_reply_to @filter(lt(timestamp, $before)) (orderdesc: timestamp, first: 20) {
 			uid
+		}
+	}
+}`
+
+const chatsQuery = `
+query Query($uid: string) {
+	users(func: uid($uid)) {
+		chats: chat {
+			uid
+			members @filter(not uid($uid)) {
+				uid
+			}
 		}
 	}
 }`

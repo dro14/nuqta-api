@@ -40,7 +40,7 @@ func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, 
 
 	err = d.dbQueryRow(ctx,
 		"SELECT registered, name, username, location, birthday, color, bio, banner, avatars, thumbnails FROM users WHERE id = $1",
-		userUid,
+		[]any{userUid},
 		&user.Registered, &user.Name, &user.Username, &nullLocation, &nullBirthday, &nullColor, &nullBio, &nullBanner, pq.Array(&user.Avatars), pq.Array(&user.Thumbnails),
 	)
 	if err != nil {
@@ -95,7 +95,7 @@ func (d *Data) GetUidByUsername(ctx context.Context, username string) (string, e
 	var userUid string
 	err := d.dbQueryRow(ctx,
 		"SELECT id FROM users WHERE LOWER(username) = $1",
-		strings.ToLower(username),
+		[]any{strings.ToLower(username)},
 		&userUid,
 	)
 	if errors.Is(err, sql.ErrNoRows) {

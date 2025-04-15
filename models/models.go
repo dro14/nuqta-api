@@ -53,24 +53,20 @@ type Post struct {
 	Score       float64  `json:"score,omitempty"`
 }
 
-type Request struct {
-	Uid          string   `json:"uid"`
-	Tab          string   `json:"tab"`
-	UserUid      string   `json:"user_uid"`
-	UserUids     []string `json:"user_uids"`
-	PostUid      string   `json:"post_uid"`
-	PostUids     []string `json:"post_uids"`
-	Username     string   `json:"username"`
-	Query        string   `json:"query"`
-	After        string   `json:"after"`
-	Before       int64    `json:"before"`
-	Offset       int64    `json:"offset"`
-	Attribute    string   `json:"attribute"`
-	Value        string   `json:"value"`
-	Source       []string `json:"source"`
-	Edge         []string `json:"edge"`
-	Target       []string `json:"target"`
-	Conversation []string `json:"conversation"`
-	Language     string   `json:"language"`
-	Provider     string   `json:"provider"`
+type Chat struct {
+	Uid     string  `json:"uid,omitempty"`
+	Members []*User `json:"members,omitempty"`
+}
+
+type Message struct {
+	Id        int64    `json:"id,omitempty"`
+	Timestamp int64    `json:"timestamp,omitempty"`
+	ChatUid   string   `json:"chat_uid,omitempty"`
+	AuthorUid string   `json:"author_uid,omitempty"`
+	InReplyTo int64    `json:"in_reply_to,omitempty"`
+	Text      string   `json:"text,omitempty"`
+	Images    []string `json:"images,omitempty"`
+	Viewed    int64    `json:"viewed,omitempty"`
+	Edited    int64    `json:"edited,omitempty"`
+	Deleted   int64    `json:"deleted,omitempty"`
 }

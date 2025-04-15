@@ -1,23 +1,23 @@
 package data
 
 const GraphSchema = `
-author: uid @count @reverse .
-chat: [uid] @count @reverse .
-click: [uid] @count @reverse .
-follow: [uid] @count @reverse .
-has_media: bool .
-in_reply_to: uid @count @reverse .
-initiated_at: int @index(int) .
-invited_by: uid @count @reverse .
-like: [uid] @count @reverse .
-registered: int @index(int) .
-report: [uid] @count @reverse .
-repost: [uid] @count @reverse .
-save: [uid] @count @reverse .
-timestamp: int @index(int) .
-view: [uid] @count @reverse .
+<author>: uid @count @reverse .
+<block>: [uid] @count @reverse .
+<chat>: [uid] .
+<click>: [uid] @count @reverse .
+<follow>: [uid] @count @reverse .
+<has_media>: bool .
+<in_reply_to>: uid @count @reverse .
+<invited_by>: uid @count @reverse .
+<like>: [uid] @count @reverse .
+<members>: [uid] .
+<registered>: int @index(int) .
+<repost>: [uid] @count @reverse .
+<save>: [uid] @count @reverse .
+<timestamp>: int @index(int) .
+<view>: [uid] @count @reverse .
 
-type Post {
+type <post> {
 	timestamp
     has_media
 	author
@@ -27,17 +27,17 @@ type Post {
 	click
 	view
 	save
-	report
 }
 
-type PrivateChat {
-	initiated_at
+type <private_chat> {
+    members
 }
 
-type User {
+type <user> {
 	registered
 	invited_by
 	follow
+    block
 	chat
 }`
 
@@ -74,12 +74,15 @@ CREATE TABLE posts (
 CREATE TABLE private_messages (
     id BIGSERIAL PRIMARY KEY,
     timestamp BIGINT NOT NULL,
-    chat_id VARCHAR(255) NOT NULL,
-    author_id VARCHAR(255) NOT NULL,
-    is_viewed BOOLEAN NOT NULL DEFAULT FALSE,
+    chat_uid VARCHAR(255) NOT NULL,
+    author_uid VARCHAR(255) NOT NULL,
+    in_reply_to BIGINT,
     text TEXT,
-    images VARCHAR(255)[]
+    images VARCHAR(255)[],
+    viewed BIGINT,
+    edited BIGINT,
+    deleted BIGINT
 );
 
 CREATE INDEX private_messages_timestamp_idx ON private_messages(timestamp);
-CREATE INDEX private_messages_chat_id_idx ON private_messages(chat_id);`
+CREATE INDEX private_messages_chat_uid_idx ON private_messages(chat_uid);`

@@ -10,12 +10,13 @@ import (
 
 var edges = []string{
 	"follow",
+	"block",
+	"chat",
 	"repost",
 	"like",
 	"click",
 	"view",
 	"save",
-	"report",
 }
 
 func (d *Data) CreateEdge(ctx context.Context, source, edge, target []string) error {

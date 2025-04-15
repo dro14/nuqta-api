@@ -28,14 +28,15 @@ func (h *Handler) createPost(c *gin.Context) {
 }
 
 func (h *Handler) getPostList(c *gin.Context) {
-	request := &models.Request{}
+	var request map[string]any
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	if request.Uid == "" {
+	uid, ok := request["uid"].(string)
+	if !ok {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
@@ -43,13 +44,14 @@ func (h *Handler) getPostList(c *gin.Context) {
 	var postUids []string
 	withInReplyTo := true
 	ctx := c.Request.Context()
-	switch request.Tab {
+	switch request["tab"] {
 	case "feed_following":
-		if request.Before == 0 {
+		before, ok := request["before"].(int64)
+		if !ok {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		posts, err := h.data.GetFollowingPosts(ctx, request.Uid, request.Before)
+		posts, err := h.data.GetFollowingPosts(ctx, uid, before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -57,61 +59,89 @@ func (h *Handler) getPostList(c *gin.Context) {
 		c.JSON(http.StatusOK, posts)
 		return
 	case "feed_replies":
-		if request.Before == 0 {
+		before, ok := request["before"].(int64)
+		if !ok {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.data.GetReplies(ctx, request.Uid, request.Before)
+		postUids, err = h.data.GetReplies(ctx, uid, before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "feed_saved":
-		if request.Before == 0 {
+		before, ok := request["before"].(int64)
+		if !ok {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.data.GetSavedPosts(ctx, request.Uid, request.Before)
+		postUids, err = h.data.GetSavedPosts(ctx, uid, before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
-		request.Tab = strings.TrimPrefix(request.Tab, "user_")
-		if request.UserUid == "" || request.Before == 0 {
+		tab, ok := request["tab"].(string)
+		if !ok {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.data.GetUserPosts(ctx, request.Tab, request.UserUid, request.Before)
+		tab = strings.TrimPrefix(tab, "user_")
+		userUid, ok := request["user_uid"].(string)
+		if !ok {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		before, ok := request["before"].(int64)
+		if !ok {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		postUids, err = h.data.GetUserPosts(ctx, tab, userUid, before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "replies_popular":
 		withInReplyTo = false
-		if request.PostUid == "" {
+		postUid, ok := request["post_uid"].(string)
+		if !ok {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.data.GetPopularReplies(ctx, request.PostUid, request.Offset)
+		offset, ok := request["offset"].(int64)
+		if !ok {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		postUids, err = h.data.GetPopularReplies(ctx, postUid, offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "replies_latest":
 		withInReplyTo = false
-		if request.PostUid == "" || request.Before == 0 {
+		postUid, ok := request["post_uid"].(string)
+		if !ok {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.data.GetLatestReplies(ctx, request.PostUid, request.Before)
+		before, ok := request["before"].(int64)
+		if !ok {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		postUids, err = h.data.GetLatestReplies(ctx, postUid, before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	default:
-		if len(request.PostUids) > 0 {
-			postUids = request.PostUids
+		list, ok := request["post_uids"].([]any)
+		if ok && len(list) > 0 {
+			for _, postUid := range list {
+				postUids = append(postUids, postUid.(string))
+			}
 		} else {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -120,7 +150,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 
 	posts := make([]*models.Post, 0, len(postUids))
 	for _, postUid := range postUids {
-		post, err := h.data.GetPost(ctx, request.Uid, postUid, withInReplyTo)
+		post, err := h.data.GetPost(ctx, uid, postUid, withInReplyTo)
 		if err != nil {
 			continue
 		}
@@ -137,26 +167,26 @@ func (h *Handler) deletePost(c *gin.Context) {
 		return
 	}
 
-	request := &models.Request{}
+	var request map[string]string
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	if request.Uid == "" || request.PostUid == "" {
+	if request["uid"] == "" || request["post_uid"] == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	post, err := h.data.GetPost(ctx, request.Uid, request.PostUid, false)
+	post, err := h.data.GetPost(ctx, request["uid"], request["post_uid"], false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	if request.Uid != post.Author.Uid {
+	if request["uid"] != post.Author.Uid {
 		c.JSON(http.StatusForbidden, failure(e.ErrForbidden))
 		return
 	}
@@ -167,12 +197,12 @@ func (h *Handler) deletePost(c *gin.Context) {
 		return
 	}
 
-	if request.Uid != author.Uid {
+	if request["uid"] != author.Uid {
 		c.JSON(http.StatusForbidden, failure(e.ErrForbidden))
 		return
 	}
 
-	err = h.data.DeletePost(ctx, request.PostUid)
+	err = h.data.DeletePost(ctx, request["post_uid"])
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

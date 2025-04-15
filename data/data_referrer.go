@@ -27,7 +27,7 @@ func (d *Data) GetReferrer(ctx context.Context, ip, osVersion string) (string, e
 	}
 	userUid := string(referrer)
 	var registered int64
-	err = d.dbQueryRow(ctx, "SELECT registered FROM users WHERE id = $1", userUid, &registered)
+	err = d.dbQueryRow(ctx, "SELECT registered FROM users WHERE id = $1", []any{userUid}, &registered)
 	if errors.Is(err, e.ErrNotFound) || registered == 0 {
 		return "", nil
 	} else if err != nil {

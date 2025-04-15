@@ -105,10 +105,10 @@ func (d *Data) dbExec(ctx context.Context, query string, args ...any) error {
 	return lastErr
 }
 
-func (d *Data) dbQueryRow(ctx context.Context, query, arg string, dest ...any) error {
+func (d *Data) dbQueryRow(ctx context.Context, query string, args []any, dest ...any) error {
 	var lastErr error
 	for range retryAttempts {
-		err := d.db.QueryRowContext(ctx, query, arg).Scan(dest...)
+		err := d.db.QueryRowContext(ctx, query, args...).Scan(dest...)
 		if err == nil {
 			return nil
 		}

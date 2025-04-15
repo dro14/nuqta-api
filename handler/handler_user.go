@@ -9,45 +9,61 @@ import (
 )
 
 func (h *Handler) getUserList(c *gin.Context) {
-	request := &models.Request{}
+	var request map[string]any
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	if request.Uid == "" {
+	uid, ok := request["uid"].(string)
+	if !ok {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	var userUids []string
 	ctx := c.Request.Context()
-	switch request.Tab {
+	switch request["tab"] {
 	case "search":
-		if request.Query == "" {
+		query, ok := request["query"].(string)
+		if !ok {
 			c.JSON(http.StatusOK, make([]*models.User, 0))
 			return
 		}
-		userUids, err = h.data.SearchUser(ctx, request.Query, request.Offset)
+		offset, ok := request["offset"].(int64)
+		if !ok {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		userUids, err = h.data.SearchUser(ctx, query, offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "followers", "following":
-		if request.UserUid == "" {
+		userUid, ok := request["user_uid"].(string)
+		if !ok {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		reverse := request.Tab == "followers"
-		userUids, err = h.data.GetUserFollows(ctx, request.UserUid, request.After, reverse)
+		after, ok := request["after"].(string)
+		if !ok {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		reverse := request["tab"] == "followers"
+		userUids, err = h.data.GetUserFollows(ctx, userUid, after, reverse)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	default:
-		if len(request.UserUids) > 0 {
-			userUids = request.UserUids
+		list, ok := request["user_uids"].([]any)
+		if ok && len(list) > 0 {
+			for _, userUid := range list {
+				userUids = append(userUids, userUid.(string))
+			}
 		} else {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -55,8 +71,8 @@ func (h *Handler) getUserList(c *gin.Context) {
 	}
 
 	users := make([]*models.User, 0, len(userUids))
-	for i := range userUids {
-		user, err := h.data.GetUser(ctx, request.Uid, userUids[i])
+	for _, userUid := range userUids {
+		user, err := h.data.GetUser(ctx, uid, userUid)
 		if err != nil {
 			continue
 		}
@@ -67,26 +83,26 @@ func (h *Handler) getUserList(c *gin.Context) {
 }
 
 func (h *Handler) getUserByUsername(c *gin.Context) {
-	request := &models.Request{}
+	var request map[string]string
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	if request.Uid == "" || request.Username == "" {
+	if request["uid"] == "" || request["username"] == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	userUid, err := h.data.GetUidByUsername(ctx, request.Username)
+	userUid, err := h.data.GetUidByUsername(ctx, request["username"])
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	user, err := h.data.GetUser(ctx, request.Uid, userUid)
+	user, err := h.data.GetUser(ctx, request["uid"], userUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
