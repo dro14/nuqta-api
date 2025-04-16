@@ -142,10 +142,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 
 func (h *Handler) deletePost(c *gin.Context) {
 	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
 
 	var request map[string]string
 	err := c.ShouldBindJSON(&request)

@@ -26,7 +26,7 @@ func (o *OpenAI) Completions(ctx context.Context, conversation []string) (string
 	}
 
 	request := &Completions{
-		Model:       "gpt-4o-mini-2024-07-18",
+		Model:       ctx.Value("model").(string),
 		Messages:    messages,
 		MaxTokens:   3072,
 		Temperature: 0.5,

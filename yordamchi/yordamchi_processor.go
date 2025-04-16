@@ -9,25 +9,10 @@ import (
 	"time"
 
 	"github.com/dro14/nuqta-service/e"
+	"github.com/dro14/nuqta-service/models"
 )
 
-var SystemMessage = map[string]string{
-	"oz": `\n\nSen Telegramdagi Yordamchi nomli, matn va rasmlarni tushuna oladigan, xushmuomala chatbotsan. Standart til: O'zbekcha (lotin).`,
-	"uz": `\n\nСен Телеграмдаги Ёрдамчи номли, матн ва расмларни тушуна оладиган, хушмуомала чатботсан. Стандарт тил: Ўзбекча (кирил).`,
-	"ru": `\n\nТы являешься дружелюбным чатботом в Телеграме под названием Yordamchi, который понимает текст и изображения. Язык по умолчанию: Русский.`,
-	"en": `\n\nYour are a friendly chatbot in Telegram called Yordamchi, that can follow text and images. Default language: English.`,
-}
-
-func (y *Yordamchi) Respond(ctx context.Context, conversation []string, language, provider string) (string, error) {
-	if len(conversation) > 3 {
-		conversation = conversation[len(conversation)-3:]
-	}
-	now := time.Now().Add(5 * time.Hour).Format(time.DateTime)
-	conversation = append(
-		[]string{now + SystemMessage[language]},
-		conversation...,
-	)
-
+func (y *Yordamchi) Respond(ctx context.Context, provider string, conversation []string) (*models.Message, error) {
 	retryDelay := 5 * time.Second
 	attempts := 0
 	errMsg := ""
@@ -37,11 +22,13 @@ Retry:
 	var err error
 	switch provider {
 	case "google":
+		ctx = context.WithValue(ctx, "model", "gemini-2.0-flash-001")
 		response, err = y.google.GenerateContent(ctx, conversation)
 	case "openai":
+		ctx = context.WithValue(ctx, "model", "gpt-4o-mini-2024-07-18")
 		response, err = y.openai.Completions(ctx, conversation)
 	default:
-		return "", e.ErrInvalidParams
+		return nil, e.ErrInvalidParams
 	}
 	if err != nil {
 		errMsg = err.Error()
@@ -50,11 +37,11 @@ Retry:
 		case errors.Is(err, e.ErrContextLength),
 			errors.Is(err, e.ErrInappropriate),
 			errors.Is(err, e.ErrBadRequest):
-			return "", err
+			return nil, err
 		case errors.Is(err, e.ErrStream), errors.Is(err, e.ErrSpit):
 			if attempts > 1 {
 				log.Printf("user %s: %q failed after %d attempts", id(ctx), errMsg, attempts)
-				return "", err
+				return nil, err
 			}
 			retryDelay = 0
 		case errors.Is(err, e.ErrDownload):
@@ -73,7 +60,7 @@ Retry:
 			goto Retry
 		} else {
 			log.Printf("user %s: %q failed after %d attempts", id(ctx), errMsg, attempts)
-			return "", err
+			return nil, err
 		}
 	}
 
@@ -81,5 +68,8 @@ Retry:
 		log.Printf("user %s: %q was handled after %d attempts", id(ctx), errMsg, attempts)
 	}
 
-	return response, nil
+	return &models.Message{
+		AuthorUid: ctx.Value("model").(string),
+		Text:      response,
+	}, nil
 }

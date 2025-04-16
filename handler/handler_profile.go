@@ -16,10 +16,6 @@ const version = "1.0.4"
 
 func (h *Handler) createProfile(c *gin.Context) {
 	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
 
 	user := &models.User{}
 	err := c.ShouldBindJSON(user)
@@ -82,10 +78,6 @@ func (h *Handler) createProfile(c *gin.Context) {
 
 func (h *Handler) getProfile(c *gin.Context) {
 	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
 
 	ctx := c.Request.Context()
 	user, err := h.data.GetProfile(ctx, firebaseUid)
@@ -101,10 +93,6 @@ func (h *Handler) getProfile(c *gin.Context) {
 
 func (h *Handler) updateProfile(c *gin.Context) {
 	firebaseUid := c.GetString("firebase_uid")
-	if firebaseUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
 
 	user := &models.User{}
 	err := c.ShouldBindJSON(user)

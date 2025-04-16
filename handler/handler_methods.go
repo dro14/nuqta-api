@@ -43,17 +43,16 @@ func (h *Handler) Run(port string) error {
 	group.POST("", h.createEdge)
 	group.DELETE("", h.deleteEdge)
 
-	group = authorized.Group("/yordamchi")
-	group.POST("", h.createResponse)
-
-	group = authorized.Group("/private")
-	group.POST("/chat", h.createChat)
-	group.GET("/chat", h.getChatList)
-	group.POST("", h.createMessage)
-	group.GET("", h.getMessageList)
-	group.PATCH("", h.viewMessage)
-	group.PUT("", h.editMessage)
-	group.DELETE("", h.deleteMessage)
+	group = authorized.Group("/chat")
+	group.POST("", h.createChat)
+	group.GET("", h.getChatList)
+	group.GET("/:type", h.getMessageList)
+	group.POST("/private", h.createPrivateMessage)
+	group.PATCH("/private", h.viewPrivateMessage)
+	group.PUT("/private", h.editPrivateMessage)
+	group.DELETE("/private", h.deletePrivateMessage)
+	group.POST("/yordamchi/:provider", h.createYordamchiResponse)
+	group.PUT("/yordamchi/:provider", h.updateYordamchiMessage)
 
 	return h.engine.Run(":" + port)
 }

@@ -58,7 +58,6 @@ CREATE TABLE users (
     thumbnails VARCHAR(255)[],
     search_vector TSVECTOR NOT NULL
 );
-
 CREATE INDEX users_firebase_uid_idx ON users(firebase_uid);
 CREATE INDEX users_username_lower_idx ON users(LOWER(username));
 CREATE INDEX users_search_idx ON users USING GIN(search_vector);
@@ -83,6 +82,17 @@ CREATE TABLE private_messages (
     edited BIGINT,
     deleted BIGINT
 );
-
 CREATE INDEX private_messages_timestamp_idx ON private_messages(timestamp);
-CREATE INDEX private_messages_chat_uid_idx ON private_messages(chat_uid);`
+CREATE INDEX private_messages_chat_uid_idx ON private_messages(chat_uid);
+
+CREATE TABLE yordamchi_messages (
+    id BIGSERIAL PRIMARY KEY,
+    timestamp BIGINT NOT NULL,
+    chat_uid VARCHAR(255) NOT NULL,
+    author_uid VARCHAR(255) NOT NULL,
+    in_reply_to BIGINT,
+    text TEXT,
+    images VARCHAR(255)[]
+);
+CREATE INDEX yordamchi_messages_timestamp_idx ON yordamchi_messages(timestamp);
+CREATE INDEX yordamchi_messages_chat_uid_idx ON yordamchi_messages(chat_uid);`

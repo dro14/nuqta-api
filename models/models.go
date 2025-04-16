@@ -54,9 +54,9 @@ type Post struct {
 }
 
 type Chat struct {
-	Uid     string  `json:"uid,omitempty"`
-	UserUid string  `json:"user_uid,omitempty"`
-	Members []*User `json:"members,omitempty"`
+	Uid      string  `json:"uid,omitempty"`
+	ChatWith string  `json:"chat_with,omitempty"`
+	Members  []*User `json:"members,omitempty"`
 }
 
 type Message struct {
