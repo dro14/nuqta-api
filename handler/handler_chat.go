@@ -184,7 +184,7 @@ func (h *Handler) deletePrivateMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, message)
 }
 
-func (h *Handler) createYordamchiResponse(c *gin.Context) {
+func (h *Handler) createYordamchiMessage(c *gin.Context) {
 	provider := c.Param("provider")
 	if provider != "openai" && provider != "google" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))

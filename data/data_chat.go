@@ -66,7 +66,7 @@ func (d *Data) GetChats(ctx context.Context, uid, type_ string) ([]*models.Chat,
 	if err != nil {
 		return nil, err
 	}
-	var chats []*models.Chat
+	chats := make([]*models.Chat, 0)
 	for _, user := range response["users"] {
 		for _, chat := range user["chats"] {
 			chatWith := "yordamchi"
@@ -92,8 +92,7 @@ func (d *Data) GetUpdates(ctx context.Context, type_ string, chatUids []string, 
 		return nil, err
 	}
 	defer rows.Close()
-
-	var messages []*models.Message
+	messages := make([]*models.Message, 0)
 	for rows.Next() {
 		message := &models.Message{}
 		var nullInReplyTo sql.NullInt64
@@ -159,8 +158,7 @@ func (d *Data) GetMessages(ctx context.Context, type_, chatUid string, before in
 		return nil, err
 	}
 	defer rows.Close()
-
-	var messages []*models.Message
+	messages := make([]*models.Message, 0)
 	for rows.Next() {
 		message := &models.Message{}
 		var nullInReplyTo sql.NullInt64

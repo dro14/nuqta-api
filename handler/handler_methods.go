@@ -52,7 +52,7 @@ func (h *Handler) Run(port string) error {
 	group.PATCH("/private", h.viewPrivateMessage)
 	group.PUT("/private", h.editPrivateMessage)
 	group.DELETE("/private", h.deletePrivateMessage)
-	group.POST("/yordamchi/:provider", h.createYordamchiResponse)
+	group.POST("/yordamchi/:provider", h.createYordamchiMessage)
 	group.PUT("/yordamchi/:provider", h.updateYordamchiMessage)
 
 	return h.engine.Run(":" + port)
