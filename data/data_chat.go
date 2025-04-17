@@ -100,7 +100,7 @@ func (d *Data) GetUpdates(ctx context.Context, type_ string, chatUids []string, 
 		var nullViewed sql.NullInt64
 		var nullEdited sql.NullInt64
 		var nullDeleted sql.NullInt64
-		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(&message.Images)}
+		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(message.Images)}
 		if type_ == "private" {
 			dest = append(dest, &nullViewed, &nullEdited, &nullDeleted)
 		}
@@ -166,7 +166,7 @@ func (d *Data) GetMessages(ctx context.Context, type_, chatUid string, before in
 		var nullViewed sql.NullInt64
 		var nullEdited sql.NullInt64
 		var nullDeleted sql.NullInt64
-		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(&message.Images)}
+		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(message.Images)}
 		if type_ == "private" {
 			dest = append(dest, &nullViewed, &nullEdited, &nullDeleted)
 		}
