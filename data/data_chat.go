@@ -87,7 +87,7 @@ func (d *Data) GetUpdates(ctx context.Context, type_ string, chatUids []string, 
 	if type_ == "private" {
 		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted FROM private_messages WHERE chat_uid = ANY($1) AND timestamp > $2 ORDER BY timestamp"
 	}
-	rows, err := d.dbQuery(ctx, query, []any{pq.Array(chatUids), after})
+	rows, err := d.dbQuery(ctx, query, pq.Array(chatUids), after)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (d *Data) GetUpdates(ctx context.Context, type_ string, chatUids []string, 
 		var nullViewed sql.NullInt64
 		var nullEdited sql.NullInt64
 		var nullDeleted sql.NullInt64
-		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(message.Images)}
+		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(&message.Images)}
 		if type_ == "private" {
 			dest = append(dest, &nullViewed, &nullEdited, &nullDeleted)
 		}
@@ -153,7 +153,7 @@ func (d *Data) GetMessages(ctx context.Context, type_, chatUid string, before in
 	if type_ == "private" {
 		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted FROM private_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
 	}
-	rows, err := d.dbQuery(ctx, query, []any{chatUid, before})
+	rows, err := d.dbQuery(ctx, query, chatUid, before)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (d *Data) GetMessages(ctx context.Context, type_, chatUid string, before in
 		var nullViewed sql.NullInt64
 		var nullEdited sql.NullInt64
 		var nullDeleted sql.NullInt64
-		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(message.Images)}
+		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(&message.Images)}
 		if type_ == "private" {
 			dest = append(dest, &nullViewed, &nullEdited, &nullDeleted)
 		}
