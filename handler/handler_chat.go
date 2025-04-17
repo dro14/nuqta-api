@@ -10,8 +10,10 @@ import (
 )
 
 type MessageRequest struct {
-	ChatUid string `json:"chat_uid"`
-	Before  int64  `json:"before"`
+	ChatUid  string   `json:"chat_uid"`
+	ChatUids []string `json:"chat_uids"`
+	Before   int64    `json:"before"`
+	After    int64    `json:"after"`
 }
 
 func (h *Handler) createChat(c *gin.Context) {
@@ -58,6 +60,35 @@ func (h *Handler) getChatList(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, chats)
+}
+
+func (h *Handler) getUpdates(c *gin.Context) {
+	type_ := c.Param("type")
+	if type_ != "private" && type_ != "yordamchi" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
+		return
+	}
+
+	request := &MessageRequest{}
+	err := c.ShouldBindJSON(request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if len(request.ChatUids) == 0 {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	ctx := c.Request.Context()
+	messages, err := h.data.GetUpdates(ctx, type_, request.ChatUids, request.After)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, messages)
 }
 
 func (h *Handler) getMessageList(c *gin.Context) {

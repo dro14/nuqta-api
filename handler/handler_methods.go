@@ -47,6 +47,7 @@ func (h *Handler) Run(port string) error {
 	group.POST("", h.createChat)
 	group.GET("", h.getChatList)
 	group.GET("/:type", h.getMessageList)
+	group.GET("/updates/:type", h.getUpdates)
 	group.POST("/private", h.createPrivateMessage)
 	group.PATCH("/private", h.viewPrivateMessage)
 	group.PUT("/private", h.editPrivateMessage)
