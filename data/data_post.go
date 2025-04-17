@@ -91,7 +91,7 @@ func (d *Data) GetPost(ctx context.Context, uid, postUid string, withInReplyTo b
 		return nil, err
 	}
 
-	var edges map[string][]map[string][]any
+	var edges map[string][]map[string][]map[string]string
 	err = json.Unmarshal(bytes, &edges)
 	if err != nil {
 		return nil, err

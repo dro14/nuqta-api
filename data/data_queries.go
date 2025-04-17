@@ -24,6 +24,9 @@ query Query($uid: string, $user_uid: string) {
 		is_following: ~follow @filter(uid($user_uid)) {
 			uid
 		}
+		chats: chat @filter(type(private_chat) AND uid_in(members, $user_uid)) {
+			uid
+		}
 	}
 }`
 

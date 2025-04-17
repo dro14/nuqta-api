@@ -76,7 +76,7 @@ func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, 
 		return nil, err
 	}
 
-	var edges map[string][]map[string][]any
+	var edges map[string][]map[string][]map[string]string
 	err = json.Unmarshal(bytes, &edges)
 	if err != nil {
 		return nil, err
@@ -86,6 +86,9 @@ func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, 
 		user_ := edges["users"][0]
 		user.IsFollowed = len(user_["is_followed"]) > 0
 		user.IsFollowing = len(user_["is_following"]) > 0
+		if len(user_["chats"]) == 1 {
+			user.ChatUid = user_["chats"][0]["uid"]
+		}
 	}
 
 	return user, nil

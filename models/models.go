@@ -24,6 +24,7 @@ type User struct {
 	Likes             int      `json:"likes,omitempty"`
 	IsFollowed        bool     `json:"is_followed,omitempty"`
 	IsFollowing       bool     `json:"is_following,omitempty"`
+	ChatUid           string   `json:"chat_uid,omitempty"`
 	RepostedTimestamp int64    `json:"reposted|timestamp,omitempty"`
 }
 
