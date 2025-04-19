@@ -199,7 +199,7 @@ func (d *Data) ViewPrivateMessage(ctx context.Context, message *models.Message) 
 	message.Viewed = time.Now().Unix()
 	return d.dbExec(ctx,
 		"UPDATE private_messages SET viewed = $1 WHERE id = $2 AND author_uid = $3",
-		[]any{message.Viewed, message.Id, message.AuthorUid},
+		message.Viewed, message.Id, message.AuthorUid,
 	)
 }
 
@@ -207,7 +207,7 @@ func (d *Data) EditPrivateMessage(ctx context.Context, message *models.Message) 
 	message.Edited = time.Now().Unix()
 	return d.dbExec(ctx,
 		"UPDATE private_messages SET text = $1, edited = $2 WHERE id = $3 AND author_uid = $4",
-		[]any{message.Text, message.Edited, message.Id, message.AuthorUid},
+		message.Text, message.Edited, message.Id, message.AuthorUid,
 	)
 }
 
@@ -215,7 +215,7 @@ func (d *Data) DeletePrivateMessage(ctx context.Context, message *models.Message
 	message.Deleted = time.Now().Unix()
 	return d.dbExec(ctx,
 		"UPDATE private_messages SET deleted = $1 WHERE id = $2 AND author_uid = $3",
-		[]any{message.Deleted, message.Id, message.AuthorUid},
+		message.Deleted, message.Id, message.AuthorUid,
 	)
 }
 
@@ -223,6 +223,6 @@ func (d *Data) UpdateYordamchiMessage(ctx context.Context, message *models.Messa
 	message.Timestamp = time.Now().Unix()
 	return d.dbExec(ctx,
 		"UPDATE yordamchi_messages SET timestamp = $1, author_uid = $2, text = $3 WHERE id = $4",
-		[]any{message.Timestamp, message.AuthorUid, message.Text, message.Id},
+		message.Timestamp, message.AuthorUid, message.Text, message.Id,
 	)
 }
