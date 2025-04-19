@@ -137,19 +137,23 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 }
 
 func (h *Handler) viewPrivateMessage(c *gin.Context) {
-	message := &models.Message{}
-	err := c.ShouldBindJSON(message)
+	var messages []*models.Message
+	err := c.ShouldBindJSON(&messages)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
+	if len(messages) == 0 {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
 	ctx := c.Request.Context()
-	err = h.data.ViewPrivateMessage(ctx, message)
+	err = h.data.ViewPrivateMessage(ctx, messages)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	c.JSON(http.StatusOK, message)
+	c.JSON(http.StatusOK, messages)
 }
 
 func (h *Handler) editPrivateMessage(c *gin.Context) {

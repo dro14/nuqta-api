@@ -195,11 +195,16 @@ func (d *Data) GetMessages(ctx context.Context, type_, chatUid string, before in
 	return messages, nil
 }
 
-func (d *Data) ViewPrivateMessage(ctx context.Context, message *models.Message) error {
-	message.Viewed = time.Now().Unix()
+func (d *Data) ViewPrivateMessage(ctx context.Context, messages []*models.Message) error {
+	now := time.Now().Unix()
+	ids := make([]int64, 0)
+	for i, message := range messages {
+		ids = append(ids, message.Id)
+		messages[i].Viewed = now
+	}
 	return d.dbExec(ctx,
-		"UPDATE private_messages SET viewed = $1 WHERE id = $2 AND author_uid = $3",
-		message.Viewed, message.Id, message.AuthorUid,
+		"UPDATE private_messages SET viewed = $1 WHERE id = ANY($2) AND author_uid = $3",
+		now, pq.Array(ids), messages[0].AuthorUid,
 	)
 }
 
