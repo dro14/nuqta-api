@@ -199,8 +199,8 @@ func (d *Data) ViewPrivateMessage(ctx context.Context, messages []*models.Messag
 	now := time.Now().Unix()
 	ids := make([]int64, 0)
 	for i, message := range messages {
-		ids = append(ids, message.Id)
 		messages[i].Viewed = now
+		ids = append(ids, message.Id)
 	}
 	return d.dbExec(ctx,
 		"UPDATE private_messages SET viewed = $1 WHERE id = ANY($2) AND author_uid = $3",

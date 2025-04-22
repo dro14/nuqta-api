@@ -1,4 +1,4 @@
-package auth
+package firebase
 
 import (
 	"context"
@@ -6,14 +6,16 @@ import (
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
+	"firebase.google.com/go/v4/messaging"
 	"google.golang.org/api/option"
 )
 
-type Auth struct {
-	client *auth.Client
+type Firebase struct {
+	auth      *auth.Client
+	messaging *messaging.Client
 }
 
-func New() *Auth {
+func New() *Firebase {
 	ctx := context.Background()
 	opt := option.WithCredentialsFile("service_account_key.json")
 	app, err := firebase.NewApp(ctx, nil, opt)
@@ -21,10 +23,18 @@ func New() *Auth {
 		log.Fatal("can't initialize firebase app: ", err)
 	}
 
-	client, err := app.Auth(ctx)
+	auth, err := app.Auth(ctx)
 	if err != nil {
 		log.Fatal("can't initialize firebase auth: ", err)
 	}
 
-	return &Auth{client: client}
+	messaging, err := app.Messaging(ctx)
+	if err != nil {
+		log.Fatal("can't initialize firebase messaging: ", err)
+	}
+
+	return &Firebase{
+		auth:      auth,
+		messaging: messaging,
+	}
 }

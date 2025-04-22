@@ -55,6 +55,8 @@ func (h *Handler) Run(port string) error {
 	group.POST("/yordamchi/:provider", h.createYordamchiMessage)
 	group.PUT("/yordamchi/:provider", h.updateYordamchiMessage)
 
+	authorized.GET("/update", h.getUpdate)
+
 	return h.engine.Run(":" + port)
 }
 
@@ -70,7 +72,7 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 		return
 	}
 
-	firebaseUid, err := h.auth.VerifyIdToken(c.Request.Context(), idToken)
+	firebaseUid, err := h.firebase.VerifyIdToken(c.Request.Context(), idToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, failure(err))
 		c.Abort()
