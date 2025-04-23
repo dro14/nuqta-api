@@ -17,6 +17,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 		return
 	}
 	connections.Store(uid, true)
+	defer connections.Delete(uid)
 
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 	c.Writer.Header().Set("Cache-Control", "no-cache")
