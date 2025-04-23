@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,8 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("Transfer-Encoding", "chunked")
 	c.Writer.Flush()
+
+	log.Printf("IP: %s\nUser-Agent: %s\n", c.ClientIP(), c.Request.UserAgent())
 
 	sendSSEEvent(c, "connected", gin.H{
 		"status":    "connected",
@@ -26,7 +29,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 		case <-ticker.C:
 			sendSSEEvent(c, "update", gin.H{
 				"update":    i,
-				"timestamp": time.Now().Unix(),
+				"timestamp": time.Now().Add(5 * time.Hour).Format(time.DateTime),
 			})
 		case <-c.Request.Context().Done():
 			return
