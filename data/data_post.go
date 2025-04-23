@@ -157,7 +157,7 @@ func (d *Data) GetFollowingPosts(ctx context.Context, uid string, before int64) 
 	)
 
 	var added []string
-	var result []*models.Post
+	result := make([]*models.Post, 0)
 	for i := range posts {
 		if slices.Contains(added, posts[i].Uid) {
 			continue
