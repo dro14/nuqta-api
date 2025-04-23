@@ -45,15 +45,13 @@ func (h *Handler) Run(port string) error {
 
 	group = authorized.Group("/chat")
 	group.POST("", h.createChat)
-	group.GET("", h.getChatList)
 	group.GET("/:type", h.getMessageList)
-	group.GET("/updates/:type", h.getUpdates)
 	group.POST("/private", h.createPrivateMessage)
-	group.PATCH("/private", h.viewPrivateMessage)
+	group.PATCH("/private", h.viewPrivateMessages)
 	group.PUT("/private", h.editPrivateMessage)
 	group.DELETE("/private", h.deletePrivateMessage)
 	group.POST("/yordamchi/:provider", h.createYordamchiMessage)
-	group.PUT("/yordamchi/:provider", h.updateYordamchiMessage)
+	group.PUT("/yordamchi/:provider", h.editYordamchiMessage)
 
 	authorized.GET("/update", h.getUpdate)
 
@@ -72,7 +70,15 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 		return
 	}
 
-	firebaseUid, err := h.firebase.VerifyIdToken(c.Request.Context(), idToken)
+	ctx := c.Request.Context()
+	firebaseUid, err := h.firebase.VerifyIdToken(ctx, idToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, failure(err))
+		c.Abort()
+		return
+	}
+
+	uid, err := h.data.GetUidByFirebaseUid(ctx, firebaseUid)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, failure(err))
 		c.Abort()
@@ -80,6 +86,7 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 	}
 
 	c.Set("firebase_uid", firebaseUid)
+	c.Set("uid", uid)
 }
 
 var pattern = regexp.MustCompile(`iPhone; CPU iPhone OS (\d+_\d+(_\d+)?) like Mac OS X`)

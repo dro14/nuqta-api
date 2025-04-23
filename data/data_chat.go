@@ -52,10 +52,9 @@ func (d *Data) CreateChat(ctx context.Context, uid, chatWith string) (*models.Ch
 	return chat, nil
 }
 
-func (d *Data) GetChats(ctx context.Context, uid, type_ string) ([]*models.Chat, error) {
+func (d *Data) GetChats(ctx context.Context, uid string) ([]*models.Chat, error) {
 	vars := map[string]string{
-		"$uid":  uid,
-		"$type": type_ + "_chat",
+		"$uid": uid,
 	}
 	bytes, err := d.graphGet(ctx, chatsQuery, vars)
 	if err != nil {
@@ -80,53 +79,6 @@ func (d *Data) GetChats(ctx context.Context, uid, type_ string) ([]*models.Chat,
 		}
 	}
 	return chats, nil
-}
-
-func (d *Data) GetUpdates(ctx context.Context, type_ string, chatUids []string, after int64) ([]*models.Message, error) {
-	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = ANY($1) AND timestamp > $2 ORDER BY timestamp"
-	if type_ == "private" {
-		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted FROM private_messages WHERE chat_uid = ANY($1) AND timestamp > $2 ORDER BY timestamp"
-	}
-	rows, err := d.dbQuery(ctx, query, pq.Array(chatUids), after)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	messages := make([]*models.Message, 0)
-	for rows.Next() {
-		message := &models.Message{}
-		var nullInReplyTo sql.NullInt64
-		var nullText sql.NullString
-		var nullViewed sql.NullInt64
-		var nullEdited sql.NullInt64
-		var nullDeleted sql.NullInt64
-		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(&message.Images)}
-		if type_ == "private" {
-			dest = append(dest, &nullViewed, &nullEdited, &nullDeleted)
-		}
-		err = rows.Scan(dest...)
-		if err != nil {
-			log.Printf("can't scan message after %d: %s", after, err)
-			continue
-		}
-		if nullInReplyTo.Valid {
-			message.InReplyTo = nullInReplyTo.Int64
-		}
-		if nullText.Valid {
-			message.Text = nullText.String
-		}
-		if nullViewed.Valid {
-			message.Viewed = nullViewed.Int64
-		}
-		if nullEdited.Valid {
-			message.Edited = nullEdited.Int64
-		}
-		if nullDeleted.Valid {
-			message.Deleted = nullDeleted.Int64
-		}
-		messages = append(messages, message)
-	}
-	return messages, nil
 }
 
 func (d *Data) CreateMessage(ctx context.Context, message *models.Message, type_ string) error {
@@ -195,7 +147,7 @@ func (d *Data) GetMessages(ctx context.Context, type_, chatUid string, before in
 	return messages, nil
 }
 
-func (d *Data) ViewPrivateMessage(ctx context.Context, messages []*models.Message) error {
+func (d *Data) ViewPrivateMessages(ctx context.Context, messages []*models.Message) error {
 	now := time.Now().Unix()
 	ids := make([]int64, 0)
 	for i, message := range messages {
@@ -224,7 +176,7 @@ func (d *Data) DeletePrivateMessage(ctx context.Context, message *models.Message
 	)
 }
 
-func (d *Data) UpdateYordamchiMessage(ctx context.Context, message *models.Message) error {
+func (d *Data) EditYordamchiMessage(ctx context.Context, message *models.Message) error {
 	message.Timestamp = time.Now().Unix()
 	return d.dbExec(ctx,
 		"UPDATE yordamchi_messages SET timestamp = $1, author_uid = $2, text = $3 WHERE id = $4",

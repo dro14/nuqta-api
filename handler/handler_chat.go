@@ -39,58 +39,6 @@ func (h *Handler) createChat(c *gin.Context) {
 	c.JSON(http.StatusOK, chat)
 }
 
-func (h *Handler) getChatList(c *gin.Context) {
-	var request map[string]string
-	err := c.ShouldBindJSON(&request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	if request["uid"] == "" || request["type"] == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	ctx := c.Request.Context()
-	chats, err := h.data.GetChats(ctx, request["uid"], request["type"])
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	c.JSON(http.StatusOK, chats)
-}
-
-func (h *Handler) getUpdates(c *gin.Context) {
-	type_ := c.Param("type")
-	if type_ != "private" && type_ != "yordamchi" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
-		return
-	}
-
-	request := &MessageRequest{}
-	err := c.ShouldBindJSON(request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	if len(request.ChatUids) == 0 {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	ctx := c.Request.Context()
-	messages, err := h.data.GetUpdates(ctx, type_, request.ChatUids, request.After)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	c.JSON(http.StatusOK, messages)
-}
-
 func (h *Handler) getMessageList(c *gin.Context) {
 	type_ := c.Param("type")
 	if type_ != "private" && type_ != "yordamchi" {
@@ -136,7 +84,7 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, message)
 }
 
-func (h *Handler) viewPrivateMessage(c *gin.Context) {
+func (h *Handler) viewPrivateMessages(c *gin.Context) {
 	var messages []*models.Message
 	err := c.ShouldBindJSON(&messages)
 	if err != nil {
@@ -148,7 +96,7 @@ func (h *Handler) viewPrivateMessage(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	err = h.data.ViewPrivateMessage(ctx, messages)
+	err = h.data.ViewPrivateMessages(ctx, messages)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -238,7 +186,7 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, []*models.Message{request, response})
 }
 
-func (h *Handler) updateYordamchiMessage(c *gin.Context) {
+func (h *Handler) editYordamchiMessage(c *gin.Context) {
 	provider := c.Param("provider")
 	if provider != "openai" && provider != "google" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
@@ -259,7 +207,7 @@ func (h *Handler) updateYordamchiMessage(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	request := messages[len(messages)-2]
-	err = h.data.UpdateYordamchiMessage(ctx, request)
+	err = h.data.EditYordamchiMessage(ctx, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -280,7 +228,7 @@ func (h *Handler) updateYordamchiMessage(c *gin.Context) {
 	messages[len(messages)-1].AuthorUid = response.AuthorUid
 	response = messages[len(messages)-1]
 
-	err = h.data.UpdateYordamchiMessage(ctx, response)
+	err = h.data.EditYordamchiMessage(ctx, response)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

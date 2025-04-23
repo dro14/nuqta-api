@@ -62,16 +62,28 @@ func (d *Data) CreateProfile(ctx context.Context, user *models.User) error {
 	return nil
 }
 
+func (d *Data) GetUidByFirebaseUid(ctx context.Context, firebaseUid string) (string, error) {
+	bytes, err := d.cacheGet("uid:" + firebaseUid)
+	if errors.Is(err, e.ErrNotFound) {
+		var uid string
+		err := d.dbQueryRow(ctx,
+			"SELECT id FROM users WHERE firebase_uid = $1",
+			[]any{firebaseUid},
+			&uid,
+		)
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", e.ErrNotFound
+		} else if err != nil {
+			return "", err
+		}
+		return uid, d.cacheSet("uid:"+firebaseUid, []byte(uid), 0)
+	}
+	return string(bytes), err
+}
+
 func (d *Data) GetProfile(ctx context.Context, firebaseUid string) (*models.User, error) {
-	var uid string
-	err := d.dbQueryRow(ctx,
-		"SELECT id FROM users WHERE firebase_uid = $1",
-		[]any{firebaseUid},
-		&uid,
-	)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, e.ErrNotFound
-	} else if err != nil {
+	uid, err := d.GetUidByFirebaseUid(ctx, firebaseUid)
+	if err != nil {
 		return nil, err
 	}
 

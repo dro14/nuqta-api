@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,12 +14,15 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Header().Set("Transfer-Encoding", "chunked")
 	c.Writer.Flush()
 
-	sendSSEEvent(c, "connected", gin.H{
-		"status":     "connected",
-		"timestamp":  time.Now().Add(5 * time.Hour).Format(time.DateTime),
-		"IP":         c.ClientIP(),
-		"User-Agent": c.Request.UserAgent(),
-	})
+	ctx := c.Request.Context()
+	uid := c.GetString("uid")
+	chats, err := h.data.GetChats(ctx, uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	sendSSEEvent(c, "chats", chats)
 
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()

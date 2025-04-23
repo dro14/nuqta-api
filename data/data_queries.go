@@ -183,9 +183,9 @@ query Query($post_uid: string, $before: int) {
 }`
 
 const chatsQuery = `
-query Query($uid: string, $type: string) {
+query Query($uid: string) {
 	users(func: uid($uid)) {
-		chats: chat @filter(type($type)) {
+		chats: chat {
 			uid
 			members @filter(not uid($uid)) {
 				uid
