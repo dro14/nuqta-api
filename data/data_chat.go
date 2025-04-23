@@ -55,7 +55,7 @@ func (d *Data) CreateChat(ctx context.Context, uid, chatWith string) (*models.Ch
 func (d *Data) GetChats(ctx context.Context, uid, type_ string) ([]*models.Chat, error) {
 	vars := map[string]string{
 		"$uid":  uid,
-		"$type": type_,
+		"$type": type_ + "_chat",
 	}
 	bytes, err := d.graphGet(ctx, chatsQuery, vars)
 	if err != nil {
