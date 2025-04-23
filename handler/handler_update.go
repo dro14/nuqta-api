@@ -2,23 +2,12 @@ package handler
 
 import (
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-var connections = sync.Map{}
-
 func (h *Handler) getUpdate(c *gin.Context) {
-	uid := c.GetString("uid")
-	_, ok := connections.Load(uid)
-	if ok {
-		return
-	}
-	connections.Store(uid, true)
-	defer connections.Delete(uid)
-
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 	c.Writer.Header().Set("Cache-Control", "no-cache")
 	c.Writer.Header().Set("Connection", "keep-alive")
@@ -26,6 +15,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Flush()
 
 	ctx := c.Request.Context()
+	uid := c.GetString("uid")
 	chats, err := h.data.GetChats(ctx, uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
