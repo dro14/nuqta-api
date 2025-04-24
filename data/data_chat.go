@@ -163,8 +163,8 @@ func (d *Data) ViewPrivateMessages(ctx context.Context, messages []*models.Messa
 func (d *Data) EditPrivateMessage(ctx context.Context, message *models.Message) error {
 	message.Edited = time.Now().UnixMilli()
 	return d.dbExec(ctx,
-		"UPDATE private_messages SET text = $1, edited = $2 WHERE id = $3 AND author_uid = $4",
-		message.Text, message.Edited, message.Id, message.AuthorUid,
+		"UPDATE private_messages SET text = $1, images = $2, edited = $3 WHERE id = $4 AND author_uid = $5",
+		message.Text, pq.Array(message.Images), message.Edited, message.Id, message.AuthorUid,
 	)
 }
 
