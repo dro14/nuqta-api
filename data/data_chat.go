@@ -82,7 +82,7 @@ func (d *Data) GetChats(ctx context.Context, uid string) ([]*models.Chat, error)
 }
 
 func (d *Data) CreateMessage(ctx context.Context, message *models.Message, type_ string) error {
-	message.Timestamp = time.Now().Unix()
+	message.Timestamp = time.Now().UnixMilli()
 	var nullInReplyTo sql.NullInt64
 	var nullText sql.NullString
 	if message.InReplyTo != 0 {
@@ -148,7 +148,7 @@ func (d *Data) GetMessages(ctx context.Context, type_, chatUid string, before in
 }
 
 func (d *Data) ViewPrivateMessages(ctx context.Context, messages []*models.Message) error {
-	now := time.Now().Unix()
+	now := time.Now().UnixMilli()
 	ids := make([]int64, 0)
 	for i, message := range messages {
 		messages[i].Viewed = now
@@ -161,7 +161,7 @@ func (d *Data) ViewPrivateMessages(ctx context.Context, messages []*models.Messa
 }
 
 func (d *Data) EditPrivateMessage(ctx context.Context, message *models.Message) error {
-	message.Edited = time.Now().Unix()
+	message.Edited = time.Now().UnixMilli()
 	return d.dbExec(ctx,
 		"UPDATE private_messages SET text = $1, edited = $2 WHERE id = $3 AND author_uid = $4",
 		message.Text, message.Edited, message.Id, message.AuthorUid,
@@ -169,7 +169,7 @@ func (d *Data) EditPrivateMessage(ctx context.Context, message *models.Message) 
 }
 
 func (d *Data) DeletePrivateMessage(ctx context.Context, message *models.Message) error {
-	message.Deleted = time.Now().Unix()
+	message.Deleted = time.Now().UnixMilli()
 	return d.dbExec(ctx,
 		"UPDATE private_messages SET deleted = $1 WHERE id = $2 AND author_uid = $3",
 		message.Deleted, message.Id, message.AuthorUid,
@@ -177,7 +177,7 @@ func (d *Data) DeletePrivateMessage(ctx context.Context, message *models.Message
 }
 
 func (d *Data) EditYordamchiMessage(ctx context.Context, message *models.Message) error {
-	message.Timestamp = time.Now().Unix()
+	message.Timestamp = time.Now().UnixMilli()
 	return d.dbExec(ctx,
 		"UPDATE yordamchi_messages SET timestamp = $1, author_uid = $2, text = $3 WHERE id = $4",
 		message.Timestamp, message.AuthorUid, message.Text, message.Id,

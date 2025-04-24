@@ -29,7 +29,7 @@ func (d *Data) CreateProfile(ctx context.Context, user *models.User) error {
 			return err
 		}
 	}
-	user.Registered = time.Now().Unix()
+	user.Registered = time.Now().UnixMilli()
 
 	object := map[string]any{
 		"dgraph.type": "user",

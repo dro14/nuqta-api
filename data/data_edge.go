@@ -29,7 +29,7 @@ func (d *Data) CreateEdge(ctx context.Context, source, edge, target []string) er
 			"uid": source[i],
 			edge[i]: map[string]any{
 				"uid":                  target[i],
-				edge[i] + "|timestamp": time.Now().Unix(),
+				edge[i] + "|timestamp": time.Now().UnixMilli(),
 			},
 		})
 	}

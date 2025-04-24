@@ -12,7 +12,7 @@ import (
 )
 
 func (d *Data) CreatePost(ctx context.Context, post *models.Post) error {
-	post.Timestamp = time.Now().Unix()
+	post.Timestamp = time.Now().UnixMilli()
 
 	object := map[string]any{
 		"dgraph.type": "post",
