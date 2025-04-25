@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var channels = make(map[string]chan *models.Message)
+var channels = make(map[string]chan []*models.Message)
 
 func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
@@ -18,7 +18,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Flush()
 
 	uid := c.GetString("uid")
-	channel := make(chan *models.Message)
+	channel := make(chan []*models.Message)
 	channels[uid] = channel
 	defer func() {
 		close(channel)
@@ -57,8 +57,8 @@ func (h *Handler) getUpdate(c *gin.Context) {
 				"update":    i,
 				"timestamp": time.Now().Add(5 * time.Hour).Format(time.DateTime),
 			})
-		case message := <-channel:
-			sendSSEEvent(c, "messages", []*models.Message{message})
+		case messages := <-channel:
+			sendSSEEvent(c, "messages", messages)
 		case <-c.Request.Context().Done():
 			return
 		}

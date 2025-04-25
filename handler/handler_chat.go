@@ -75,15 +75,15 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
-	channel, ok := channels[message.RecipientUid]
-	if ok {
-		channel <- message
-	}
 	ctx := c.Request.Context()
-	err = h.data.CreatePrivateMessage(ctx, message)
+	err = h.data.CreatePrivateMessage(ctx, message, c.GetString("uid"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
+	}
+	channel, ok := channels[message.RecipientUid]
+	if ok {
+		channel <- []*models.Message{message}
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -100,10 +100,14 @@ func (h *Handler) viewPrivateMessages(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	err = h.data.ViewPrivateMessages(ctx, messages)
+	err = h.data.ViewPrivateMessages(ctx, messages, c.GetString("uid"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
+	}
+	channel, ok := channels[messages[0].AuthorUid]
+	if ok {
+		channel <- messages
 	}
 	c.JSON(http.StatusOK, messages)
 }
@@ -116,10 +120,14 @@ func (h *Handler) editPrivateMessage(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	err = h.data.EditPrivateMessage(ctx, message)
+	err = h.data.EditPrivateMessage(ctx, message, c.GetString("uid"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
+	}
+	channel, ok := channels[message.RecipientUid]
+	if ok {
+		channel <- []*models.Message{message}
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -132,10 +140,14 @@ func (h *Handler) deletePrivateMessage(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	err = h.data.DeletePrivateMessage(ctx, message)
+	err = h.data.DeletePrivateMessage(ctx, message, c.GetString("uid"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
+	}
+	channel, ok := channels[message.RecipientUid]
+	if ok {
+		channel <- []*models.Message{message}
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -160,8 +172,9 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
+	uid := c.GetString("uid")
 	request := messages[len(messages)-1]
-	err = h.data.CreateYordamchiMessage(ctx, request)
+	err = h.data.CreateYordamchiMessage(ctx, request, uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -181,7 +194,7 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 	response.ChatUid = request.ChatUid
 	response.InReplyTo = request.Id
 
-	err = h.data.CreateYordamchiMessage(ctx, response)
+	err = h.data.CreateYordamchiMessage(ctx, response, uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
