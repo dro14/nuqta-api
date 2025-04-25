@@ -5,14 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/dro14/nuqta-service/models"
 	"github.com/lib/pq"
 )
 
-func (d *Data) CreateChat(ctx context.Context, uid, chatWith string) (*models.Chat, error) {
+func (d *Data) CreateChat(ctx context.Context, uid, chatWith string) (string, error) {
 	type_ := "yordamchi_chat"
 	members := []map[string]string{{"uid": uid}}
 	if chatWith != "yordamchi" {
@@ -26,7 +25,7 @@ func (d *Data) CreateChat(ctx context.Context, uid, chatWith string) (*models.Ch
 	}
 	assigned, err := d.graphSet(ctx, object)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	chatUid := assigned.Uids["chat"]
@@ -42,43 +41,46 @@ func (d *Data) CreateChat(ctx context.Context, uid, chatWith string) (*models.Ch
 	if err != nil {
 		object = map[string]any{"uid": chatUid}
 		d.graphDelete(ctx, object)
-		return nil, err
+		return "", err
 	}
 
-	chat := &models.Chat{
-		Uid:      chatUid,
-		ChatWith: chatWith,
-	}
-	return chat, nil
+	return chatUid, nil
 }
 
-func (d *Data) GetChats(ctx context.Context, uid string) ([]*models.Chat, error) {
+func (d *Data) GetChats(ctx context.Context, uid, type_ string) ([]string, error) {
 	vars := map[string]string{
-		"$uid": uid,
+		"$uid":  uid,
+		"$type": type_ + "_chat",
 	}
 	bytes, err := d.graphGet(ctx, chatsQuery, vars)
 	if err != nil {
 		return nil, err
 	}
-	var response map[string][]map[string][]*models.Chat
+	var response map[string][]map[string][]map[string]string
 	err = json.Unmarshal(bytes, &response)
 	if err != nil {
 		return nil, err
 	}
-	chats := make([]*models.Chat, 0)
+	chatUids := make([]string, 0)
 	for _, user := range response["users"] {
 		for _, chat := range user["chats"] {
-			chatWith := "yordamchi"
-			if len(chat.Members) == 1 {
-				chatWith = chat.Members[0].Uid
-			}
-			chats = append(chats, &models.Chat{
-				Uid:      chat.Uid,
-				ChatWith: chatWith,
-			})
+			chatUids = append(chatUids, chat["uid"])
 		}
 	}
-	return chats, nil
+	return chatUids, nil
+}
+
+func (d *Data) GetUpdates(ctx context.Context, type_ string, chatUids []string, after int64) ([]*models.Message, error) {
+	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = ANY($1) AND timestamp > $2"
+	if type_ == "private" {
+		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = ANY($1) AND timestamp > $2"
+	}
+	rows, err := d.dbQuery(ctx, query, pq.Array(chatUids), after)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return decodeMessages(rows, type_), nil
 }
 
 func (d *Data) CreateMessage(ctx context.Context, message *models.Message, type_ string) error {
@@ -103,48 +105,14 @@ func (d *Data) CreateMessage(ctx context.Context, message *models.Message, type_
 func (d *Data) GetMessages(ctx context.Context, type_, chatUid string, before int64) ([]*models.Message, error) {
 	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
 	if type_ == "private" {
-		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted FROM private_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
+		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
 	}
 	rows, err := d.dbQuery(ctx, query, chatUid, before)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	messages := make([]*models.Message, 0)
-	for rows.Next() {
-		message := &models.Message{}
-		var nullInReplyTo sql.NullInt64
-		var nullText sql.NullString
-		var nullViewed sql.NullInt64
-		var nullEdited sql.NullInt64
-		var nullDeleted sql.NullInt64
-		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(&message.Images)}
-		if type_ == "private" {
-			dest = append(dest, &nullViewed, &nullEdited, &nullDeleted)
-		}
-		err = rows.Scan(dest...)
-		if err != nil {
-			log.Printf("can't scan message from chat %s before %d: %s", chatUid, before, err)
-			continue
-		}
-		if nullInReplyTo.Valid {
-			message.InReplyTo = nullInReplyTo.Int64
-		}
-		if nullText.Valid {
-			message.Text = nullText.String
-		}
-		if nullViewed.Valid {
-			message.Viewed = nullViewed.Int64
-		}
-		if nullEdited.Valid {
-			message.Edited = nullEdited.Int64
-		}
-		if nullDeleted.Valid {
-			message.Deleted = nullDeleted.Int64
-		}
-		messages = append(messages, message)
-	}
-	return messages, nil
+	return decodeMessages(rows, type_), nil
 }
 
 func (d *Data) ViewPrivateMessages(ctx context.Context, messages []*models.Message) error {

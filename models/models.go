@@ -54,21 +54,16 @@ type Post struct {
 	Score       float64  `json:"score,omitempty"`
 }
 
-type Chat struct {
-	Uid      string  `json:"uid,omitempty"`
-	ChatWith string  `json:"chat_with,omitempty"`
-	Members  []*User `json:"members,omitempty"`
-}
-
 type Message struct {
-	Id        int64    `json:"id,omitempty"`
-	Timestamp int64    `json:"timestamp,omitempty"`
-	ChatUid   string   `json:"chat_uid,omitempty"`
-	AuthorUid string   `json:"author_uid,omitempty"`
-	InReplyTo int64    `json:"in_reply_to,omitempty"`
-	Text      string   `json:"text,omitempty"`
-	Images    []string `json:"images,omitempty"`
-	Viewed    int64    `json:"viewed,omitempty"`
-	Edited    int64    `json:"edited,omitempty"`
-	Deleted   int64    `json:"deleted,omitempty"`
+	Id           int64    `json:"id,omitempty"`
+	Timestamp    int64    `json:"timestamp,omitempty"`
+	ChatUid      string   `json:"chat_uid,omitempty"`
+	AuthorUid    string   `json:"author_uid,omitempty"`
+	RecipientUid string   `json:"recipient_uid,omitempty"`
+	InReplyTo    int64    `json:"in_reply_to,omitempty"`
+	Text         string   `json:"text,omitempty"`
+	Images       []string `json:"images,omitempty"`
+	Viewed       int64    `json:"viewed,omitempty"`
+	Edited       int64    `json:"edited,omitempty"`
+	Deleted      int64    `json:"deleted,omitempty"`
 }

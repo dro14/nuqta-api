@@ -30,13 +30,13 @@ func (h *Handler) createChat(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	chat, err := h.data.CreateChat(ctx, request["uid"], request["chat_with"])
+	chatUid, err := h.data.CreateChat(ctx, request["uid"], request["chat_with"])
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	c.JSON(http.StatusOK, chat)
+	c.JSON(http.StatusOK, gin.H{"chat_uid": chatUid})
 }
 
 func (h *Handler) getMessageList(c *gin.Context) {
