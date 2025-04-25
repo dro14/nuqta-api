@@ -81,10 +81,9 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	value, ok := channels.Load(message.RecipientUid)
+	channel, ok := channels.Load(message.RecipientUid)
 	if ok {
-		channel := value.(chan []*models.Message)
-		channel <- []*models.Message{message}
+		channel.(chan []*models.Message) <- []*models.Message{message}
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -106,10 +105,9 @@ func (h *Handler) viewPrivateMessages(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	value, ok := channels.Load(messages[0].AuthorUid)
+	channel, ok := channels.Load(messages[0].AuthorUid)
 	if ok {
-		channel := value.(chan []*models.Message)
-		channel <- messages
+		channel.(chan []*models.Message) <- messages
 	}
 	c.JSON(http.StatusOK, messages)
 }
@@ -127,10 +125,9 @@ func (h *Handler) editPrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	value, ok := channels.Load(message.RecipientUid)
+	channel, ok := channels.Load(message.RecipientUid)
 	if ok {
-		channel := value.(chan []*models.Message)
-		channel <- []*models.Message{message}
+		channel.(chan []*models.Message) <- []*models.Message{message}
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -148,10 +145,9 @@ func (h *Handler) deletePrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	value, ok := channels.Load(message.RecipientUid)
+	channel, ok := channels.Load(message.RecipientUid)
 	if ok {
-		channel := value.(chan []*models.Message)
-		channel <- []*models.Message{message}
+		channel.(chan []*models.Message) <- []*models.Message{message}
 	}
 	c.JSON(http.StatusOK, message)
 }
