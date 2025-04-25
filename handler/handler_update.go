@@ -19,7 +19,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Flush()
 
 	uid := c.GetString("uid")
-	channel := make(chan []*models.Message)
+	channel := make(chan models.Message)
 	channels.Store(uid, channel)
 	defer func() {
 		close(channel)
@@ -58,8 +58,8 @@ func (h *Handler) getUpdate(c *gin.Context) {
 				"update":    i,
 				"timestamp": time.Now().Add(5 * time.Hour).Format(time.DateTime),
 			})
-		case messages := <-channel:
-			sendSSEEvent(c, "messages", messages)
+		case message := <-channel:
+			sendSSEEvent(c, "messages", []*models.Message{&message})
 		case <-c.Request.Context().Done():
 			return
 		}
