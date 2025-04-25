@@ -2,14 +2,13 @@ package handler
 
 import (
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/dro14/nuqta-service/models"
 	"github.com/gin-gonic/gin"
 )
 
-var channels sync.Map
+var channels = make(map[string]chan *models.Message)
 
 func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
@@ -19,11 +18,11 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Flush()
 
 	uid := c.GetString("uid")
-	channel := make(chan models.Message)
-	channels.Store(uid, channel)
+	channel := make(chan *models.Message)
+	channels[uid] = channel
 	defer func() {
 		close(channel)
-		channels.Delete(uid)
+		delete(channels, uid)
 	}()
 
 	messages := make([]*models.Message, 0)
@@ -59,7 +58,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 				"timestamp": time.Now().Add(5 * time.Hour).Format(time.DateTime),
 			})
 		case message := <-channel:
-			sendSSEEvent(c, "messages", []*models.Message{&message})
+			sendSSEEvent(c, "messages", []*models.Message{message})
 		case <-c.Request.Context().Done():
 			return
 		}
