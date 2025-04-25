@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/dro14/nuqta-service/models"
@@ -83,7 +82,7 @@ func (d *Data) GetUpdates(ctx context.Context, type_ string, chatUids []string, 
 	return decodeMessages(rows, type_), nil
 }
 
-func (d *Data) CreateMessage(ctx context.Context, message *models.Message, type_ string) error {
+func (d *Data) CreatePrivateMessage(ctx context.Context, message *models.Message) error {
 	message.Timestamp = time.Now().UnixMilli()
 	var nullInReplyTo sql.NullInt64
 	var nullText sql.NullString
@@ -96,7 +95,26 @@ func (d *Data) CreateMessage(ctx context.Context, message *models.Message, type_
 		nullText.String = message.Text
 	}
 	return d.dbQueryRow(ctx,
-		fmt.Sprintf("INSERT INTO %s_messages (timestamp, chat_uid, author_uid, in_reply_to, text, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", type_),
+		"INSERT INTO private_messages (timestamp, chat_uid, author_uid, recipient_uid, in_reply_to, text, images) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+		[]any{message.Timestamp, message.ChatUid, message.AuthorUid, message.RecipientUid, nullInReplyTo, nullText, pq.Array(message.Images)},
+		&message.Id,
+	)
+}
+
+func (d *Data) CreateYordamchiMessage(ctx context.Context, message *models.Message) error {
+	message.Timestamp = time.Now().UnixMilli()
+	var nullInReplyTo sql.NullInt64
+	var nullText sql.NullString
+	if message.InReplyTo != 0 {
+		nullInReplyTo.Valid = true
+		nullInReplyTo.Int64 = message.InReplyTo
+	}
+	if message.Text != "" {
+		nullText.Valid = true
+		nullText.String = message.Text
+	}
+	return d.dbQueryRow(ctx,
+		"INSERT INTO yordamchi_messages (timestamp, chat_uid, author_uid, in_reply_to, text, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
 		[]any{message.Timestamp, message.ChatUid, message.AuthorUid, nullInReplyTo, nullText, pq.Array(message.Images)},
 		&message.Id,
 	)

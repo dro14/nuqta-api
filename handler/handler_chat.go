@@ -80,7 +80,7 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 		channel.(chan models.Message) <- *message
 	}
 	ctx := c.Request.Context()
-	err = h.data.CreateMessage(ctx, message, "private")
+	err = h.data.CreatePrivateMessage(ctx, message)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -161,7 +161,7 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	request := messages[len(messages)-1]
-	err = h.data.CreateMessage(ctx, request, "yordamchi")
+	err = h.data.CreateYordamchiMessage(ctx, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -181,7 +181,7 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 	response.ChatUid = request.ChatUid
 	response.InReplyTo = request.Id
 
-	err = h.data.CreateMessage(ctx, response, "yordamchi")
+	err = h.data.CreateYordamchiMessage(ctx, response)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
