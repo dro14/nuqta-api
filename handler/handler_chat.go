@@ -75,6 +75,10 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
+	channel, ok := channels.Load(message.RecipientUid)
+	if ok {
+		channel.(chan []*models.Message) <- []*models.Message{message}
+	}
 	ctx := c.Request.Context()
 	err = h.data.CreateMessage(ctx, message, "private")
 	if err != nil {

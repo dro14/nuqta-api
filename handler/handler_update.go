@@ -2,11 +2,14 @@ package handler
 
 import (
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/dro14/nuqta-service/models"
 	"github.com/gin-gonic/gin"
 )
+
+var channels sync.Map
 
 func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
@@ -15,11 +18,18 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Header().Set("Transfer-Encoding", "chunked")
 	c.Writer.Flush()
 
+	uid := c.GetString("uid")
+	channel := make(chan []*models.Message)
+	channels.Store(uid, channel)
+	defer func() {
+		close(channel)
+		channels.Delete(uid)
+	}()
+
 	messages := make([]*models.Message, 0)
 	after := c.Param("after")
 	if after == "" || after == "0" {
 		ctx := c.Request.Context()
-		uid := c.GetString("uid")
 		chatUids, err := h.data.GetChats(ctx, uid, "private")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
@@ -48,6 +58,8 @@ func (h *Handler) getUpdate(c *gin.Context) {
 				"update":    i,
 				"timestamp": time.Now().Add(5 * time.Hour).Format(time.DateTime),
 			})
+		case messages := <-channel:
+			sendSSEEvent(c, "messages", messages)
 		case <-c.Request.Context().Done():
 			return
 		}
