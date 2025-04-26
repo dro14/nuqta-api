@@ -108,8 +108,8 @@ func (d *Data) CreatePrivateMessage(ctx context.Context, message *models.Message
 		nullText.String = message.Text
 	}
 	return d.dbQueryRow(ctx,
-		"INSERT INTO private_messages (timestamp, chat_uid, author_uid, recipient_uid, in_reply_to, text, images) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
-		[]any{message.Timestamp, message.ChatUid, uid, message.RecipientUid, nullInReplyTo, nullText, pq.Array(message.Images)},
+		"INSERT INTO private_messages (timestamp, chat_uid, author_uid, in_reply_to, text, images, recipient_uid, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id",
+		[]any{message.Timestamp, message.ChatUid, uid, nullInReplyTo, nullText, pq.Array(message.Images), message.RecipientUid, message.Timestamp},
 		&message.Id,
 	)
 }
