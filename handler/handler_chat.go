@@ -59,7 +59,7 @@ func (h *Handler) getMessageList(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	messages, err := h.data.GetMessages(ctx, type_, request.ChatUid, request.Before)
+	messages, err := h.data.GetMessages(ctx, request.ChatUid, type_, request.Before)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -172,9 +172,8 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	uid := c.GetString("uid")
 	request := messages[len(messages)-1]
-	err = h.data.CreateYordamchiMessage(ctx, request, uid)
+	err = h.data.CreateYordamchiMessage(ctx, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -192,9 +191,8 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 		return
 	}
 	response.ChatUid = request.ChatUid
-	response.InReplyTo = request.Id
 
-	err = h.data.CreateYordamchiMessage(ctx, response, uid)
+	err = h.data.CreateYordamchiMessage(ctx, response)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

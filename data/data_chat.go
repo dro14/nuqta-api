@@ -69,12 +69,25 @@ func (d *Data) GetChats(ctx context.Context, uid, type_ string) ([]string, error
 	return chatUids, nil
 }
 
-func (d *Data) GetUpdates(ctx context.Context, type_ string, chatUids []string, after int64) ([]*models.Message, error) {
+func (d *Data) GetUpdates(ctx context.Context, chatUids []string, type_ string, after int64) ([]*models.Message, error) {
 	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = ANY($1) AND timestamp > $2"
 	if type_ == "private" {
-		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = ANY($1) AND timestamp > $2"
+		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = ANY($1) AND last_updated > $2"
 	}
 	rows, err := d.dbQuery(ctx, query, pq.Array(chatUids), after)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return decodeMessages(rows, type_), nil
+}
+
+func (d *Data) GetMessages(ctx context.Context, chatUid, type_ string, before int64) ([]*models.Message, error) {
+	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
+	if type_ == "private" {
+		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
+	}
+	rows, err := d.dbQuery(ctx, query, chatUid, before)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +114,36 @@ func (d *Data) CreatePrivateMessage(ctx context.Context, message *models.Message
 	)
 }
 
-func (d *Data) CreateYordamchiMessage(ctx context.Context, message *models.Message, uid string) error {
+func (d *Data) ViewPrivateMessages(ctx context.Context, messages []*models.Message, uid string) error {
+	now := time.Now().UnixMilli()
+	ids := make([]int64, 0)
+	for i, message := range messages {
+		messages[i].Viewed = now
+		ids = append(ids, message.Id)
+	}
+	return d.dbExec(ctx,
+		"UPDATE private_messages SET viewed = $1, last_updated = $2 WHERE id = ANY($3) AND recipient_uid = $4",
+		now, now, pq.Array(ids), uid,
+	)
+}
+
+func (d *Data) EditPrivateMessage(ctx context.Context, message *models.Message, uid string) error {
+	message.Edited = time.Now().UnixMilli()
+	return d.dbExec(ctx,
+		"UPDATE private_messages SET text = $1, images = $2, edited = $3, last_updated = $4 WHERE id = $5 AND author_uid = $6",
+		message.Text, pq.Array(message.Images), message.Edited, message.Edited, message.Id, uid,
+	)
+}
+
+func (d *Data) DeletePrivateMessage(ctx context.Context, message *models.Message, uid string) error {
+	message.Deleted = time.Now().UnixMilli()
+	return d.dbExec(ctx,
+		"UPDATE private_messages SET deleted = $1, last_updated = $2 WHERE id = $3 AND author_uid = $4",
+		message.Deleted, message.Deleted, message.Id, uid,
+	)
+}
+
+func (d *Data) CreateYordamchiMessage(ctx context.Context, message *models.Message) error {
 	message.Timestamp = time.Now().UnixMilli()
 	var nullInReplyTo sql.NullInt64
 	var nullText sql.NullString
@@ -115,50 +157,8 @@ func (d *Data) CreateYordamchiMessage(ctx context.Context, message *models.Messa
 	}
 	return d.dbQueryRow(ctx,
 		"INSERT INTO yordamchi_messages (timestamp, chat_uid, author_uid, in_reply_to, text, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-		[]any{message.Timestamp, message.ChatUid, uid, nullInReplyTo, nullText, pq.Array(message.Images)},
+		[]any{message.Timestamp, message.ChatUid, message.AuthorUid, nullInReplyTo, nullText, pq.Array(message.Images)},
 		&message.Id,
-	)
-}
-
-func (d *Data) GetMessages(ctx context.Context, type_, chatUid string, before int64) ([]*models.Message, error) {
-	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
-	if type_ == "private" {
-		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
-	}
-	rows, err := d.dbQuery(ctx, query, chatUid, before)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return decodeMessages(rows, type_), nil
-}
-
-func (d *Data) ViewPrivateMessages(ctx context.Context, messages []*models.Message, uid string) error {
-	now := time.Now().UnixMilli()
-	ids := make([]int64, 0)
-	for i, message := range messages {
-		messages[i].Viewed = now
-		ids = append(ids, message.Id)
-	}
-	return d.dbExec(ctx,
-		"UPDATE private_messages SET viewed = $1 WHERE id = ANY($2) AND recipient_uid = $3",
-		now, pq.Array(ids), uid,
-	)
-}
-
-func (d *Data) EditPrivateMessage(ctx context.Context, message *models.Message, uid string) error {
-	message.Edited = time.Now().UnixMilli()
-	return d.dbExec(ctx,
-		"UPDATE private_messages SET text = $1, images = $2, edited = $3 WHERE id = $4 AND author_uid = $5",
-		message.Text, pq.Array(message.Images), message.Edited, message.Id, uid,
-	)
-}
-
-func (d *Data) DeletePrivateMessage(ctx context.Context, message *models.Message, uid string) error {
-	message.Deleted = time.Now().UnixMilli()
-	return d.dbExec(ctx,
-		"UPDATE private_messages SET deleted = $1 WHERE id = $2 AND author_uid = $3",
-		message.Deleted, message.Id, uid,
 	)
 }
 

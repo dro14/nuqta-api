@@ -37,7 +37,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 		}
 		now := time.Now().UnixMilli()
 		for _, chatUid := range chatUids {
-			chatMessages, err := h.data.GetMessages(ctx, "private", chatUid, now)
+			chatMessages, err := h.data.GetMessages(ctx, chatUid, "private", now)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return

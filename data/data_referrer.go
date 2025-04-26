@@ -11,7 +11,7 @@ import (
 )
 
 func (d *Data) GetReferrer(ctx context.Context, ip, osVersion string) (string, error) {
-	osVersion = strings.TrimRight(osVersion, ".0")
+	osVersion = strings.TrimSuffix(strings.TrimSuffix(osVersion, ".0"), ".0")
 	key := fmt.Sprintf("referrer:%s:%s", ip, osVersion)
 	referrer, err := d.cacheGet(key)
 	if errors.Is(err, e.ErrNotFound) {
@@ -37,7 +37,7 @@ func (d *Data) GetReferrer(ctx context.Context, ip, osVersion string) (string, e
 }
 
 func (d *Data) SetReferrer(ctx context.Context, ip, osVersion, referrer string) error {
-	osVersion = strings.TrimRight(osVersion, ".0")
+	osVersion = strings.TrimSuffix(strings.TrimSuffix(osVersion, ".0"), ".0")
 	key := fmt.Sprintf("referrer:%s", ip)
 	if osVersion != "" {
 		key += fmt.Sprintf(":%s", osVersion)
