@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/dro14/nuqta-service/e"
@@ -139,13 +140,10 @@ func (d *Data) SearchUser(ctx context.Context, query string, offset int64) ([]st
 	return userUids, nil
 }
 
-func (d *Data) GetUserFollows(ctx context.Context, userUid, after string, reverse bool) ([]string, error) {
-	if after == "" {
-		after = "0x0"
-	}
+func (d *Data) GetUserFollows(ctx context.Context, userUid string, offset int64, reverse bool) ([]string, error) {
 	vars := map[string]string{
 		"$user_uid": userUid,
-		"$after":    after,
+		"$offset":   strconv.FormatInt(offset, 10),
 	}
 	var edge string
 	if reverse {
@@ -168,6 +166,32 @@ func (d *Data) GetUserFollows(ctx context.Context, userUid, after string, revers
 	var userUids []string
 	for _, user := range response["users"] {
 		for _, follower := range user[edge] {
+			userUids = append(userUids, follower.Uid)
+		}
+	}
+
+	return userUids, nil
+}
+
+func (d *Data) GetUserNetwork(ctx context.Context, userUid string, offset int64) ([]string, error) {
+	vars := map[string]string{
+		"$uid":    userUid,
+		"$offset": strconv.FormatInt(offset, 10),
+	}
+	bytes, err := d.graphGet(ctx, userNetworkQuery, vars)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]map[string][]*models.User
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var userUids []string
+	for _, user := range response["users"] {
+		for _, follower := range user["follow"] {
 			userUids = append(userUids, follower.Uid)
 		}
 	}

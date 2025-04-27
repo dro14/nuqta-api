@@ -31,9 +31,18 @@ query Query($uid: string, $user_uid: string) {
 }`
 
 const userFollowsQuery = `
-query Query($user_uid: string, $after: string) {
+query Query($user_uid: string, $offset: int) {
 	users(func: uid($user_uid)) {
-		%s (first: 20, after: $after) {
+		%s @facets(orderdesc: timestamp) (offset: $offset, first: 20) {
+			uid
+		}
+	}
+}`
+
+const userNetworkQuery = `
+query Query($uid: string, $offset: int) {
+	users(func: uid($uid)) {
+		follow @filter(uid_in(follow, $uid)) (offset: $offset, first: 20) {
 			uid
 		}
 	}

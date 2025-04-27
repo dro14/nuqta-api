@@ -9,12 +9,10 @@ import (
 )
 
 type userRequest struct {
-	Uid      string   `json:"uid"`
 	Tab      string   `json:"tab"`
 	Query    string   `json:"query"`
 	UserUid  string   `json:"user_uid"`
 	UserUids []string `json:"user_uids"`
-	After    string   `json:"after"`
 	Offset   int64    `json:"offset"`
 }
 
@@ -26,12 +24,8 @@ func (h *Handler) getUserList(c *gin.Context) {
 		return
 	}
 
-	if request.Uid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
 	var userUids []string
+	uid := c.GetString("uid")
 	ctx := c.Request.Context()
 	switch request.Tab {
 	case "search":
@@ -50,7 +44,13 @@ func (h *Handler) getUserList(c *gin.Context) {
 			return
 		}
 		reverse := request.Tab == "followers"
-		userUids, err = h.data.GetUserFollows(ctx, request.UserUid, request.After, reverse)
+		userUids, err = h.data.GetUserFollows(ctx, request.UserUid, request.Offset, reverse)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+	case "network":
+		userUids, err = h.data.GetUserNetwork(ctx, uid, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -66,7 +66,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 
 	users := make([]*models.User, 0, len(userUids))
 	for _, userUid := range userUids {
-		user, err := h.data.GetUser(ctx, request.Uid, userUid)
+		user, err := h.data.GetUser(ctx, uid, userUid)
 		if err != nil {
 			continue
 		}
