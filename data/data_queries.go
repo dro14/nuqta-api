@@ -42,7 +42,7 @@ query Query($user_uid: string, $offset: int) {
 const userNetworkQuery = `
 query Query($uid: string, $offset: int) {
 	users(func: uid($uid)) {
-		follow @filter(uid_in(follow, $uid)) (offset: $offset, first: 20) {
+		follow @filter(uid_in(follow, $uid)) @facets(orderdesc: timestamp) (offset: $offset, first: 20) {
 			uid
 		}
 	}
