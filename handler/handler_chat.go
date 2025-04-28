@@ -81,9 +81,11 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	channel, ok := channels.Load(message.RecipientUid)
+	value, ok := channelsMap.Load(message.RecipientUid)
 	if ok {
-		channel.(chan any) <- []*models.Message{message}
+		for _, channel := range value.([]chan any) {
+			channel <- []*models.Message{message}
+		}
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -105,9 +107,11 @@ func (h *Handler) viewPrivateMessages(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	channel, ok := channels.Load(messages[0].AuthorUid)
+	value, ok := channelsMap.Load(messages[0].AuthorUid)
 	if ok {
-		channel.(chan any) <- messages
+		for _, channel := range value.([]chan any) {
+			channel <- messages
+		}
 	}
 	c.JSON(http.StatusOK, messages)
 }
@@ -125,9 +129,11 @@ func (h *Handler) editPrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	channel, ok := channels.Load(message.RecipientUid)
+	value, ok := channelsMap.Load(message.RecipientUid)
 	if ok {
-		channel.(chan any) <- []*models.Message{message}
+		for _, channel := range value.([]chan any) {
+			channel <- []*models.Message{message}
+		}
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -145,9 +151,11 @@ func (h *Handler) deletePrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	channel, ok := channels.Load(message.RecipientUid)
+	value, ok := channelsMap.Load(message.RecipientUid)
 	if ok {
-		channel.(chan any) <- []*models.Message{message}
+		for _, channel := range value.([]chan any) {
+			channel <- []*models.Message{message}
+		}
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -165,9 +173,11 @@ func (h *Handler) typePrivateMessage(c *gin.Context) {
 		return
 	}
 
-	channel, ok := channels.Load(request["recipient_uid"])
+	value, ok := channelsMap.Load(request["recipient_uid"])
 	if ok {
-		channel.(chan any) <- request["chat_uid"]
+		for _, channel := range value.([]chan any) {
+			channel <- request["chat_uid"]
+		}
 	}
 }
 

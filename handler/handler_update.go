@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"slices"
 	"sync"
 	"time"
 
@@ -9,28 +10,30 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var channels sync.Map
+var channelsMap sync.Map
 
 func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 	c.Writer.Header().Set("Cache-Control", "no-cache")
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("Transfer-Encoding", "chunked")
+	c.Writer.Header().Set("X-Accel-Buffering", "no")
 	c.Writer.Flush()
 
 	uid := c.GetString("uid")
-	value, ok := channels.Load(uid)
+	var channels []chan any
+	value, ok := channelsMap.Load(uid)
 	if ok {
-		oldChannel := value.(chan any)
-		oldChannel <- true
-		close(oldChannel)
-		channels.Delete(uid)
+		channels = value.([]chan any)
 	}
 	channel := make(chan any)
-	channels.Store(uid, channel)
+	channels = append(channels, channel)
+	channelsMap.Store(uid, channels)
 	defer func() {
 		close(channel)
-		channels.Delete(uid)
+		index := slices.Index(channels, channel)
+		channels = slices.Delete(channels, index, index+1)
+		channelsMap.Store(uid, channels)
 	}()
 
 	messages := make([]*models.Message, 0)
@@ -55,7 +58,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 
 	sendSSEEvent(c, "messages", messages)
 
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 
 	for i := 0; ; i++ {
@@ -71,8 +74,6 @@ func (h *Handler) getUpdate(c *gin.Context) {
 				sendSSEEvent(c, "messages", data)
 			case string:
 				sendSSEEvent(c, "typing", gin.H{"chat_uid": data})
-			case bool:
-				return
 			}
 		case <-c.Request.Context().Done():
 			return
