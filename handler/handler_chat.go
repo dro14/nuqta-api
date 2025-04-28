@@ -160,6 +160,22 @@ func (h *Handler) deletePrivateMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, message)
 }
 
+func (h *Handler) removePrivateMessage(c *gin.Context) {
+	message := &models.Message{}
+	err := c.ShouldBindJSON(message)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	ctx := c.Request.Context()
+	err = h.data.RemovePrivateMessage(ctx, message, c.GetString("uid"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+}
+
 func (h *Handler) typePrivateMessage(c *gin.Context) {
 	var request map[string]string
 	err := c.ShouldBindJSON(&request)

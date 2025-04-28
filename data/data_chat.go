@@ -143,6 +143,13 @@ func (d *Data) DeletePrivateMessage(ctx context.Context, message *models.Message
 	)
 }
 
+func (d *Data) RemovePrivateMessage(ctx context.Context, message *models.Message, uid string) error {
+	return d.dbExec(ctx,
+		"DELETE FROM private_messages WHERE id = $1 AND recipient_uid = $2",
+		message.Id, uid,
+	)
+}
+
 func (d *Data) CreateYordamchiMessage(ctx context.Context, message *models.Message) error {
 	message.Timestamp = time.Now().UnixMilli()
 	var nullInReplyTo sql.NullInt64

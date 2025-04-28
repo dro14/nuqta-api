@@ -50,6 +50,7 @@ func (h *Handler) Run(port string) error {
 	group.PATCH("/private", h.viewPrivateMessages)
 	group.PUT("/private", h.editPrivateMessage)
 	group.DELETE("/private", h.deletePrivateMessage)
+	group.HEAD("/private", h.removePrivateMessage)
 	group.OPTIONS("/private", h.typePrivateMessage)
 	group.POST("/yordamchi/:provider", h.createYordamchiMessage)
 	group.PUT("/yordamchi/:provider", h.editYordamchiMessage)
