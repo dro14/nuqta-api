@@ -30,10 +30,10 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	channels = append(channels, channel)
 	channelsMap.Store(uid, channels)
 	defer func() {
-		close(channel)
 		index := slices.Index(channels, channel)
 		channels = slices.Delete(channels, index, index+1)
 		channelsMap.Store(uid, channels)
+		close(channel)
 	}()
 
 	messages := make([]*models.Message, 0)
@@ -58,7 +58,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 
 	sendSSEEvent(c, "messages", messages)
 
-	ticker := time.NewTicker(20 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
 	for i := 0; ; i++ {
