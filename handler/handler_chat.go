@@ -83,7 +83,7 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 	}
 	channel, ok := channels.Load(message.RecipientUid)
 	if ok {
-		channel.(chan []*models.Message) <- []*models.Message{message}
+		channel.(chan any) <- []*models.Message{message}
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -107,7 +107,7 @@ func (h *Handler) viewPrivateMessages(c *gin.Context) {
 	}
 	channel, ok := channels.Load(messages[0].AuthorUid)
 	if ok {
-		channel.(chan []*models.Message) <- messages
+		channel.(chan any) <- messages
 	}
 	c.JSON(http.StatusOK, messages)
 }
@@ -127,7 +127,7 @@ func (h *Handler) editPrivateMessage(c *gin.Context) {
 	}
 	channel, ok := channels.Load(message.RecipientUid)
 	if ok {
-		channel.(chan []*models.Message) <- []*models.Message{message}
+		channel.(chan any) <- []*models.Message{message}
 	}
 	c.JSON(http.StatusOK, message)
 }
@@ -147,9 +147,28 @@ func (h *Handler) deletePrivateMessage(c *gin.Context) {
 	}
 	channel, ok := channels.Load(message.RecipientUid)
 	if ok {
-		channel.(chan []*models.Message) <- []*models.Message{message}
+		channel.(chan any) <- []*models.Message{message}
 	}
 	c.JSON(http.StatusOK, message)
+}
+
+func (h *Handler) typePrivateMessage(c *gin.Context) {
+	var request map[string]string
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request["chat_uid"] == "" || request["recipient_uid"] == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	channel, ok := channels.Load(request["recipient_uid"])
+	if ok {
+		channel.(chan any) <- request["chat_uid"]
+	}
 }
 
 func (h *Handler) createYordamchiMessage(c *gin.Context) {

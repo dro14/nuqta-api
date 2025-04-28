@@ -19,7 +19,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Flush()
 
 	uid := c.GetString("uid")
-	channel := make(chan []*models.Message)
+	channel := make(chan any)
 	channels.Store(uid, channel)
 	defer func() {
 		close(channel)
@@ -48,18 +48,23 @@ func (h *Handler) getUpdate(c *gin.Context) {
 
 	sendSSEEvent(c, "messages", messages)
 
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
+	// ticker := time.NewTicker(5 * time.Second)
+	// defer ticker.Stop()
 
 	for i := 0; ; i++ {
 		select {
-		case <-ticker.C:
-			sendSSEEvent(c, "update", gin.H{
-				"update":    i,
-				"timestamp": time.Now().Add(5 * time.Hour).Format(time.DateTime),
-			})
-		case messages := <-channel:
-			sendSSEEvent(c, "messages", messages)
+		// case <-ticker.C:
+		// 	sendSSEEvent(c, "update", gin.H{
+		// 		"update":    i,
+		// 		"timestamp": time.Now().Add(5 * time.Hour).Format(time.DateTime),
+		// 	})
+		case data := <-channel:
+			switch data := data.(type) {
+			case []*models.Message:
+				sendSSEEvent(c, "messages", data)
+			case string:
+				sendSSEEvent(c, "typing", gin.H{"chat_uid": data})
+			}
 		case <-c.Request.Context().Done():
 			return
 		}
