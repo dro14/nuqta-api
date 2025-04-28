@@ -61,13 +61,15 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
-	for i := 0; ; i++ {
+	i := 0
+	for {
 		select {
 		case <-ticker.C:
 			sendSSEEvent(c, "ping", gin.H{
 				"ping":      i,
 				"timestamp": time.Now().Add(5 * time.Hour).Format(time.DateTime),
 			})
+			i++
 		case data := <-channel:
 			switch data := data.(type) {
 			case []*models.Message:
