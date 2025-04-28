@@ -19,6 +19,13 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Flush()
 
 	uid := c.GetString("uid")
+	value, ok := channels.Load(uid)
+	if ok {
+		oldChannel := value.(chan any)
+		oldChannel <- true
+		close(oldChannel)
+		channels.Delete(uid)
+	}
 	channel := make(chan any)
 	channels.Store(uid, channel)
 	defer func() {
@@ -64,6 +71,8 @@ func (h *Handler) getUpdate(c *gin.Context) {
 				sendSSEEvent(c, "messages", data)
 			case string:
 				sendSSEEvent(c, "typing", gin.H{"chat_uid": data})
+			case bool:
+				return
 			}
 		case <-c.Request.Context().Done():
 			return
