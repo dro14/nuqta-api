@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const pingInterval = 30
+
 var channelsMap sync.Map
 
 func (h *Handler) getUpdate(c *gin.Context) {
@@ -58,7 +60,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 
 	sendSSEEvent(c, "messages", messages)
 
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(pingInterval * time.Second)
 	defer ticker.Stop()
 
 	i := 0
@@ -68,6 +70,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			sendSSEEvent(c, "ping", gin.H{
 				"ping":      i,
 				"timestamp": time.Now().Add(5 * time.Hour).Format(time.DateTime),
+				"interval":  pingInterval,
 			})
 			i++
 		case data := <-channel:
