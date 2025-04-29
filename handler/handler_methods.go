@@ -24,6 +24,9 @@ func (h *Handler) Run(port string) error {
 	authorized := h.engine.Group("")
 	authorized.Use(h.authMiddleware)
 
+	authorized.GET("/ping", h.ping)
+	authorized.GET("/update", h.getUpdate)
+
 	group = authorized.Group("/profile")
 	group.POST("", h.createProfile)
 	group.GET("", h.getProfile)
@@ -54,8 +57,6 @@ func (h *Handler) Run(port string) error {
 	group.OPTIONS("/private", h.typePrivateMessage)
 	group.POST("/yordamchi/:provider", h.createYordamchiMessage)
 	group.PUT("/yordamchi/:provider", h.editYordamchiMessage)
-
-	authorized.GET("/update", h.getUpdate)
 
 	return h.engine.Run(":" + port)
 }

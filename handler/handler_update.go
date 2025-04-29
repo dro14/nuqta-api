@@ -10,9 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const pingInterval = 30
-
-var channelsMap sync.Map
+var (
+	broadcasters      map[string][]chan any
+	broadcastersMutex sync.RWMutex
+)
 
 func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
@@ -23,18 +24,16 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Flush()
 
 	uid := c.GetString("uid")
-	var channels []chan any
-	value, ok := channelsMap.Load(uid)
-	if ok {
-		channels = value.([]chan any)
-	}
 	channel := make(chan any)
-	channels = append(channels, channel)
-	channelsMap.Store(uid, channels)
+	broadcastersMutex.Lock()
+	broadcasters[uid] = append(broadcasters[uid], channel)
+	broadcastersMutex.Unlock()
 	defer func() {
+		broadcastersMutex.Lock()
+		channels := broadcasters[uid]
 		index := slices.Index(channels, channel)
-		channels = slices.Delete(channels, index, index+1)
-		channelsMap.Store(uid, channels)
+		broadcasters[uid] = slices.Delete(channels, index, index+1)
+		broadcastersMutex.Unlock()
 		close(channel)
 	}()
 
@@ -60,21 +59,12 @@ func (h *Handler) getUpdate(c *gin.Context) {
 
 	sendSSEEvent(c, "messages", messages)
 
-	ticker := time.NewTicker(pingInterval * time.Second)
-	defer ticker.Stop()
-
-	i := 0
 	for {
 		select {
-		case <-ticker.C:
-			sendSSEEvent(c, "ping", gin.H{
-				"ping":      i,
-				"timestamp": time.Now().Add(5 * time.Hour).Format(time.DateTime),
-				"interval":  pingInterval,
-			})
-			i++
 		case data := <-channel:
 			switch data := data.(type) {
+			case bool:
+				sendSSEEvent(c, "pong", gin.H{"timestamp": time.Now().UnixMilli()})
 			case []*models.Message:
 				sendSSEEvent(c, "messages", data)
 			case string:
@@ -86,7 +76,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	}
 }
 
-func sendSSEEvent(c *gin.Context, event string, data any) {
-	c.SSEvent(event, data)
-	c.Writer.Flush()
+func (h *Handler) ping(c *gin.Context) {
+	broadcast(c.GetString("uid"), true)
+	c.JSON(http.StatusOK, gin.H{"interval": 30})
 }

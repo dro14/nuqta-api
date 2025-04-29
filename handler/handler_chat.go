@@ -81,12 +81,7 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	value, ok := channelsMap.Load(message.RecipientUid)
-	if ok {
-		for _, channel := range value.([]chan any) {
-			channel <- []*models.Message{message}
-		}
-	}
+	broadcast(message.RecipientUid, []*models.Message{message})
 	c.JSON(http.StatusOK, message)
 }
 
@@ -107,12 +102,7 @@ func (h *Handler) viewPrivateMessages(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	value, ok := channelsMap.Load(messages[0].AuthorUid)
-	if ok {
-		for _, channel := range value.([]chan any) {
-			channel <- messages
-		}
-	}
+	broadcast(messages[0].AuthorUid, messages)
 	c.JSON(http.StatusOK, messages)
 }
 
@@ -129,12 +119,7 @@ func (h *Handler) editPrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	value, ok := channelsMap.Load(message.RecipientUid)
-	if ok {
-		for _, channel := range value.([]chan any) {
-			channel <- []*models.Message{message}
-		}
-	}
+	broadcast(message.RecipientUid, []*models.Message{message})
 	c.JSON(http.StatusOK, message)
 }
 
@@ -151,12 +136,7 @@ func (h *Handler) deletePrivateMessage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	value, ok := channelsMap.Load(message.RecipientUid)
-	if ok {
-		for _, channel := range value.([]chan any) {
-			channel <- []*models.Message{message}
-		}
-	}
+	broadcast(message.RecipientUid, []*models.Message{message})
 	c.JSON(http.StatusOK, message)
 }
 
@@ -177,24 +157,19 @@ func (h *Handler) removePrivateMessage(c *gin.Context) {
 }
 
 func (h *Handler) typePrivateMessage(c *gin.Context) {
-	var request map[string]string
-	err := c.ShouldBindJSON(&request)
+	message := &models.Message{}
+	err := c.ShouldBindJSON(message)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	if request["chat_uid"] == "" || request["recipient_uid"] == "" {
+	if message.ChatUid == "" || message.RecipientUid == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
-	value, ok := channelsMap.Load(request["recipient_uid"])
-	if ok {
-		for _, channel := range value.([]chan any) {
-			channel <- request["chat_uid"]
-		}
-	}
+	broadcast(message.RecipientUid, message.ChatUid)
 }
 
 func (h *Handler) createYordamchiMessage(c *gin.Context) {
