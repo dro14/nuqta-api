@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	broadcasters      map[string][]chan any
+	broadcasters      = make(map[string][]chan any)
 	broadcastersMutex sync.RWMutex
 )
 
