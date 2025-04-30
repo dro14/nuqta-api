@@ -25,7 +25,7 @@ Retry:
 		ctx = context.WithValue(ctx, "model", "gemini-2.0-flash-001")
 		response, err = y.google.GenerateContent(ctx, conversation)
 	case "openai":
-		ctx = context.WithValue(ctx, "model", "gpt-4o-mini-2024-07-18")
+		ctx = context.WithValue(ctx, "model", "gpt-4.1-nano-2025-04-14")
 		response, err = y.openai.Completions(ctx, conversation)
 	default:
 		return nil, e.ErrInvalidParams
