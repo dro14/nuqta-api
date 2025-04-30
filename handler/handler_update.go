@@ -37,16 +37,17 @@ func (h *Handler) getUpdate(c *gin.Context) {
 		close(channel)
 	}()
 
-	messages := make([]*models.Message, 0)
 	after := c.Param("after")
 	if after == "" || after == "0" {
 		ctx := c.Request.Context()
+		now := time.Now().UnixMilli()
+
+		messages := make([]*models.Message, 0)
 		chatUids, err := h.data.GetChats(ctx, uid, "private")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-		now := time.Now().UnixMilli()
 		for _, chatUid := range chatUids {
 			chatMessages, err := h.data.GetMessages(ctx, chatUid, "private", now)
 			if err != nil {
@@ -55,9 +56,30 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			}
 			messages = append(messages, chatMessages...)
 		}
-	}
 
-	sendSSEEvent(c, "messages", messages)
+		if len(messages) > 0 {
+			sendSSEEvent(c, "messages", messages)
+			messages = make([]*models.Message, 0)
+		}
+
+		chatUids, err = h.data.GetChats(ctx, uid, "yordamchi")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+		for _, chatUid := range chatUids {
+			chatMessages, err := h.data.GetMessages(ctx, chatUid, "yordamchi", now)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, failure(err))
+				return
+			}
+			messages = append(messages, chatMessages...)
+		}
+
+		if len(messages) > 0 {
+			sendSSEEvent(c, "messages", messages)
+		}
+	}
 
 	for {
 		select {
