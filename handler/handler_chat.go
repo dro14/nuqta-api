@@ -199,9 +199,9 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 		return
 	}
 
-	conversation := make([]string, len(messages))
-	for i, message := range messages {
-		conversation[i] = message.Text
+	conversation := make([]string, 0)
+	for _, message := range messages[:len(messages)-1] {
+		conversation = append(conversation, message.Text)
 	}
 
 	ctx = context.WithValue(ctx, "firebase_uid", c.GetString("firebase_uid"))
@@ -248,9 +248,9 @@ func (h *Handler) editYordamchiMessage(c *gin.Context) {
 		return
 	}
 
-	conversation := make([]string, len(messages))
-	for i, message := range messages[:len(messages)-1] {
-		conversation[i] = message.Text
+	conversation := make([]string, 0)
+	for _, message := range messages[:len(messages)-1] {
+		conversation = append(conversation, message.Text)
 	}
 
 	ctx = context.WithValue(ctx, "firebase_uid", c.GetString("firebase_uid"))
