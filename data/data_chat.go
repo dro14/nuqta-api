@@ -171,8 +171,8 @@ func (d *Data) CreateYordamchi(ctx context.Context, message *models.Message) err
 
 func (d *Data) ClearYordamchi(ctx context.Context, message *models.Message) error {
 	return d.dbExec(ctx,
-		"UPDATE yordamchi_messages SET deleted = $1 WHERE chat_uid = $2 AND id >= $3 AND timestamp >= $4 AND deleted IS NULL",
-		time.Now().UnixMilli(), message.ChatUid, message.Id, message.Timestamp,
+		"UPDATE yordamchi_messages SET deleted = $1 WHERE chat_uid = $2 AND id >= $3 AND deleted IS NULL",
+		time.Now().UnixMilli(), message.ChatUid, message.Id,
 	)
 }
 
