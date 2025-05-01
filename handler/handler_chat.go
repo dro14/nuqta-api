@@ -187,7 +187,7 @@ func (h *Handler) createYordamchi(c *gin.Context) {
 		return
 	}
 
-	if len(messages) != 2 && len(messages) != 4 {
+	if 1 < len(messages) && len(messages) < 5 {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
 		return
 	}
@@ -218,7 +218,7 @@ func (h *Handler) editYordamchi(c *gin.Context) {
 		return
 	}
 
-	if len(messages) != 2 && len(messages) != 4 {
+	if 1 < len(messages) && len(messages) < 5 {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
 		return
 	}
