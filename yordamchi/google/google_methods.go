@@ -30,6 +30,7 @@ func (g *Google) GenerateContent(ctx context.Context, conversation []string) (st
 			Role:  role,
 		})
 	}
+	log.Printf("%+v", *request)
 
 	resp, err := g.send(ctx, request)
 	if err != nil {
