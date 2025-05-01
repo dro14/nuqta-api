@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -216,6 +217,11 @@ func (h *Handler) editYordamchi(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
+	}
+
+	log.Printf("received messages: %d", len(messages))
+	for _, message := range messages {
+		log.Printf("%+v", *message)
 	}
 
 	if 1 < len(messages) && len(messages) < 5 {
