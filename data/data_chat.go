@@ -163,8 +163,8 @@ func (d *Data) CreateYordamchiMessage(ctx context.Context, message *models.Messa
 		nullText.String = message.Text
 	}
 	return d.dbQueryRow(ctx,
-		"INSERT INTO yordamchi_messages (timestamp, chat_uid, author_uid, in_reply_to, text, images) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-		[]any{message.Timestamp, message.ChatUid, message.AuthorUid, nullInReplyTo, nullText, pq.Array(message.Images)},
+		"INSERT INTO yordamchi_messages (timestamp, chat_uid, author_uid, in_reply_to, text) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+		[]any{message.Timestamp, message.ChatUid, message.AuthorUid, nullInReplyTo, nullText},
 		&message.Id,
 	)
 }

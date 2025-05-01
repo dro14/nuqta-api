@@ -199,26 +199,31 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 		return
 	}
 
-	conversation := make([]string, 0)
-	for _, message := range messages {
-		conversation = append(conversation, message.Text)
-	}
+	c.JSON(http.StatusOK, request)
 
-	ctx = context.WithValue(ctx, "firebase_uid", c.GetString("firebase_uid"))
-	response, err := h.yordamchi.Respond(ctx, provider, conversation)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-	response.ChatUid = request.ChatUid
+	go func() {
+		conversation := make([]string, 0)
+		for _, message := range messages {
+			conversation = append(conversation, message.Text)
+		}
 
-	err = h.data.CreateYordamchiMessage(ctx, response)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
+		ctx := context.Background()
+		ctx = context.WithValue(ctx, "firebase_uid", c.GetString("firebase_uid"))
+		response, err := h.yordamchi.Respond(ctx, provider, conversation)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+		response.ChatUid = request.ChatUid
 
-	c.JSON(http.StatusOK, []*models.Message{request, response})
+		err = h.data.CreateYordamchiMessage(ctx, response)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+
+		broadcast(request.AuthorUid, []*models.Message{response})
+	}()
 }
 
 func (h *Handler) editYordamchiMessage(c *gin.Context) {
@@ -235,39 +240,48 @@ func (h *Handler) editYordamchiMessage(c *gin.Context) {
 		return
 	}
 
-	if len(messages) != 3 && len(messages) != 5 {
+	if len(messages) > 1 && len(messages) < 6 {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	request := messages[len(messages)-2]
+	request := messages[len(messages)-(1+len(messages)%2)]
 	err = h.data.EditYordamchiMessage(ctx, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
-	conversation := make([]string, 0)
-	for _, message := range messages[:len(messages)-1] {
-		conversation = append(conversation, message.Text)
-	}
+	c.JSON(http.StatusOK, request)
 
-	ctx = context.WithValue(ctx, "firebase_uid", c.GetString("firebase_uid"))
-	response, err := h.yordamchi.Respond(ctx, provider, conversation)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-	messages[len(messages)-1].Text = response.Text
-	messages[len(messages)-1].AuthorUid = response.AuthorUid
-	response = messages[len(messages)-1]
+	go func() {
+		var id int64
+		if len(messages)%2 != 0 {
+			id = messages[len(messages)-1].Id
+			messages = messages[:len(messages)-1]
+		}
 
-	err = h.data.EditYordamchiMessage(ctx, response)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
+		conversation := make([]string, 0)
+		for _, message := range messages {
+			conversation = append(conversation, message.Text)
+		}
 
-	c.JSON(http.StatusOK, []*models.Message{request, response})
+		ctx := context.Background()
+		ctx = context.WithValue(ctx, "firebase_uid", c.GetString("firebase_uid"))
+		response, err := h.yordamchi.Respond(ctx, provider, conversation)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+		response.Id = id
+
+		err = h.data.EditYordamchiMessage(ctx, response)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+
+		broadcast(request.AuthorUid, []*models.Message{response})
+	}()
 }
