@@ -200,7 +200,7 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 	}
 
 	conversation := make([]string, 0)
-	for _, message := range messages[:len(messages)-1] {
+	for _, message := range messages {
 		conversation = append(conversation, message.Text)
 	}
 
