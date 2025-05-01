@@ -94,7 +94,8 @@ CREATE TABLE yordamchi_messages (
     author_uid VARCHAR(255) NOT NULL,
     in_reply_to BIGINT,
     text TEXT,
-    images VARCHAR(255)[]
+    images VARCHAR(255)[],
+    deleted BIGINT
 );
 CREATE INDEX yordamchi_messages_timestamp_idx ON yordamchi_messages(timestamp);
 CREATE INDEX yordamchi_messages_chat_uid_idx ON yordamchi_messages(chat_uid);`

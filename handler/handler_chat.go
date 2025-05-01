@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
@@ -39,7 +40,7 @@ func (h *Handler) createChat(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"chat_uid": chatUid})
 }
 
-func (h *Handler) getMessageList(c *gin.Context) {
+func (h *Handler) getMessages(c *gin.Context) {
 	type_ := c.Param("type")
 	if type_ != "private" && type_ != "yordamchi" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
@@ -68,7 +69,7 @@ func (h *Handler) getMessageList(c *gin.Context) {
 	c.JSON(http.StatusOK, messages)
 }
 
-func (h *Handler) createPrivateMessage(c *gin.Context) {
+func (h *Handler) createPrivate(c *gin.Context) {
 	message := &models.Message{}
 	err := c.ShouldBindJSON(message)
 	if err != nil {
@@ -76,7 +77,7 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	err = h.data.CreatePrivateMessage(ctx, message, c.GetString("uid"))
+	err = h.data.CreatePrivate(ctx, message, c.GetString("uid"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -85,7 +86,7 @@ func (h *Handler) createPrivateMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, message)
 }
 
-func (h *Handler) viewPrivateMessages(c *gin.Context) {
+func (h *Handler) viewPrivate(c *gin.Context) {
 	var messages []*models.Message
 	err := c.ShouldBindJSON(&messages)
 	if err != nil {
@@ -97,7 +98,7 @@ func (h *Handler) viewPrivateMessages(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	err = h.data.ViewPrivateMessages(ctx, messages, c.GetString("uid"))
+	err = h.data.ViewPrivate(ctx, messages, c.GetString("uid"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -106,7 +107,7 @@ func (h *Handler) viewPrivateMessages(c *gin.Context) {
 	c.JSON(http.StatusOK, messages)
 }
 
-func (h *Handler) editPrivateMessage(c *gin.Context) {
+func (h *Handler) editPrivate(c *gin.Context) {
 	message := &models.Message{}
 	err := c.ShouldBindJSON(message)
 	if err != nil {
@@ -114,7 +115,7 @@ func (h *Handler) editPrivateMessage(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	err = h.data.EditPrivateMessage(ctx, message, c.GetString("uid"))
+	err = h.data.EditPrivate(ctx, message, c.GetString("uid"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -123,7 +124,7 @@ func (h *Handler) editPrivateMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, message)
 }
 
-func (h *Handler) deletePrivateMessage(c *gin.Context) {
+func (h *Handler) deletePrivate(c *gin.Context) {
 	message := &models.Message{}
 	err := c.ShouldBindJSON(message)
 	if err != nil {
@@ -131,7 +132,7 @@ func (h *Handler) deletePrivateMessage(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	err = h.data.DeletePrivateMessage(ctx, message, c.GetString("uid"))
+	err = h.data.DeletePrivate(ctx, message, c.GetString("uid"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -140,7 +141,7 @@ func (h *Handler) deletePrivateMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, message)
 }
 
-func (h *Handler) removePrivateMessage(c *gin.Context) {
+func (h *Handler) removePrivate(c *gin.Context) {
 	message := &models.Message{}
 	err := c.ShouldBindJSON(message)
 	if err != nil {
@@ -149,14 +150,14 @@ func (h *Handler) removePrivateMessage(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	err = h.data.RemovePrivateMessage(ctx, message, c.GetString("uid"))
+	err = h.data.RemovePrivate(ctx, message, c.GetString("uid"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 }
 
-func (h *Handler) typePrivateMessage(c *gin.Context) {
+func (h *Handler) typePrivate(c *gin.Context) {
 	message := &models.Message{}
 	err := c.ShouldBindJSON(message)
 	if err != nil {
@@ -172,7 +173,7 @@ func (h *Handler) typePrivateMessage(c *gin.Context) {
 	broadcast(message.RecipientUid, message.ChatUid)
 }
 
-func (h *Handler) createYordamchiMessage(c *gin.Context) {
+func (h *Handler) createYordamchi(c *gin.Context) {
 	provider := c.Param("provider")
 	if provider != "openai" && provider != "google" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
@@ -193,40 +194,17 @@ func (h *Handler) createYordamchiMessage(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	request := messages[len(messages)-1]
-	err = h.data.CreateYordamchiMessage(ctx, request)
+	err = h.data.CreateYordamchi(ctx, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
+	go h.sendResponse(messages, c.GetString("firebase_uid"), provider)
 	c.JSON(http.StatusOK, request)
-
-	go func() {
-		conversation := make([]string, 0)
-		for _, message := range messages {
-			conversation = append(conversation, message.Text)
-		}
-
-		ctx := context.Background()
-		ctx = context.WithValue(ctx, "firebase_uid", c.GetString("firebase_uid"))
-		response, err := h.yordamchi.Respond(ctx, provider, conversation)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-		response.ChatUid = request.ChatUid
-
-		err = h.data.CreateYordamchiMessage(ctx, response)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-
-		broadcast(request.AuthorUid, []*models.Message{response})
-	}()
 }
 
-func (h *Handler) editYordamchiMessage(c *gin.Context) {
+func (h *Handler) editYordamchi(c *gin.Context) {
 	provider := c.Param("provider")
 	if provider != "openai" && provider != "google" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
@@ -240,48 +218,78 @@ func (h *Handler) editYordamchiMessage(c *gin.Context) {
 		return
 	}
 
-	if len(messages) > 1 && len(messages) < 6 {
+	if len(messages) != 2 && len(messages) != 4 {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	request := messages[len(messages)-(1+len(messages)%2)]
-	err = h.data.EditYordamchiMessage(ctx, request)
+	request := messages[len(messages)-1]
+	err = h.data.ClearYordamchi(ctx, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
 
+	err = h.data.CreateYordamchi(ctx, request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	go h.sendResponse(messages, c.GetString("firebase_uid"), provider)
 	c.JSON(http.StatusOK, request)
+}
 
-	go func() {
-		var id int64
-		if len(messages)%2 != 0 {
-			id = messages[len(messages)-1].Id
-			messages = messages[:len(messages)-1]
+func (h *Handler) sendResponse(messages []*models.Message, firebaseUid, provider string) {
+	request := messages[len(messages)-1]
+	conversation := make([]string, 0)
+	for _, message := range messages {
+		conversation = append(conversation, message.Text)
+	}
+
+	now := time.Now()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "firebase_uid", firebaseUid)
+	response, err := h.yordamchi.Respond(ctx, provider, conversation)
+	if err != nil {
+		response = &models.Message{
+			Id:        now.UnixMicro(),
+			ChatUid:   request.ChatUid,
+			Timestamp: now.UnixMilli(),
+			Text:      err.Error(),
 		}
-
-		conversation := make([]string, 0)
-		for _, message := range messages {
-			conversation = append(conversation, message.Text)
-		}
-
-		ctx := context.Background()
-		ctx = context.WithValue(ctx, "firebase_uid", c.GetString("firebase_uid"))
-		response, err := h.yordamchi.Respond(ctx, provider, conversation)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-		response.Id = id
-
-		err = h.data.EditYordamchiMessage(ctx, response)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
-			return
-		}
-
 		broadcast(request.AuthorUid, []*models.Message{response})
-	}()
+		return
+	}
+	response.ChatUid = request.ChatUid
+
+	err = h.data.CreateYordamchi(ctx, response)
+	if err != nil {
+		response = &models.Message{
+			Id:        now.UnixMicro(),
+			ChatUid:   request.ChatUid,
+			Timestamp: now.UnixMilli(),
+			Text:      err.Error(),
+		}
+		broadcast(request.AuthorUid, []*models.Message{response})
+		return
+	}
+
+	broadcast(request.AuthorUid, []*models.Message{response})
+}
+
+func (h *Handler) deleteYordamchi(c *gin.Context) {
+	message := &models.Message{}
+	err := c.ShouldBindJSON(message)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+	ctx := c.Request.Context()
+	err = h.data.DeleteYordamchi(ctx, message)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
 }

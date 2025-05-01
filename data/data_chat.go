@@ -70,7 +70,7 @@ func (d *Data) GetChats(ctx context.Context, uid, type_ string) ([]string, error
 }
 
 func (d *Data) GetUpdates(ctx context.Context, chatUids []string, type_ string, after int64) ([]*models.Message, error) {
-	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = ANY($1) AND timestamp > $2"
+	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = ANY($1) AND timestamp > $2 AND deleted IS NULL"
 	if type_ == "private" {
 		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = ANY($1) AND last_updated > $2"
 	}
@@ -83,7 +83,7 @@ func (d *Data) GetUpdates(ctx context.Context, chatUids []string, type_ string, 
 }
 
 func (d *Data) GetMessages(ctx context.Context, chatUid, type_ string, before int64) ([]*models.Message, error) {
-	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
+	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = $1 AND timestamp < $2 AND deleted IS NULL ORDER BY timestamp DESC LIMIT 20"
 	if type_ == "private" {
 		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
 	}
@@ -95,7 +95,7 @@ func (d *Data) GetMessages(ctx context.Context, chatUid, type_ string, before in
 	return decodeMessages(rows, type_), nil
 }
 
-func (d *Data) CreatePrivateMessage(ctx context.Context, message *models.Message, uid string) error {
+func (d *Data) CreatePrivate(ctx context.Context, message *models.Message, uid string) error {
 	message.Timestamp = time.Now().UnixMilli()
 	var nullInReplyTo sql.NullInt64
 	var nullText sql.NullString
@@ -114,7 +114,7 @@ func (d *Data) CreatePrivateMessage(ctx context.Context, message *models.Message
 	)
 }
 
-func (d *Data) ViewPrivateMessages(ctx context.Context, messages []*models.Message, uid string) error {
+func (d *Data) ViewPrivate(ctx context.Context, messages []*models.Message, uid string) error {
 	now := time.Now().UnixMilli()
 	ids := make([]int64, 0)
 	for i, message := range messages {
@@ -127,7 +127,7 @@ func (d *Data) ViewPrivateMessages(ctx context.Context, messages []*models.Messa
 	)
 }
 
-func (d *Data) EditPrivateMessage(ctx context.Context, message *models.Message, uid string) error {
+func (d *Data) EditPrivate(ctx context.Context, message *models.Message, uid string) error {
 	message.Edited = time.Now().UnixMilli()
 	return d.dbExec(ctx,
 		"UPDATE private_messages SET text = $1, images = $2, edited = $3, last_updated = $4 WHERE id = $5 AND author_uid = $6",
@@ -135,7 +135,7 @@ func (d *Data) EditPrivateMessage(ctx context.Context, message *models.Message, 
 	)
 }
 
-func (d *Data) DeletePrivateMessage(ctx context.Context, message *models.Message, uid string) error {
+func (d *Data) DeletePrivate(ctx context.Context, message *models.Message, uid string) error {
 	message.Deleted = time.Now().UnixMilli()
 	return d.dbExec(ctx,
 		"UPDATE private_messages SET deleted = $1, last_updated = $2 WHERE id = $3 AND author_uid = $4",
@@ -143,14 +143,14 @@ func (d *Data) DeletePrivateMessage(ctx context.Context, message *models.Message
 	)
 }
 
-func (d *Data) RemovePrivateMessage(ctx context.Context, message *models.Message, uid string) error {
+func (d *Data) RemovePrivate(ctx context.Context, message *models.Message, uid string) error {
 	return d.dbExec(ctx,
 		"DELETE FROM private_messages WHERE id = $1 AND recipient_uid = $2",
 		message.Id, uid,
 	)
 }
 
-func (d *Data) CreateYordamchiMessage(ctx context.Context, message *models.Message) error {
+func (d *Data) CreateYordamchi(ctx context.Context, message *models.Message) error {
 	message.Timestamp = time.Now().UnixMilli()
 	var nullInReplyTo sql.NullInt64
 	var nullText sql.NullString
@@ -169,10 +169,17 @@ func (d *Data) CreateYordamchiMessage(ctx context.Context, message *models.Messa
 	)
 }
 
-func (d *Data) EditYordamchiMessage(ctx context.Context, message *models.Message) error {
-	message.Timestamp = time.Now().UnixMilli()
+func (d *Data) ClearYordamchi(ctx context.Context, message *models.Message) error {
 	return d.dbExec(ctx,
-		"UPDATE yordamchi_messages SET timestamp = $1, author_uid = $2, text = $3 WHERE id = $4",
-		message.Timestamp, message.AuthorUid, message.Text, message.Id,
+		"UPDATE yordamchi_messages SET deleted = $1 WHERE chat_uid = $2 AND id >= $3 AND timestamp >= $4 AND deleted IS NULL",
+		time.Now().UnixMilli(), message.ChatUid, message.Id, message.Timestamp,
+	)
+}
+
+func (d *Data) DeleteYordamchi(ctx context.Context, message *models.Message) error {
+	message.Deleted = time.Now().UnixMilli()
+	return d.dbExec(ctx,
+		"UPDATE yordamchi_messages SET deleted = $1 WHERE id = $2 AND author_uid = $3 AND deleted IS NULL",
+		message.Deleted, message.Id, message.AuthorUid,
 	)
 }
