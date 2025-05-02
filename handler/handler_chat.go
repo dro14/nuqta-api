@@ -263,6 +263,7 @@ func (h *Handler) sendResponse(messages []*models.Message, firebaseUid, provider
 		return
 	}
 	response.ChatUid = request.ChatUid
+	response.InReplyTo = request.Id
 
 	err = h.data.CreateYordamchi(ctx, response)
 	if err != nil {
