@@ -51,7 +51,7 @@ query Query($uid: string, $offset: int) {
 const inviteCountQuery = `
 query Query($uid: string) {
 	users(func: uid($uid)) {
-		count(~invited_by)
+		count: count(~invited_by)
 	}
 }`
 
