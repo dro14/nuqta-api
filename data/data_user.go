@@ -173,12 +173,12 @@ func (d *Data) GetUserFollows(ctx context.Context, userUid string, offset int64,
 	return userUids, nil
 }
 
-func (d *Data) GetUserNetwork(ctx context.Context, userUid string, offset int64) ([]string, error) {
+func (d *Data) GetUserInvites(ctx context.Context, uid string, offset int64) ([]string, error) {
 	vars := map[string]string{
-		"$uid":    userUid,
+		"$uid":    uid,
 		"$offset": strconv.FormatInt(offset, 10),
 	}
-	bytes, err := d.graphGet(ctx, userNetworkQuery, vars)
+	bytes, err := d.graphGet(ctx, userInvitesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -191,8 +191,8 @@ func (d *Data) GetUserNetwork(ctx context.Context, userUid string, offset int64)
 
 	var userUids []string
 	for _, user := range response["users"] {
-		for _, follower := range user["follow"] {
-			userUids = append(userUids, follower.Uid)
+		for _, invited := range user["invited"] {
+			userUids = append(userUids, invited.Uid)
 		}
 	}
 

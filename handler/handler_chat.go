@@ -255,8 +255,9 @@ func (h *Handler) sendResponse(messages []*models.Message, firebaseUid, provider
 	if err != nil {
 		response = &models.Message{
 			Id:        now.UnixMicro(),
-			ChatUid:   request.ChatUid,
 			Timestamp: now.UnixMilli(),
+			ChatUid:   request.ChatUid,
+			InReplyTo: request.Id,
 			Text:      err.Error(),
 		}
 		broadcast(request.AuthorUid, []*models.Message{response})
@@ -269,8 +270,9 @@ func (h *Handler) sendResponse(messages []*models.Message, firebaseUid, provider
 	if err != nil {
 		response = &models.Message{
 			Id:        now.UnixMicro(),
-			ChatUid:   request.ChatUid,
 			Timestamp: now.UnixMilli(),
+			ChatUid:   request.ChatUid,
+			InReplyTo: request.Id,
 			Text:      err.Error(),
 		}
 		broadcast(request.AuthorUid, []*models.Message{response})
