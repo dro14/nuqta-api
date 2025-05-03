@@ -40,11 +40,18 @@ query Query($user_uid: string, $offset: int) {
 }`
 
 const userInvitesQuery = `
-query Query($uid: string, $offset: int) {
+query Query($uid: string, $after: int) {
 	users(func: uid($uid)) {
-		invited: ~invited_by (orderdesc: registered, first: 20, offset: $offset) {
+		invited: ~invited_by @filter(gt(registered, $after)) (orderdesc: registered) {
 			uid
 		}
+	}
+}`
+
+const inviteCountQuery = `
+query Query($uid: string) {
+	users(func: uid($uid)) {
+		count(~invited_by)
 	}
 }`
 

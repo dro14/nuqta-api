@@ -198,3 +198,21 @@ func (d *Data) GetUserInvites(ctx context.Context, uid string, offset int64) ([]
 
 	return userUids, nil
 }
+
+func (d *Data) GetInviteCount(ctx context.Context, uid string) (int64, error) {
+	vars := map[string]string{
+		"$uid": uid,
+	}
+	bytes, err := d.graphGet(ctx, inviteCountQuery, vars)
+	if err != nil {
+		return 0, err
+	}
+
+	var response map[string][]map[string]int64
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return 0, err
+	}
+
+	return response["users"][0]["count"], nil
+}

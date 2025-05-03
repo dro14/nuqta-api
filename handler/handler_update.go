@@ -79,6 +79,13 @@ func (h *Handler) getUpdate(c *gin.Context) {
 		if len(messages) > 0 {
 			sendSSEEvent(c, "messages", messages)
 		}
+
+		inviteCount, err := h.data.GetInviteCount(ctx, uid)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+		sendSSEEvent(c, "invite_count", gin.H{"count": inviteCount})
 	}
 
 	for {
