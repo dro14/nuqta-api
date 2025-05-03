@@ -33,16 +33,16 @@ query Query($uid: string, $user_uid: string) {
 const userFollowsQuery = `
 query Query($user_uid: string, $offset: int) {
 	users(func: uid($user_uid)) {
-		%s @facets(orderdesc: timestamp) (first: 20, offset: $offset) {
+		%s @facets(orderdesc: timestamp) (offset: $offset, first: 20) {
 			uid
 		}
 	}
 }`
 
 const userInvitesQuery = `
-query Query($uid: string, $after: int) {
+query Query($uid: string, $offset: int) {
 	users(func: uid($uid)) {
-		invited: ~invited_by @filter(gt(registered, $after)) (orderdesc: registered) {
+		invited: ~invited_by (orderdesc: registered, offset: $offset, first: 20) {
 			uid
 		}
 	}
