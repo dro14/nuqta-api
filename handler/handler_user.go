@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
@@ -9,9 +10,7 @@ import (
 )
 
 type userRequest struct {
-	Tab      string   `json:"tab"`
-	Query    string   `json:"query"`
-	UserUid  string   `json:"user_uid"`
+	Uid      string   `json:"uid"`
 	UserUids []string `json:"user_uids"`
 	Offset   int64    `json:"offset"`
 }
@@ -25,32 +24,31 @@ func (h *Handler) getUserList(c *gin.Context) {
 	}
 
 	var userUids []string
-	uid := c.GetString("uid")
 	ctx := c.Request.Context()
-	switch request.Tab {
+	first, second, _ := strings.Cut(request.Uid, ":")
+	switch first {
 	case "search":
-		if request.Query == "" {
+		if second == "" {
 			c.JSON(http.StatusOK, make([]*models.User, 0))
 			return
 		}
-		userUids, err = h.data.SearchUser(ctx, request.Query, request.Offset)
+		userUids, err = h.data.SearchUser(ctx, second, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "followers", "following":
-		if request.UserUid == "" {
+		if second == "" {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		reverse := request.Tab == "followers"
-		userUids, err = h.data.GetUserFollows(ctx, request.UserUid, request.Offset, reverse)
+		userUids, err = h.data.GetUserFollows(ctx, second, request.Offset, first == "followers")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
 	case "invites":
-		userUids, err = h.data.GetUserInvites(ctx, uid, request.Offset)
+		userUids, err = h.data.GetUserInvites(ctx, c.GetString("uid"), request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -66,7 +64,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 
 	users := make([]*models.User, 0, len(userUids))
 	for _, userUid := range userUids {
-		user, err := h.data.GetUser(ctx, uid, userUid)
+		user, err := h.data.GetUser(ctx, c.GetString("uid"), userUid)
 		if err != nil {
 			continue
 		}
