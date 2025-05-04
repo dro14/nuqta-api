@@ -10,7 +10,7 @@ import (
 )
 
 type userRequest struct {
-	Uid      string   `json:"uid"`
+	Key      string   `json:"key"`
 	UserUids []string `json:"user_uids"`
 	Offset   int64    `json:"offset"`
 }
@@ -25,7 +25,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 
 	var userUids []string
 	ctx := c.Request.Context()
-	first, second, _ := strings.Cut(request.Uid, ":")
+	first, second, _ := strings.Cut(request.Key, ":")
 	switch first {
 	case "search":
 		if second == "" {
@@ -82,7 +82,7 @@ func (h *Handler) getUserByUsername(c *gin.Context) {
 		return
 	}
 
-	if request["uid"] == "" || request["username"] == "" {
+	if request["username"] == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
@@ -94,7 +94,7 @@ func (h *Handler) getUserByUsername(c *gin.Context) {
 		return
 	}
 
-	user, err := h.data.GetUser(ctx, request["uid"], userUid)
+	user, err := h.data.GetUser(ctx, c.GetString("uid"), userUid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
