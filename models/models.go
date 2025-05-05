@@ -22,8 +22,8 @@ type User struct {
 	Replies           int      `json:"replies,omitempty"`
 	Reposts           int      `json:"reposts,omitempty"`
 	Likes             int      `json:"likes,omitempty"`
-	IsFollowed        bool     `json:"is_followed,omitempty"`
 	IsFollowing       bool     `json:"is_following,omitempty"`
+	IsFollower        bool     `json:"is_follower,omitempty"`
 	ChatUid           string   `json:"chat_uid,omitempty"`
 	RepostedTimestamp int64    `json:"reposted|timestamp,omitempty"`
 }

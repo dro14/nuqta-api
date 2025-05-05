@@ -18,10 +18,10 @@ query Query($user_uid: string) {
 const userEdgesQuery = `
 query Query($uid: string, $user_uid: string) {
 	users(func: uid($uid)) {
-		is_followed: follow @filter(uid($user_uid)) {
+		is_following: follow @filter(uid($user_uid)) {
 			uid
 		}
-		is_following: ~follow @filter(uid($user_uid)) {
+		is_follower: ~follow @filter(uid($user_uid)) {
 			uid
 		}
 		chats: chat @filter(type(private_chat) AND uid_in(members, $user_uid)) {

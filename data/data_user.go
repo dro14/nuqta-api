@@ -85,8 +85,8 @@ func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, 
 
 	if len(edges["users"]) > 0 {
 		user_ := edges["users"][0]
-		user.IsFollowed = len(user_["is_followed"]) > 0
 		user.IsFollowing = len(user_["is_following"]) > 0
+		user.IsFollower = len(user_["is_follower"]) > 0
 		if len(user_["chats"]) == 1 {
 			user.ChatUid = user_["chats"][0]["uid"]
 		}
