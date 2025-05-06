@@ -71,10 +71,12 @@ func (d *Data) GetChats(ctx context.Context, uid, type_ string) ([]string, error
 
 func (d *Data) GetUpdates(ctx context.Context, uid, type_ string, chatUids []string, after int64) ([]*models.Message, error) {
 	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = ANY($1) AND timestamp > $2 AND deleted IS NULL"
+	args := []any{pq.Array(chatUids), after}
 	if type_ == "private" {
 		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = ANY($1) AND last_updated > $2 AND (author_uid != $3 OR deleted IS NULL)"
+		args = append(args, uid)
 	}
-	rows, err := d.dbQuery(ctx, query, pq.Array(chatUids), after, uid)
+	rows, err := d.dbQuery(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,10 +86,12 @@ func (d *Data) GetUpdates(ctx context.Context, uid, type_ string, chatUids []str
 
 func (d *Data) GetMessages(ctx context.Context, uid, type_, chatUid string, before int64) ([]*models.Message, error) {
 	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = $1 AND timestamp < $2 AND deleted IS NULL ORDER BY timestamp DESC LIMIT 20"
+	args := []any{chatUid, before}
 	if type_ == "private" {
 		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = $1 AND timestamp < $2 AND (author_uid != $3 OR deleted IS NULL) ORDER BY timestamp DESC LIMIT 20"
+		args = append(args, uid)
 	}
-	rows, err := d.dbQuery(ctx, query, chatUid, before, uid)
+	rows, err := d.dbQuery(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

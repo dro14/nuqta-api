@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"net/http"
 	"slices"
 	"sync"
 	"time"
@@ -45,13 +44,13 @@ func (h *Handler) getUpdate(c *gin.Context) {
 		messages := make([]*models.Message, 0)
 		chatUids, err := h.data.GetChats(ctx, uid, "private")
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
+			sendSSEEvent(c, "error", err.Error())
 			return
 		}
 		for _, chatUid := range chatUids {
 			chatMessages, err := h.data.GetMessages(ctx, uid, "private", chatUid, now)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, failure(err))
+				sendSSEEvent(c, "error", err.Error())
 				return
 			}
 			messages = append(messages, chatMessages...)
@@ -59,13 +58,13 @@ func (h *Handler) getUpdate(c *gin.Context) {
 
 		chatUids, err = h.data.GetChats(ctx, uid, "yordamchi")
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
+			sendSSEEvent(c, "error", err.Error())
 			return
 		}
 		for _, chatUid := range chatUids {
 			chatMessages, err := h.data.GetMessages(ctx, uid, "yordamchi", chatUid, now)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, failure(err))
+				sendSSEEvent(c, "error", err.Error())
 				return
 			}
 			messages = append(messages, chatMessages...)
@@ -77,7 +76,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 
 		inviteCount, err := h.data.GetInviteCount(ctx, uid)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, failure(err))
+			sendSSEEvent(c, "error", err.Error())
 			return
 		}
 		sendSSEEvent(c, "invite_count", gin.H{"count": inviteCount})
@@ -102,5 +101,4 @@ func (h *Handler) getUpdate(c *gin.Context) {
 
 func (h *Handler) ping(c *gin.Context) {
 	broadcast(c.GetString("uid"), true)
-	c.JSON(http.StatusOK, gin.H{"interval": 30})
 }
