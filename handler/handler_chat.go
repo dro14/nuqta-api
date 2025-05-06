@@ -60,7 +60,7 @@ func (h *Handler) getMessages(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	messages, err := h.data.GetMessages(ctx, request.ChatUid, type_, request.Before)
+	messages, err := h.data.GetMessages(ctx, c.GetString("uid"), type_, request.ChatUid, request.Before)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

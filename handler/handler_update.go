@@ -49,17 +49,12 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			return
 		}
 		for _, chatUid := range chatUids {
-			chatMessages, err := h.data.GetMessages(ctx, chatUid, "private", now)
+			chatMessages, err := h.data.GetMessages(ctx, uid, "private", chatUid, now)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return
 			}
 			messages = append(messages, chatMessages...)
-		}
-
-		if len(messages) > 0 {
-			sendSSEEvent(c, "messages", messages)
-			messages = make([]*models.Message, 0)
 		}
 
 		chatUids, err = h.data.GetChats(ctx, uid, "yordamchi")
@@ -68,7 +63,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			return
 		}
 		for _, chatUid := range chatUids {
-			chatMessages, err := h.data.GetMessages(ctx, chatUid, "yordamchi", now)
+			chatMessages, err := h.data.GetMessages(ctx, uid, "yordamchi", chatUid, now)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, failure(err))
 				return

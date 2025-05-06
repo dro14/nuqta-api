@@ -69,12 +69,12 @@ func (d *Data) GetChats(ctx context.Context, uid, type_ string) ([]string, error
 	return chatUids, nil
 }
 
-func (d *Data) GetUpdates(ctx context.Context, chatUids []string, type_ string, after int64) ([]*models.Message, error) {
+func (d *Data) GetUpdates(ctx context.Context, uid, type_ string, chatUids []string, after int64) ([]*models.Message, error) {
 	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = ANY($1) AND timestamp > $2 AND deleted IS NULL"
 	if type_ == "private" {
-		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = ANY($1) AND last_updated > $2"
+		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = ANY($1) AND last_updated > $2 AND (author_uid != $3 OR deleted IS NULL)"
 	}
-	rows, err := d.dbQuery(ctx, query, pq.Array(chatUids), after)
+	rows, err := d.dbQuery(ctx, query, pq.Array(chatUids), after, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -82,12 +82,12 @@ func (d *Data) GetUpdates(ctx context.Context, chatUids []string, type_ string, 
 	return decodeMessages(rows, type_), nil
 }
 
-func (d *Data) GetMessages(ctx context.Context, chatUid, type_ string, before int64) ([]*models.Message, error) {
+func (d *Data) GetMessages(ctx context.Context, uid, type_, chatUid string, before int64) ([]*models.Message, error) {
 	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = $1 AND timestamp < $2 AND deleted IS NULL ORDER BY timestamp DESC LIMIT 20"
 	if type_ == "private" {
-		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = $1 AND timestamp < $2 ORDER BY timestamp DESC LIMIT 20"
+		query = "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images, viewed, edited, deleted, recipient_uid FROM private_messages WHERE chat_uid = $1 AND timestamp < $2 AND (author_uid != $3 OR deleted IS NULL) ORDER BY timestamp DESC LIMIT 20"
 	}
-	rows, err := d.dbQuery(ctx, query, chatUid, before)
+	rows, err := d.dbQuery(ctx, query, chatUid, before, uid)
 	if err != nil {
 		return nil, err
 	}
