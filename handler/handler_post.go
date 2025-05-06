@@ -81,12 +81,12 @@ func (h *Handler) getPostList(c *gin.Context) {
 			return
 		}
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
-		second = strings.TrimPrefix(second, "user_")
+		first = strings.TrimPrefix(first, "user_")
 		if second == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.data.GetUserPosts(ctx, uid, second, request.Before)
+		postUids, err = h.data.GetUserPosts(ctx, first, second, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
