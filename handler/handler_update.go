@@ -47,8 +47,8 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	}
 
 	sendSSEEvent(c, "update", gin.H{
-		"version":     version,
-		"inviteCount": inviteCount,
+		"version":      version,
+		"invite_count": inviteCount,
 	})
 
 	messages := make([]*models.Message, 0)
