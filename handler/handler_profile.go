@@ -12,8 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.4"
-
 func (h *Handler) createProfile(c *gin.Context) {
 	firebaseUid := c.GetString("firebase_uid")
 
@@ -37,7 +35,6 @@ func (h *Handler) createProfile(c *gin.Context) {
 	}
 
 	if existingUser != nil {
-		existingUser.Version = version
 		c.JSON(http.StatusOK, existingUser)
 		return
 	}
@@ -72,7 +69,6 @@ func (h *Handler) createProfile(c *gin.Context) {
 		return
 	}
 
-	user.Version = version
 	c.JSON(http.StatusOK, user)
 }
 
@@ -86,7 +82,6 @@ func (h *Handler) getProfile(c *gin.Context) {
 	} else if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 	} else {
-		user.Version = version
 		c.JSON(http.StatusOK, user)
 	}
 }

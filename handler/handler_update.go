@@ -2,12 +2,15 @@ package handler
 
 import (
 	"slices"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/dro14/nuqta-service/models"
 	"github.com/gin-gonic/gin"
 )
+
+const version = "1.0.4"
 
 var (
 	broadcasters      = make(map[string][]chan any)
@@ -36,12 +39,13 @@ func (h *Handler) getUpdate(c *gin.Context) {
 		close(channel)
 	}()
 
-	after := c.Param("after")
-	if after == "" || after == "0" {
-		ctx := c.Request.Context()
+	sendSSEEvent(c, "version", version)
+
+	ctx := c.Request.Context()
+	messages := make([]*models.Message, 0)
+	if c.Param("after") == "0" {
 		now := time.Now().UnixMilli()
 
-		messages := make([]*models.Message, 0)
 		chatUids, err := h.data.GetChats(ctx, uid, "private")
 		if err != nil {
 			sendSSEEvent(c, "error", err.Error())
@@ -69,29 +73,59 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			}
 			messages = append(messages, chatMessages...)
 		}
-
-		if len(messages) > 0 {
-			sendSSEEvent(c, "messages", messages)
-		}
-
-		inviteCount, err := h.data.GetInviteCount(ctx, uid)
+	} else {
+		after, err := strconv.ParseInt(c.Param("after"), 10, 64)
 		if err != nil {
 			sendSSEEvent(c, "error", err.Error())
 			return
 		}
-		sendSSEEvent(c, "invite_count", gin.H{"count": inviteCount})
+
+		chatUids, err := h.data.GetChats(ctx, uid, "private")
+		if err != nil {
+			sendSSEEvent(c, "error", err.Error())
+			return
+		}
+		chatMessages, err := h.data.GetUpdates(ctx, uid, "private", chatUids, after)
+		if err != nil {
+			sendSSEEvent(c, "error", err.Error())
+			return
+		}
+		messages = append(messages, chatMessages...)
+
+		chatUids, err = h.data.GetChats(ctx, uid, "yordamchi")
+		if err != nil {
+			sendSSEEvent(c, "error", err.Error())
+			return
+		}
+		chatMessages, err = h.data.GetUpdates(ctx, uid, "yordamchi", chatUids, after)
+		if err != nil {
+			sendSSEEvent(c, "error", err.Error())
+			return
+		}
+		messages = append(messages, chatMessages...)
 	}
+
+	if len(messages) > 0 {
+		sendSSEEvent(c, "messages", messages)
+	}
+
+	inviteCount, err := h.data.GetInviteCount(ctx, uid)
+	if err != nil {
+		sendSSEEvent(c, "error", err.Error())
+		return
+	}
+	sendSSEEvent(c, "invite_count", inviteCount)
 
 	for {
 		select {
 		case data := <-channel:
 			switch data := data.(type) {
-			case bool:
-				sendSSEEvent(c, "pong", gin.H{"timestamp": time.Now().UnixMilli()})
+			case int64:
+				sendSSEEvent(c, "pong", data)
 			case []*models.Message:
 				sendSSEEvent(c, "messages", data)
 			case string:
-				sendSSEEvent(c, "typing", gin.H{"chat_uid": data})
+				sendSSEEvent(c, "typing", data)
 			}
 		case <-c.Request.Context().Done():
 			return
@@ -100,5 +134,5 @@ func (h *Handler) getUpdate(c *gin.Context) {
 }
 
 func (h *Handler) ping(c *gin.Context) {
-	broadcast(c.GetString("uid"), true)
+	broadcast(c.GetString("uid"), time.Now().UnixMilli())
 }

@@ -25,7 +25,7 @@ func (h *Handler) Run(port string) error {
 	authorized.Use(h.authMiddleware)
 
 	authorized.GET("/ping", h.ping)
-	authorized.GET("/update", h.getUpdate)
+	authorized.GET("/update/:after", h.getUpdate)
 
 	group = authorized.Group("/profile")
 	group.POST("", h.createProfile)
