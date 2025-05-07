@@ -43,7 +43,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 	}
 
 	var postUids []string
-	withInReplyTo := true
 	uid := c.GetString("uid")
 	ctx := c.Request.Context()
 	first, second, _ := strings.Cut(request.Key, ":")
@@ -92,7 +91,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 			return
 		}
 	case "replies_popular":
-		withInReplyTo = false
 		if second == "" {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -103,7 +101,6 @@ func (h *Handler) getPostList(c *gin.Context) {
 			return
 		}
 	case "replies_latest":
-		withInReplyTo = false
 		if second == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
@@ -124,7 +121,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 
 	posts := make([]*models.Post, 0, len(postUids))
 	for _, postUid := range postUids {
-		post, err := h.data.GetPost(ctx, uid, postUid, withInReplyTo)
+		post, err := h.data.GetPost(ctx, uid, postUid)
 		if err != nil {
 			continue
 		}
@@ -150,7 +147,7 @@ func (h *Handler) deletePost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	post, err := h.data.GetPost(ctx, request["uid"], request["post_uid"], false)
+	post, err := h.data.GetPost(ctx, request["uid"], request["post_uid"])
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

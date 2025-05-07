@@ -56,7 +56,7 @@ func (d *Data) CreatePost(ctx context.Context, post *models.Post) error {
 	return nil
 }
 
-func (d *Data) GetPost(ctx context.Context, uid, postUid string, withInReplyTo bool) (*models.Post, error) {
+func (d *Data) GetPost(ctx context.Context, uid, postUid string) (*models.Post, error) {
 	vars := map[string]string{
 		"$post_uid": postUid,
 	}
@@ -105,10 +105,6 @@ func (d *Data) GetPost(ctx context.Context, uid, postUid string, withInReplyTo b
 		post.IsClicked = len(user["is_clicked"]) > 0
 		post.IsViewed = len(user["is_viewed"]) > 0
 		post.IsSaved = len(user["is_saved"]) > 0
-	}
-
-	if !withInReplyTo {
-		post.InReplyTo = nil
 	}
 
 	return post, nil
@@ -162,7 +158,7 @@ func (d *Data) GetFollowingPosts(ctx context.Context, uid string, before int64) 
 		if slices.Contains(added, posts[i].Uid) {
 			continue
 		}
-		post, err := d.GetPost(ctx, uid, posts[i].Uid, true)
+		post, err := d.GetPost(ctx, uid, posts[i].Uid)
 		if err != nil {
 			return nil, err
 		}
