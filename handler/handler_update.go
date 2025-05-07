@@ -39,9 +39,18 @@ func (h *Handler) getUpdate(c *gin.Context) {
 		close(channel)
 	}()
 
-	sendSSEEvent(c, "version", version)
-
 	ctx := c.Request.Context()
+	inviteCount, err := h.data.GetInviteCount(ctx, uid)
+	if err != nil {
+		sendSSEEvent(c, "error", err.Error())
+		return
+	}
+
+	sendSSEEvent(c, "update", gin.H{
+		"version":     version,
+		"inviteCount": inviteCount,
+	})
+
 	messages := make([]*models.Message, 0)
 	if c.Param("after") == "0" {
 		now := time.Now().UnixMilli()
@@ -108,13 +117,6 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	if len(messages) > 0 {
 		sendSSEEvent(c, "messages", messages)
 	}
-
-	inviteCount, err := h.data.GetInviteCount(ctx, uid)
-	if err != nil {
-		sendSSEEvent(c, "error", err.Error())
-		return
-	}
-	sendSSEEvent(c, "invite_count", inviteCount)
 
 	for {
 		select {
