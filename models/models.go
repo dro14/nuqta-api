@@ -1,6 +1,7 @@
 package models
 
 type User struct {
+	Version           string   `json:"version,omitempty"`
 	Uid               string   `json:"uid,omitempty"`
 	FirebaseUid       string   `json:"firebase_uid,omitempty"`
 	Email             string   `json:"email,omitempty"`
