@@ -16,8 +16,13 @@ type Part struct {
 }
 
 type GenerationConfig struct {
-	MaxOutputTokens int     `json:"maxOutputTokens"`
-	Temperature     float64 `json:"temperature"`
+	MaxOutputTokens int            `json:"maxOutputTokens"`
+	Temperature     float64        `json:"temperature"`
+	ThinkingConfig  ThinkingConfig `json:"thinkingConfig"`
+}
+
+type ThinkingConfig struct {
+	ThinkingBudget int `json:"thinkingBudget"`
 }
 
 type Response struct {
