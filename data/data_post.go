@@ -154,26 +154,29 @@ func (d *Data) GetFollowingPosts(ctx context.Context, uid string, offset int64) 
 		},
 	)
 
+	var added []string
+	var unique []*models.Post
+	for _, post := range posts {
+		if slices.Contains(added, post.Uid) {
+			continue
+		}
+		added = append(added, post.Uid)
+		unique = append(unique, post)
+	}
+
 	if offset > 0 {
 		posts = posts[offset:]
 	}
 
-	var added []string
 	result := make([]*models.Post, 0)
 	for i := range posts {
-		if slices.Contains(added, posts[i].Uid) {
-			continue
-		}
 		post, err := d.GetPost(ctx, uid, posts[i].Uid)
 		if err != nil {
 			return nil, err
 		}
 		if posts[i].RepostedBy != nil {
-			post.RepostedBy = &models.User{
-				Uid: posts[i].RepostedBy.Uid,
-			}
+			post.RepostedBy = posts[i].RepostedBy
 		}
-		added = append(added, post.Uid)
 		result = append(result, post)
 		if len(result) == 20 {
 			break
