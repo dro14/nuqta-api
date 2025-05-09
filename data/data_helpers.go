@@ -166,11 +166,12 @@ func decodeMessages(rows *sql.Rows, type_ string) []*models.Message {
 		var nullInReplyTo sql.NullInt64
 		var nullText sql.NullString
 		var nullViewed sql.NullInt64
+		var nullLiked sql.NullInt64
 		var nullEdited sql.NullInt64
 		var nullDeleted sql.NullInt64
 		dest := []any{&message.Id, &message.Timestamp, &message.ChatUid, &message.AuthorUid, &nullInReplyTo, &nullText, pq.Array(&message.Images)}
 		if type_ == "private" {
-			dest = append(dest, &nullViewed, &nullEdited, &nullDeleted, &message.RecipientUid)
+			dest = append(dest, &nullViewed, &nullLiked, &nullEdited, &nullDeleted, &message.RecipientUid)
 		}
 		err := rows.Scan(dest...)
 		if err != nil {
@@ -185,6 +186,9 @@ func decodeMessages(rows *sql.Rows, type_ string) []*models.Message {
 		}
 		if nullViewed.Valid {
 			message.Viewed = nullViewed.Int64
+		}
+		if nullLiked.Valid {
+			message.Liked = nullLiked.Int64
 		}
 		if nullEdited.Valid {
 			message.Edited = nullEdited.Int64
