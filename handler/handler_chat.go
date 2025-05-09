@@ -69,6 +69,20 @@ func (h *Handler) getMessages(c *gin.Context) {
 	c.JSON(http.StatusOK, messages)
 }
 
+func (h *Handler) typePrivate(c *gin.Context) {
+	message := &models.Message{}
+	err := c.ShouldBindJSON(message)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+	if message.ChatUid == "" || message.RecipientUid == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+	broadcast(message.RecipientUid, message.ChatUid)
+}
+
 func (h *Handler) createPrivate(c *gin.Context) {
 	message := &models.Message{}
 	err := c.ShouldBindJSON(message)
@@ -107,6 +121,23 @@ func (h *Handler) viewPrivate(c *gin.Context) {
 	c.JSON(http.StatusOK, messages)
 }
 
+func (h *Handler) likePrivate(c *gin.Context) {
+	message := &models.Message{}
+	err := c.ShouldBindJSON(message)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+	ctx := c.Request.Context()
+	err = h.data.LikePrivate(ctx, message, c.GetString("uid"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+	broadcast(message.AuthorUid, []*models.Message{message})
+	c.JSON(http.StatusOK, message)
+}
+
 func (h *Handler) editPrivate(c *gin.Context) {
 	message := &models.Message{}
 	err := c.ShouldBindJSON(message)
@@ -116,6 +147,23 @@ func (h *Handler) editPrivate(c *gin.Context) {
 	}
 	ctx := c.Request.Context()
 	err = h.data.EditPrivate(ctx, message, c.GetString("uid"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+	broadcast(message.RecipientUid, []*models.Message{message})
+	c.JSON(http.StatusOK, message)
+}
+
+func (h *Handler) removePrivate(c *gin.Context) {
+	message := &models.Message{}
+	err := c.ShouldBindJSON(message)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+	ctx := c.Request.Context()
+	err = h.data.RemovePrivate(ctx, message, c.GetString("uid"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
@@ -137,40 +185,6 @@ func (h *Handler) deletePrivate(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
-	broadcast(message.RecipientUid, []*models.Message{message})
-	c.JSON(http.StatusOK, message)
-}
-
-func (h *Handler) removePrivate(c *gin.Context) {
-	message := &models.Message{}
-	err := c.ShouldBindJSON(message)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	ctx := c.Request.Context()
-	err = h.data.RemovePrivate(ctx, message, c.GetString("uid"))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-}
-
-func (h *Handler) typePrivate(c *gin.Context) {
-	message := &models.Message{}
-	err := c.ShouldBindJSON(message)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, failure(err))
-		return
-	}
-
-	if message.ChatUid == "" || message.RecipientUid == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	broadcast(message.RecipientUid, message.ChatUid)
 }
 
 func (h *Handler) createYordamchi(c *gin.Context) {

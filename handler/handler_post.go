@@ -48,11 +48,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 	first, second, _ := strings.Cut(request.Key, ":")
 	switch first {
 	case "feed_following":
-		if request.Before == 0 {
-			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-			return
-		}
-		posts, err := h.data.GetFollowingPosts(ctx, uid, request.Before)
+		posts, err := h.data.GetFollowingPosts(ctx, uid, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -79,6 +75,17 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
+	case "feed_viewed":
+		if request.Before == 0 {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		postUids, err = h.data.GetViewedPosts(ctx, uid, request.Before)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
+		c.JSON(http.StatusOK, postUids)
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
 		first = strings.TrimPrefix(first, "user_")
 		if second == "" || request.Before == 0 {

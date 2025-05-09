@@ -24,6 +24,12 @@ query Query($uid: string, $user_uid: string) {
 		is_follower: ~follow @filter(uid($user_uid)) {
 			uid
 		}
+		is_blocking: block @filter(uid($user_uid)) {
+			uid
+		}
+		is_blocker: ~block @filter(uid($user_uid)) {
+			uid
+		}
 		chats: chat @filter(type(private_chat) AND uid_in(members, $user_uid)) {
 			uid
 		}
@@ -39,7 +45,7 @@ query Query($user_uid: string, $offset: int) {
 	}
 }`
 
-const userInvitesQuery = `
+const userInvitationsQuery = `
 query Query($uid: string, $offset: int) {
 	users(func: uid($uid)) {
 		invited: ~invited_by (orderdesc: registered, offset: $offset, first: 20) {
@@ -96,23 +102,20 @@ query Query($uid: string, $post_uid: string) {
 	}
 }`
 
-const followingPostsQuery = `
-query Query($uid: string, $before: int) {
-	var(func: uid($uid)) {
-		follow_uids as follow
-	}
-
-	posts(func: lt(timestamp, $before)) @filter(uid_in(author, uid(follow_uids)) AND not has(in_reply_to)) {
-		uid
-		timestamp
-	}
-
-	reposts(func: type(post)) @filter(uid_in(repost, uid(follow_uids))) {
-		uid
-		reposted: repost @filter(uid(follow_uids)) @facets(lt(timestamp, $before)) @facets(orderdesc: timestamp) {
+const followingQuery = `
+query Query($uid: string) {  
+	users(func: uid($uid)) {
+		follow {
 			uid
+			posts: ~author @filter(not has(in_reply_to)) {
+				uid
+				timestamp
+			}
+			reposts: ~repost @facets(timestamp) {
+				uid
+			}
 		}
-    }
+	}
 }`
 
 const repliesQuery = `
@@ -130,10 +133,19 @@ query Query($uid: string, $before: int) {
 	}
 }`
 
-const savedPostsQuery = `
+const savedQuery = `
 query Query($uid: string, $before: int) {
 	users(func: uid($uid)) {
 		posts: ~save @facets(lt(timestamp, $before)) @facets(orderdesc: timestamp, first: 20) {
+			uid
+		}
+	}
+}`
+
+const viewedQuery = `
+query Query($uid: string, $before: int) {
+	users(func: uid($uid)) {
+		posts: ~view @facets(lt(timestamp, $before)) @facets(orderdesc: timestamp, first: 20) {
 			uid
 		}
 	}

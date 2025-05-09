@@ -131,6 +131,14 @@ func (d *Data) ViewPrivate(ctx context.Context, messages []*models.Message, uid 
 	)
 }
 
+func (d *Data) LikePrivate(ctx context.Context, message *models.Message, uid string) error {
+	message.Liked = time.Now().UnixMilli()
+	return d.dbExec(ctx,
+		"UPDATE private_messages SET liked = $1, last_updated = $2 WHERE id = $3 AND recipient_uid = $4",
+		message.Liked, message.Liked, message.Id, uid,
+	)
+}
+
 func (d *Data) EditPrivate(ctx context.Context, message *models.Message, uid string) error {
 	message.Edited = time.Now().UnixMilli()
 	return d.dbExec(ctx,
@@ -139,7 +147,7 @@ func (d *Data) EditPrivate(ctx context.Context, message *models.Message, uid str
 	)
 }
 
-func (d *Data) DeletePrivate(ctx context.Context, message *models.Message, uid string) error {
+func (d *Data) RemovePrivate(ctx context.Context, message *models.Message, uid string) error {
 	message.Deleted = time.Now().UnixMilli()
 	return d.dbExec(ctx,
 		"UPDATE private_messages SET deleted = $1, last_updated = $2 WHERE id = $3 AND author_uid = $4",
@@ -147,7 +155,7 @@ func (d *Data) DeletePrivate(ctx context.Context, message *models.Message, uid s
 	)
 }
 
-func (d *Data) RemovePrivate(ctx context.Context, message *models.Message, uid string) error {
+func (d *Data) DeletePrivate(ctx context.Context, message *models.Message, uid string) error {
 	return d.dbExec(ctx,
 		"DELETE FROM private_messages WHERE id = $1 AND recipient_uid = $2",
 		message.Id, uid,

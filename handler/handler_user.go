@@ -47,8 +47,8 @@ func (h *Handler) getUserList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-	case "invites":
-		userUids, err = h.data.GetUserInvites(ctx, c.GetString("uid"), request.Offset)
+	case "invitations":
+		userUids, err = h.data.GetUserInvitations(ctx, c.GetString("uid"), request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return

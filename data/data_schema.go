@@ -81,7 +81,8 @@ CREATE TABLE private_messages (
     edited BIGINT,
     deleted BIGINT,
     recipient_uid VARCHAR(255) NOT NULL,
-    timestamp BIGINT NOT NULL
+    timestamp BIGINT NOT NULL,
+    liked BIGINT
 );
 CREATE INDEX private_messages_chat_uid_idx ON private_messages(chat_uid);
 CREATE INDEX private_messages_last_updated_idx ON private_messages(last_updated);

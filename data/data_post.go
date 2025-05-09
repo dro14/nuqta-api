@@ -110,32 +110,34 @@ func (d *Data) GetPost(ctx context.Context, uid, postUid string) (*models.Post, 
 	return post, nil
 }
 
-func (d *Data) GetFollowingPosts(ctx context.Context, uid string, before int64) ([]*models.Post, error) {
+func (d *Data) GetFollowingPosts(ctx context.Context, uid string, offset int64) ([]*models.Post, error) {
 	vars := map[string]string{
-		"$uid":    uid,
-		"$before": strconv.FormatInt(before, 10),
+		"$uid": uid,
 	}
-	bytes, err := d.graphGet(ctx, followingPostsQuery, vars)
+	bytes, err := d.graphGet(ctx, followingQuery, vars)
 	if err != nil {
 		return nil, err
 	}
 
-	var response map[string][]*models.Post
+	var response map[string][]map[string][]*models.Following
 	err = json.Unmarshal(bytes, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	posts := response["posts"]
-	for _, repost := range response["reposts"] {
-		if len(repost.Reposted) > 0 {
-			posts = append(posts, &models.Post{
-				Uid:       repost.Uid,
-				Timestamp: repost.Reposted[0].RepostedTimestamp,
-				RepostedBy: &models.User{
-					Uid: repost.Reposted[0].Uid,
-				},
-			})
+	var posts []*models.Post
+	for _, user := range response["users"] {
+		for _, following := range user["following"] {
+			posts = append(posts, following.Posts...)
+			for _, repost := range following.Reposts {
+				posts = append(posts, &models.Post{
+					Uid:       repost.Uid,
+					Timestamp: repost.RepostsTimestamp,
+					RepostedBy: &models.User{
+						Uid: following.Uid,
+					},
+				})
+			}
 		}
 	}
 
@@ -151,6 +153,10 @@ func (d *Data) GetFollowingPosts(ctx context.Context, uid string, before int64) 
 			}
 		},
 	)
+
+	if offset > 0 {
+		posts = posts[offset:]
+	}
 
 	var added []string
 	result := make([]*models.Post, 0)
@@ -206,7 +212,33 @@ func (d *Data) GetSavedPosts(ctx context.Context, uid string, before int64) ([]s
 		"$uid":    uid,
 		"$before": strconv.FormatInt(before, 10),
 	}
-	bytes, err := d.graphGet(ctx, savedPostsQuery, vars)
+	bytes, err := d.graphGet(ctx, savedQuery, vars)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]map[string][]*models.Post
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var postUids []string
+	for _, user := range response["users"] {
+		for _, post := range user["posts"] {
+			postUids = append(postUids, post.Uid)
+		}
+	}
+
+	return postUids, nil
+}
+
+func (d *Data) GetViewedPosts(ctx context.Context, uid string, before int64) ([]string, error) {
+	vars := map[string]string{
+		"$uid":    uid,
+		"$before": strconv.FormatInt(before, 10),
+	}
+	bytes, err := d.graphGet(ctx, viewedQuery, vars)
 	if err != nil {
 		return nil, err
 	}

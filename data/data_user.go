@@ -87,6 +87,8 @@ func (d *Data) GetUser(ctx context.Context, uid, userUid string) (*models.User, 
 		user_ := edges["users"][0]
 		user.IsFollowing = len(user_["is_following"]) > 0
 		user.IsFollower = len(user_["is_follower"]) > 0
+		user.IsBlocking = len(user_["is_blocking"]) > 0
+		user.IsBlocker = len(user_["is_blocker"]) > 0
 		if len(user_["chats"]) == 1 {
 			user.ChatUid = user_["chats"][0]["uid"]
 		}
@@ -173,12 +175,12 @@ func (d *Data) GetUserFollows(ctx context.Context, userUid string, offset int64,
 	return userUids, nil
 }
 
-func (d *Data) GetUserInvites(ctx context.Context, uid string, offset int64) ([]string, error) {
+func (d *Data) GetUserInvitations(ctx context.Context, uid string, offset int64) ([]string, error) {
 	vars := map[string]string{
 		"$uid":    uid,
 		"$offset": strconv.FormatInt(offset, 10),
 	}
-	bytes, err := d.graphGet(ctx, userInvitesQuery, vars)
+	bytes, err := d.graphGet(ctx, userInvitationsQuery, vars)
 	if err != nil {
 		return nil, err
 	}
