@@ -105,7 +105,7 @@ query Query($uid: string, $post_uid: string) {
 const followingQuery = `
 query Query($uid: string) {  
 	users(func: uid($uid)) {
-		follow {
+		following: follow {
 			uid
 			posts: ~author @filter(not has(in_reply_to)) {
 				uid
