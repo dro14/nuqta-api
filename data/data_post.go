@@ -165,17 +165,17 @@ func (d *Data) GetFollowingPosts(ctx context.Context, uid string, offset int64) 
 	}
 
 	if offset > 0 {
-		posts = posts[offset:]
+		unique = unique[offset:]
 	}
 
 	result := make([]*models.Post, 0)
-	for i := range posts {
-		post, err := d.GetPost(ctx, uid, posts[i].Uid)
+	for i := range unique {
+		post, err := d.GetPost(ctx, uid, unique[i].Uid)
 		if err != nil {
 			return nil, err
 		}
-		if posts[i].RepostedBy != nil {
-			post.RepostedBy = posts[i].RepostedBy
+		if unique[i].RepostedBy != nil {
+			post.RepostedBy = unique[i].RepostedBy
 		}
 		result = append(result, post)
 		if len(result) == 20 {
