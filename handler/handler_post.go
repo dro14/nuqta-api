@@ -75,7 +75,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-	case "feed_viewed":
+	case "feed_history":
 		if request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
