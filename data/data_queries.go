@@ -45,6 +45,15 @@ query Query($user_uid: string, $offset: int) {
 	}
 }`
 
+const postUsersQuery = `
+query Query($post_uid: string, $offset: int) {
+	posts(func: uid($post_uid)) {
+		users: %s @facets(orderdesc: timestamp) (offset: $offset, first: 20) {
+			uid
+		}
+	}
+}`
+
 const userInvitationsQuery = `
 query Query($uid: string, $offset: int) {
 	users(func: uid($uid)) {

@@ -201,6 +201,33 @@ func (d *Data) GetUserInvitations(ctx context.Context, uid string, offset int64)
 	return userUids, nil
 }
 
+func (d *Data) GetPostUsers(ctx context.Context, tab, postUid string, offset int64) ([]string, error) {
+	query := fmt.Sprintf(postUsersQuery, tab)
+	vars := map[string]string{
+		"$post_uid": postUid,
+		"$offset":   strconv.FormatInt(offset, 10),
+	}
+	bytes, err := d.graphGet(ctx, query, vars)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]map[string][]*models.User
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var userUids []string
+	for _, post := range response["posts"] {
+		for _, user := range post["users"] {
+			userUids = append(userUids, user.Uid)
+		}
+	}
+
+	return userUids, nil
+}
+
 func (d *Data) GetInviteCount(ctx context.Context, uid string) (int64, error) {
 	vars := map[string]string{
 		"$uid": uid,

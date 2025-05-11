@@ -86,7 +86,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			return
 		}
 	case "user_posts", "user_replies", "user_reposts", "user_likes":
-		first = strings.TrimPrefix(first, "user_")
+		first = first[5:]
 		if second == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return

@@ -53,6 +53,17 @@ func (h *Handler) getUserList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
+	case "post_reposts", "post_likes", "post_views":
+		first = first[5 : len(first)-1]
+		if second == "" {
+			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+			return
+		}
+		userUids, err = h.data.GetPostUsers(ctx, first, second, request.Offset)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, failure(err))
+			return
+		}
 	default:
 		if len(request.UserUids) > 0 {
 			userUids = request.UserUids
