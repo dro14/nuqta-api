@@ -137,9 +137,23 @@ func (h *Handler) getPostList(c *gin.Context) {
 	c.JSON(http.StatusOK, posts)
 }
 
-func (h *Handler) deletePost(c *gin.Context) {
-	firebaseUid := c.GetString("firebase_uid")
+func (h *Handler) editPost(c *gin.Context) {
+	post := &models.Post{}
+	err := c.ShouldBindJSON(post)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
 
+	ctx := c.Request.Context()
+	err = h.data.EditPost(ctx, post)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+}
+
+func (h *Handler) deletePost(c *gin.Context) {
 	var request map[string]string
 	err := c.ShouldBindJSON(&request)
 	if err != nil {
@@ -147,31 +161,16 @@ func (h *Handler) deletePost(c *gin.Context) {
 		return
 	}
 
-	if request["uid"] == "" || request["post_uid"] == "" {
+	if request["post_uid"] == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
+	uid := c.GetString("uid")
 	ctx := c.Request.Context()
-	post, err := h.data.GetPost(ctx, request["uid"], request["post_uid"])
+	_, err = h.data.GetPost(ctx, uid, request["post_uid"])
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	if request["uid"] != post.Author.Uid {
-		c.JSON(http.StatusForbidden, failure(e.ErrForbidden))
-		return
-	}
-
-	author, err := h.data.GetProfile(ctx, firebaseUid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
-
-	if request["uid"] != author.Uid {
-		c.JSON(http.StatusForbidden, failure(e.ErrForbidden))
+		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 

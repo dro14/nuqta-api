@@ -96,7 +96,7 @@ func (d *Data) GetProfile(ctx context.Context, firebaseUid string) (*models.User
 	return user, nil
 }
 
-func (d *Data) UpdateProfile(ctx context.Context, user *models.User) error {
+func (d *Data) EditProfile(ctx context.Context, user *models.User) error {
 	return d.dbExec(ctx,
 		"UPDATE users SET name = $1, username = $2, location = $3, birthday = $4, color = $5, bio = $6, banner = $7, avatars = $8, thumbnails = $9, search_vector = to_tsvector('simple', $10) WHERE id = $11",
 		user.Name, user.Username, user.Location, user.Birthday, user.Color, user.Bio, user.Banner, pq.Array(user.Avatars), pq.Array(user.Thumbnails), getSearchVector(user.Name, user.Username), user.Uid,

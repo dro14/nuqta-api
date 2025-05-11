@@ -89,7 +89,7 @@ func (h *Handler) getProfile(c *gin.Context) {
 	}
 }
 
-func (h *Handler) updateProfile(c *gin.Context) {
+func (h *Handler) editProfile(c *gin.Context) {
 	firebaseUid := c.GetString("firebase_uid")
 
 	user := &models.User{}
@@ -105,7 +105,7 @@ func (h *Handler) updateProfile(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	err = h.data.UpdateProfile(ctx, user)
+	err = h.data.EditProfile(ctx, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

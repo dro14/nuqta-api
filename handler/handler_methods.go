@@ -30,7 +30,7 @@ func (h *Handler) Run(port string) error {
 	group = authorized.Group("/profile")
 	group.POST("", h.createProfile)
 	group.GET("", h.getProfile)
-	group.PUT("", h.updateProfile)
+	group.PUT("", h.editProfile)
 	group.OPTIONS("", h.isAvailable)
 
 	group = authorized.Group("/user")
@@ -40,6 +40,7 @@ func (h *Handler) Run(port string) error {
 	group = authorized.Group("/post")
 	group.POST("", h.createPost)
 	group.GET("", h.getPostList)
+	group.PUT("", h.editPost)
 	group.DELETE("", h.deletePost)
 
 	group = authorized.Group("/edge")

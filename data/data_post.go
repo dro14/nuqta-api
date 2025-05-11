@@ -409,6 +409,13 @@ func (d *Data) GetPostReplies(ctx context.Context, postUid string) ([]string, er
 	return replyUids, nil
 }
 
+func (d *Data) EditPost(ctx context.Context, post *models.Post) error {
+	return d.dbExec(ctx,
+		"UPDATE posts SET text = $1, who_can_reply = $2, images = $3 WHERE id = $4",
+		post.Text, post.WhoCanReply, pq.Array(post.Images), post.Uid,
+	)
+}
+
 func (d *Data) DeletePost(ctx context.Context, postUid string) error {
 	replyUids, err := d.GetPostReplies(ctx, postUid)
 	if err != nil {
