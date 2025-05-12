@@ -151,6 +151,8 @@ func (h *Handler) editPost(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
+
+	c.JSON(http.StatusOK, post)
 }
 
 func (h *Handler) deletePost(c *gin.Context) {

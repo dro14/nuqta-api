@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"slices"
 	"strconv"
@@ -73,13 +74,19 @@ func (d *Data) GetPost(ctx context.Context, uid, postUid string) (*models.Post, 
 	post := response["posts"][0]
 	post.Uid = postUid
 
+	var edited sql.NullInt64
+
 	err = d.dbQueryRow(ctx,
-		"SELECT timestamp, text, who_can_reply, images FROM posts WHERE id = $1",
+		"SELECT timestamp, text, who_can_reply, images, edited FROM posts WHERE id = $1",
 		[]any{postUid},
-		&post.Timestamp, &post.Text, &post.WhoCanReply, pq.Array(&post.Images),
+		&post.Timestamp, &post.Text, &post.WhoCanReply, pq.Array(&post.Images), &edited,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if edited.Valid {
+		post.Edited = edited.Int64
 	}
 
 	vars = map[string]string{
@@ -410,9 +417,10 @@ func (d *Data) GetPostReplies(ctx context.Context, postUid string) ([]string, er
 }
 
 func (d *Data) EditPost(ctx context.Context, post *models.Post) error {
+	post.Edited = time.Now().UnixMilli()
 	return d.dbExec(ctx,
-		"UPDATE posts SET text = $1, who_can_reply = $2, images = $3 WHERE id = $4",
-		post.Text, post.WhoCanReply, pq.Array(post.Images), post.Uid,
+		"UPDATE posts SET text = $1, who_can_reply = $2, images = $3, edited = $4 WHERE id = $5",
+		post.Text, post.WhoCanReply, pq.Array(post.Images), post.Edited, post.Uid,
 	)
 }
 

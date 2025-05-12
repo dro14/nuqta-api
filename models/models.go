@@ -35,6 +35,7 @@ type Post struct {
 	WhoCanReply      string   `json:"who_can_reply,omitempty"`
 	Text             string   `json:"text,omitempty"`
 	Images           []string `json:"images,omitempty"`
+	Edited           int64    `json:"edited,omitempty"`
 	Author           *User    `json:"author,omitempty"`
 	InReplyTo        *Post    `json:"in_reply_to,omitempty"`
 	RepostedBy       *User    `json:"reposted_by,omitempty"`
