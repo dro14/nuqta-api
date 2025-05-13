@@ -66,7 +66,8 @@ CREATE TABLE posts (
     timestamp BIGINT NOT NULL,
     text TEXT,
     who_can_reply VARCHAR(50) NOT NULL,
-    images VARCHAR(255)[]
+    images VARCHAR(255)[],
+    edited BIGINT
 );
 
 CREATE TABLE private_messages (

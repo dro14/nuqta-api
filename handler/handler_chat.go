@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -201,6 +202,10 @@ func (h *Handler) createYordamchi(c *gin.Context) {
 		return
 	}
 
+	log.Printf("messages: %d", len(messages))
+	for _, message := range messages {
+		log.Printf("%+v", message)
+	}
 	if len(messages) < 2 || len(messages) > 4 {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
 		return
@@ -232,6 +237,10 @@ func (h *Handler) editYordamchi(c *gin.Context) {
 		return
 	}
 
+	log.Printf("messages: %d", len(messages))
+	for _, message := range messages {
+		log.Printf("%+v", message)
+	}
 	if len(messages) < 2 || len(messages) > 4 {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
 		return
