@@ -96,7 +96,6 @@ func (h *Handler) createPrivate(c *gin.Context) {
 	}
 	broadcast(message.AuthorUid, "put_messages", []*models.Message{message})
 	broadcast(message.RecipientUid, "put_messages", []*models.Message{message})
-	c.JSON(http.StatusOK, message)
 }
 
 func (h *Handler) viewPrivate(c *gin.Context) {
