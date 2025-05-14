@@ -101,7 +101,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			return
 		}
 		putMessages = append(putMessages, messages...)
-		ids, err := h.data.GetDeletedMessages(ctx, "private", chatUids, after)
+		ids, err := h.data.GetDeletedMessages(ctx, uid, "private", chatUids, after)
 		if err != nil {
 			sendSSEEvent(c, "error", err.Error())
 			return
@@ -119,7 +119,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			return
 		}
 		putMessages = append(putMessages, messages...)
-		ids, err = h.data.GetDeletedMessages(ctx, "yordamchi", chatUids, after)
+		ids, err = h.data.GetDeletedMessages(ctx, uid, "yordamchi", chatUids, after)
 		if err != nil {
 			sendSSEEvent(c, "error", err.Error())
 			return

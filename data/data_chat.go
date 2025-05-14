@@ -84,12 +84,14 @@ func (d *Data) GetUpdates(ctx context.Context, uid, type_ string, chatUids []str
 	return decodeMessages(rows, type_), nil
 }
 
-func (d *Data) GetDeletedMessages(ctx context.Context, type_ string, chatUids []string, after int64) ([]int64, error) {
+func (d *Data) GetDeletedMessages(ctx context.Context, uid, type_ string, chatUids []string, after int64) ([]int64, error) {
 	query := "SELECT id FROM yordamchi_messages WHERE chat_uid = ANY($1) AND deleted IS NOT NULL AND deleted > $2"
+	args := []any{pq.Array(chatUids), after}
 	if type_ == "private" {
-		query = "SELECT id FROM private_messages WHERE chat_uid = ANY($1) AND deleted IS NOT NULL AND deleted > $2"
+		query = "SELECT id FROM private_messages WHERE chat_uid = ANY($1) AND deleted IS NOT NULL AND deleted > $2 AND author_uid = $3"
+		args = append(args, uid)
 	}
-	rows, err := d.dbQuery(ctx, query, chatUids, after)
+	rows, err := d.dbQuery(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
