@@ -59,7 +59,6 @@ func (h *Handler) Run(port string) error {
 	group.DELETE("/private/delete", h.deletePrivate)
 	group.POST("/yordamchi/:provider", h.createYordamchi)
 	group.PUT("/yordamchi/:provider", h.editYordamchi)
-	group.DELETE("/yordamchi", h.deleteYordamchi)
 
 	return h.engine.Run(":" + port)
 }

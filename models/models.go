@@ -78,3 +78,8 @@ type Following struct {
 	Posts   []*Post `json:"posts"`
 	Reposts []*Post `json:"reposts"`
 }
+
+type Event struct {
+	Name string `json:"name"`
+	Data any    `json:"data"`
+}

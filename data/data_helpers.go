@@ -200,3 +200,17 @@ func decodeMessages(rows *sql.Rows, type_ string) []*models.Message {
 	}
 	return messages
 }
+
+func decodeIds(rows *sql.Rows) []int64 {
+	ids := make([]int64, 0)
+	for rows.Next() {
+		var id int64
+		err := rows.Scan(&id)
+		if err != nil {
+			log.Printf("can't scan id: %v", err)
+			continue
+		}
+		ids = append(ids, id)
+	}
+	return ids
+}

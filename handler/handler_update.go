@@ -13,7 +13,7 @@ import (
 const version = "1.0.4"
 
 var (
-	broadcasters      = make(map[string][]chan any)
+	broadcasters      = make(map[string][]chan *models.Event)
 	broadcastersMutex sync.RWMutex
 )
 
@@ -26,7 +26,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	c.Writer.Flush()
 
 	uid := c.GetString("uid")
-	channel := make(chan any)
+	channel := make(chan *models.Event)
 	broadcastersMutex.Lock()
 	broadcasters[uid] = append(broadcasters[uid], channel)
 	broadcastersMutex.Unlock()
@@ -51,7 +51,8 @@ func (h *Handler) getUpdate(c *gin.Context) {
 		"invite_count": inviteCount,
 	})
 
-	messages := make([]*models.Message, 0)
+	putMessages := make([]*models.Message, 0)
+	deletedIds := make([]int64, 0)
 	if c.Param("after") == "0" {
 		now := time.Now().UnixMilli()
 
@@ -61,12 +62,12 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			return
 		}
 		for _, chatUid := range chatUids {
-			chatMessages, err := h.data.GetMessages(ctx, uid, "private", chatUid, now)
+			messages, err := h.data.GetMessages(ctx, uid, "private", chatUid, now)
 			if err != nil {
 				sendSSEEvent(c, "error", err.Error())
 				return
 			}
-			messages = append(messages, chatMessages...)
+			putMessages = append(putMessages, messages...)
 		}
 
 		chatUids, err = h.data.GetChats(ctx, uid, "yordamchi")
@@ -75,12 +76,12 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			return
 		}
 		for _, chatUid := range chatUids {
-			chatMessages, err := h.data.GetMessages(ctx, uid, "yordamchi", chatUid, now)
+			messages, err := h.data.GetMessages(ctx, uid, "yordamchi", chatUid, now)
 			if err != nil {
 				sendSSEEvent(c, "error", err.Error())
 				return
 			}
-			messages = append(messages, chatMessages...)
+			putMessages = append(putMessages, messages...)
 		}
 	} else {
 		after, err := strconv.ParseInt(c.Param("after"), 10, 64)
@@ -94,41 +95,50 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			sendSSEEvent(c, "error", err.Error())
 			return
 		}
-		chatMessages, err := h.data.GetUpdates(ctx, uid, "private", chatUids, after)
+		messages, err := h.data.GetUpdates(ctx, uid, "private", chatUids, after)
 		if err != nil {
 			sendSSEEvent(c, "error", err.Error())
 			return
 		}
-		messages = append(messages, chatMessages...)
+		putMessages = append(putMessages, messages...)
+		ids, err := h.data.GetDeletedMessages(ctx, "private", chatUids, after)
+		if err != nil {
+			sendSSEEvent(c, "error", err.Error())
+			return
+		}
+		deletedIds = append(deletedIds, ids...)
 
 		chatUids, err = h.data.GetChats(ctx, uid, "yordamchi")
 		if err != nil {
 			sendSSEEvent(c, "error", err.Error())
 			return
 		}
-		chatMessages, err = h.data.GetUpdates(ctx, uid, "yordamchi", chatUids, after)
+		messages, err = h.data.GetUpdates(ctx, uid, "yordamchi", chatUids, after)
 		if err != nil {
 			sendSSEEvent(c, "error", err.Error())
 			return
 		}
-		messages = append(messages, chatMessages...)
+		putMessages = append(putMessages, messages...)
+		ids, err = h.data.GetDeletedMessages(ctx, "yordamchi", chatUids, after)
+		if err != nil {
+			sendSSEEvent(c, "error", err.Error())
+			return
+		}
+		deletedIds = append(deletedIds, ids...)
 	}
 
-	if len(messages) > 0 {
-		sendSSEEvent(c, "messages", messages)
+	if len(putMessages) > 0 {
+		sendSSEEvent(c, "messages", putMessages)
+	}
+
+	if len(deletedIds) > 0 {
+		sendSSEEvent(c, "delete_messages", deletedIds)
 	}
 
 	for {
 		select {
-		case data := <-channel:
-			switch data := data.(type) {
-			case int64:
-				sendSSEEvent(c, "pong", data)
-			case []*models.Message:
-				sendSSEEvent(c, "messages", data)
-			case string:
-				sendSSEEvent(c, "typing", data)
-			}
+		case event := <-channel:
+			sendSSEEvent(c, event.Name, event.Data)
 		case <-c.Request.Context().Done():
 			return
 		}
@@ -136,5 +146,5 @@ func (h *Handler) getUpdate(c *gin.Context) {
 }
 
 func (h *Handler) ping(c *gin.Context) {
-	broadcast(c.GetString("uid"), time.Now().UnixMilli())
+	broadcast(c.GetString("uid"), "pong", time.Now().UnixMilli())
 }

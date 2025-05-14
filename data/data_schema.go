@@ -88,6 +88,7 @@ CREATE TABLE private_messages (
 CREATE INDEX private_messages_chat_uid_idx ON private_messages(chat_uid);
 CREATE INDEX private_messages_last_updated_idx ON private_messages(last_updated);
 CREATE INDEX private_messages_timestamp_idx ON private_messages(timestamp);
+CREATE INDEX private_messages_deleted_idx ON private_messages(deleted);
 
 CREATE TABLE yordamchi_messages (
     id BIGSERIAL PRIMARY KEY,
@@ -100,4 +101,5 @@ CREATE TABLE yordamchi_messages (
     deleted BIGINT
 );
 CREATE INDEX yordamchi_messages_timestamp_idx ON yordamchi_messages(timestamp);
-CREATE INDEX yordamchi_messages_chat_uid_idx ON yordamchi_messages(chat_uid);`
+CREATE INDEX yordamchi_messages_chat_uid_idx ON yordamchi_messages(chat_uid);
+CREATE INDEX yordamchi_messages_deleted_idx ON yordamchi_messages(deleted);`

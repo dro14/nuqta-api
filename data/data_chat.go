@@ -84,6 +84,19 @@ func (d *Data) GetUpdates(ctx context.Context, uid, type_ string, chatUids []str
 	return decodeMessages(rows, type_), nil
 }
 
+func (d *Data) GetDeletedMessages(ctx context.Context, type_ string, chatUids []string, after int64) ([]int64, error) {
+	query := "SELECT id FROM yordamchi_messages WHERE chat_uid = ANY($1) AND deleted IS NOT NULL AND deleted > $2"
+	if type_ == "private" {
+		query = "SELECT id FROM private_messages WHERE chat_uid = ANY($1) AND deleted IS NOT NULL AND deleted > $2"
+	}
+	rows, err := d.dbQuery(ctx, query, chatUids, after)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return decodeIds(rows), nil
+}
+
 func (d *Data) GetMessages(ctx context.Context, uid, type_, chatUid string, before int64) ([]*models.Message, error) {
 	query := "SELECT id, timestamp, chat_uid, author_uid, in_reply_to, text, images FROM yordamchi_messages WHERE chat_uid = $1 AND timestamp < $2 AND deleted IS NULL ORDER BY timestamp DESC LIMIT 20"
 	args := []any{chatUid, before}
@@ -181,17 +194,14 @@ func (d *Data) CreateYordamchi(ctx context.Context, message *models.Message) err
 	)
 }
 
-func (d *Data) ClearYordamchi(ctx context.Context, message *models.Message) error {
-	return d.dbExec(ctx,
-		"UPDATE yordamchi_messages SET deleted = $1 WHERE chat_uid = $2 AND id >= $3 AND deleted IS NULL",
+func (d *Data) ClearYordamchi(ctx context.Context, message *models.Message) ([]int64, error) {
+	rows, err := d.dbQuery(ctx,
+		"UPDATE yordamchi_messages SET deleted = $1 WHERE chat_uid = $2 AND id >= $3 AND deleted IS NULL RETURNING id",
 		time.Now().UnixMilli(), message.ChatUid, message.Id,
 	)
-}
-
-func (d *Data) DeleteYordamchi(ctx context.Context, message *models.Message) error {
-	message.Deleted = time.Now().UnixMilli()
-	return d.dbExec(ctx,
-		"UPDATE yordamchi_messages SET deleted = $1 WHERE id = $2 AND author_uid = $3 AND deleted IS NULL",
-		message.Deleted, message.Id, message.AuthorUid,
-	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return decodeIds(rows), nil
 }
