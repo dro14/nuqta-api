@@ -249,6 +249,9 @@ func (h *Handler) editYordamchi(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
+	for i, id := range ids {
+		ids[i] = -1 * id
+	}
 	broadcast(request.AuthorUid, "delete_messages", ids)
 
 	err = h.data.CreateYordamchi(ctx, request)

@@ -124,6 +124,9 @@ func (h *Handler) getUpdate(c *gin.Context) {
 			sendSSEEvent(c, "error", err.Error())
 			return
 		}
+		for i, id := range ids {
+			ids[i] = -1 * id
+		}
 		deletedIds = append(deletedIds, ids...)
 	}
 
