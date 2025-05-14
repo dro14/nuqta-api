@@ -53,7 +53,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-	case "post_reposts", "post_likes", "post_views":
+	case "post_reposts", "post_likes":
 		first = first[5 : len(first)-1]
 		if second == "" {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))

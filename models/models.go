@@ -20,6 +20,7 @@ type User struct {
 	Following   int      `json:"following,omitempty"`
 	Posts       int      `json:"posts,omitempty"`
 	Replies     int      `json:"replies,omitempty"`
+	Media       int      `json:"media,omitempty"`
 	Reposts     int      `json:"reposts,omitempty"`
 	Likes       int      `json:"likes,omitempty"`
 	IsFollowing bool     `json:"is_following,omitempty"`

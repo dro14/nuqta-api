@@ -276,6 +276,8 @@ func (d *Data) GetUserPosts(ctx context.Context, tab, userUid string, before int
 		query = userPostsQuery
 	case "replies":
 		query = userRepliesQuery
+	case "media":
+		query = userMediaQuery
 	case "reposts":
 		query = userRepostsQuery
 	case "likes":

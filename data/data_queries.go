@@ -10,6 +10,7 @@ query Query($user_uid: string) {
 		following: count(follow)
 		posts: count(~author @filter(not has(in_reply_to)))
 		replies: count(~author @filter(has(in_reply_to)))
+		media: count(~author @filter(has(has_media)))
 		reposts: count(~repost)
 		likes: count(~like)
 	}
@@ -173,6 +174,15 @@ const userRepliesQuery = `
 query Query($user_uid: string, $before: int) {
 	users(func: uid($user_uid)) {
 		posts: ~author @filter(lt(timestamp, $before) AND has(in_reply_to)) (orderdesc: timestamp, first: 20) {
+			uid
+		}
+	}
+}`
+
+const userMediaQuery = `
+query Query($user_uid: string, $before: int) {
+	users(func: uid($user_uid)) {
+		posts: ~author @filter(lt(timestamp, $before) AND has(has_media)) (orderdesc: timestamp, first: 20) {
 			uid
 		}
 	}

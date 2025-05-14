@@ -85,7 +85,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
 		}
-	case "user_posts", "user_replies", "user_reposts", "user_likes":
+	case "user_posts", "user_replies", "user_media", "user_reposts", "user_likes":
 		first = first[5:]
 		if second == "" || request.Before == 0 {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
