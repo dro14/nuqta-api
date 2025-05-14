@@ -128,7 +128,7 @@ func (h *Handler) getUpdate(c *gin.Context) {
 	}
 
 	if len(putMessages) > 0 {
-		sendSSEEvent(c, "messages", putMessages)
+		sendSSEEvent(c, "put_messages", putMessages)
 	}
 
 	if len(deletedIds) > 0 {
