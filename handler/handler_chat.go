@@ -78,7 +78,7 @@ func (h *Handler) typePrivate(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
-	broadcast(message.RecipientUid, "typing", message.ChatUid)
+	broadcast(message.RecipientUid, "private_typing", message.ChatUid)
 }
 
 func (h *Handler) createPrivate(c *gin.Context) {
@@ -118,7 +118,6 @@ func (h *Handler) viewPrivate(c *gin.Context) {
 	}
 	broadcast(messages[0].AuthorUid, "put_messages", messages)
 	broadcast(messages[0].RecipientUid, "put_messages", messages)
-	c.JSON(http.StatusOK, messages)
 }
 
 func (h *Handler) likePrivate(c *gin.Context) {
@@ -136,7 +135,6 @@ func (h *Handler) likePrivate(c *gin.Context) {
 	}
 	broadcast(message.AuthorUid, "put_messages", []*models.Message{message})
 	broadcast(message.RecipientUid, "put_messages", []*models.Message{message})
-	c.JSON(http.StatusOK, message)
 }
 
 func (h *Handler) editPrivate(c *gin.Context) {
@@ -154,7 +152,6 @@ func (h *Handler) editPrivate(c *gin.Context) {
 	}
 	broadcast(message.AuthorUid, "put_messages", []*models.Message{message})
 	broadcast(message.RecipientUid, "put_messages", []*models.Message{message})
-	c.JSON(http.StatusOK, message)
 }
 
 func (h *Handler) removePrivate(c *gin.Context) {
@@ -172,7 +169,6 @@ func (h *Handler) removePrivate(c *gin.Context) {
 	}
 	broadcast(message.AuthorUid, "delete_messages", []int64{message.Id})
 	broadcast(message.RecipientUid, "put_messages", []*models.Message{message})
-	c.JSON(http.StatusOK, message)
 }
 
 func (h *Handler) deletePrivate(c *gin.Context) {
@@ -218,9 +214,9 @@ func (h *Handler) createYordamchi(c *gin.Context) {
 		return
 	}
 
-	go h.sendResponse(messages, c.GetString("firebase_uid"), provider)
 	broadcast(request.AuthorUid, "put_messages", []*models.Message{request})
-	c.JSON(http.StatusOK, request)
+	broadcast(request.AuthorUid, "yordamchi_typing", request.ChatUid)
+	go h.sendResponse(messages, c.GetString("firebase_uid"), provider)
 }
 
 func (h *Handler) editYordamchi(c *gin.Context) {
@@ -260,9 +256,9 @@ func (h *Handler) editYordamchi(c *gin.Context) {
 		return
 	}
 
-	go h.sendResponse(messages, c.GetString("firebase_uid"), provider)
 	broadcast(request.AuthorUid, "put_messages", []*models.Message{request})
-	c.JSON(http.StatusOK, request)
+	broadcast(request.AuthorUid, "yordamchi_typing", request.ChatUid)
+	go h.sendResponse(messages, c.GetString("firebase_uid"), provider)
 }
 
 func (h *Handler) sendResponse(messages []*models.Message, firebaseUid, provider string) {
