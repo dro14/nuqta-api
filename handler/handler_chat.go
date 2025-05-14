@@ -78,7 +78,7 @@ func (h *Handler) typePrivate(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
-	broadcast(message.RecipientUid, "private_typing", message.ChatUid)
+	broadcast(message.RecipientUid, "typing", message.ChatUid)
 }
 
 func (h *Handler) createPrivate(c *gin.Context) {
@@ -215,7 +215,6 @@ func (h *Handler) createYordamchi(c *gin.Context) {
 	}
 
 	broadcast(request.AuthorUid, "put_messages", []*models.Message{request})
-	broadcast(request.AuthorUid, "yordamchi_typing", request.ChatUid)
 	go h.sendResponse(messages, c.GetString("firebase_uid"), provider)
 }
 
@@ -257,7 +256,6 @@ func (h *Handler) editYordamchi(c *gin.Context) {
 	}
 
 	broadcast(request.AuthorUid, "put_messages", []*models.Message{request})
-	broadcast(request.AuthorUid, "yordamchi_typing", request.ChatUid)
 	go h.sendResponse(messages, c.GetString("firebase_uid"), provider)
 }
 
