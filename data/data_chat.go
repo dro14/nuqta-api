@@ -154,6 +154,14 @@ func (d *Data) LikePrivate(ctx context.Context, message *models.Message, uid str
 	)
 }
 
+func (d *Data) UnlikePrivate(ctx context.Context, message *models.Message, uid string) error {
+	message.Liked = 0
+	return d.dbExec(ctx,
+		"UPDATE private_messages SET liked = $1, last_updated = $2 WHERE id = $3 AND recipient_uid = $4",
+		sql.NullInt64{}, time.Now().UnixMilli(), message.Id, uid,
+	)
+}
+
 func (d *Data) EditPrivate(ctx context.Context, message *models.Message, uid string) error {
 	message.Edited = time.Now().UnixMilli()
 	return d.dbExec(ctx,

@@ -136,6 +136,23 @@ func (h *Handler) likePrivate(c *gin.Context) {
 	broadcast(message.RecipientUid, "put_messages", []*models.Message{message})
 }
 
+func (h *Handler) unlikePrivate(c *gin.Context) {
+	message := &models.Message{}
+	err := c.ShouldBindJSON(message)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+	ctx := c.Request.Context()
+	err = h.data.UnlikePrivate(ctx, message, c.GetString("uid"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+	broadcast(message.AuthorUid, "put_messages", []*models.Message{message})
+	broadcast(message.RecipientUid, "put_messages", []*models.Message{message})
+}
+
 func (h *Handler) editPrivate(c *gin.Context) {
 	message := &models.Message{}
 	err := c.ShouldBindJSON(message)

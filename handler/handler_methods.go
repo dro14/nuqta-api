@@ -54,6 +54,7 @@ func (h *Handler) Run(port string) error {
 	group.POST("/private/new", h.createPrivate)
 	group.PATCH("/private/view", h.viewPrivate)
 	group.PATCH("/private/like", h.likePrivate)
+	group.PATCH("/private/unlike", h.unlikePrivate)
 	group.PUT("/private", h.editPrivate)
 	group.DELETE("/private/remove", h.removePrivate)
 	group.DELETE("/private/delete", h.deletePrivate)
