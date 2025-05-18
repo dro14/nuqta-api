@@ -145,6 +145,11 @@ func (h *Handler) editPost(c *gin.Context) {
 		return
 	}
 
+	if post.Author.Uid != c.GetString("uid") {
+		c.JSON(http.StatusForbidden, failure(e.ErrForbidden))
+		return
+	}
+
 	ctx := c.Request.Context()
 	err = h.data.EditPost(ctx, post)
 	if err != nil {

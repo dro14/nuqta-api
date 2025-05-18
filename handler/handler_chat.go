@@ -23,13 +23,13 @@ func (h *Handler) createChat(c *gin.Context) {
 		return
 	}
 
-	if request["uid"] == "" || request["chat_with"] == "" {
+	if request["chat_with"] == "" {
 		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 		return
 	}
 
 	ctx := c.Request.Context()
-	chatUid, err := h.data.CreateChat(ctx, request["uid"], request["chat_with"])
+	chatUid, err := h.data.CreateChat(ctx, c.GetString("uid"), request["chat_with"])
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

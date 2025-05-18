@@ -83,13 +83,7 @@ func (h *Handler) authMiddleware(c *gin.Context) {
 		return
 	}
 
-	uid, err := h.data.GetUidByFirebaseUid(ctx, firebaseUid)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, failure(err))
-		c.Abort()
-		return
-	}
-
+	uid, _ := h.data.GetUidByFirebaseUid(ctx, firebaseUid)
 	c.Set("firebase_uid", firebaseUid)
 	c.Set("uid", uid)
 }
