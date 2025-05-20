@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const version = "1.0.4"
+const version = "1.1.0"
 
 var (
 	broadcasters      = make(map[string][]chan *models.Event)

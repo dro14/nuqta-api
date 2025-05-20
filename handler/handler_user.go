@@ -24,15 +24,16 @@ func (h *Handler) getUserList(c *gin.Context) {
 	}
 
 	var userUids []string
+	uid := c.GetString("uid")
 	ctx := c.Request.Context()
 	first, second, _ := strings.Cut(request.Key, ":")
 	switch first {
 	case "search":
 		if second == "" {
-			c.JSON(http.StatusOK, make([]*models.User, 0))
-			return
+			userUids, err = h.data.GetUserRecommendations(ctx, uid, request.Offset)
+		} else {
+			userUids, err = h.data.SearchUser(ctx, second, request.Offset)
 		}
-		userUids, err = h.data.SearchUser(ctx, second, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -48,7 +49,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 			return
 		}
 	case "invitations":
-		userUids, err = h.data.GetUserInvitations(ctx, c.GetString("uid"), request.Offset)
+		userUids, err = h.data.GetUserInvitations(ctx, uid, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -75,7 +76,7 @@ func (h *Handler) getUserList(c *gin.Context) {
 
 	users := make([]*models.User, 0, len(userUids))
 	for _, userUid := range userUids {
-		user, err := h.data.GetUser(ctx, c.GetString("uid"), userUid)
+		user, err := h.data.GetUser(ctx, uid, userUid)
 		if err != nil {
 			continue
 		}

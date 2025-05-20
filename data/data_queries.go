@@ -37,6 +37,32 @@ query Query($uid: string, $user_uid: string) {
 	}
 }`
 
+const userRecommendationsQuery = `
+query Query($uid: string) {
+	var(func: uid($uid)) {
+		invited_by as invited_by
+		follow {
+			following as uid
+			~follow @filter(not uid($uid)) {
+				follow {
+					collaborative as uid
+				}
+			}
+		}
+		followers as ~follow
+		invites as ~invited_by
+		blocking as block
+		blockers as ~block
+	}
+
+	users(func: uid(invited_by, collaborative, followers, invites)) @filter(not uid($uid) AND not uid(following, blocking, blockers)) {
+		uid
+		followers: count(~follow)
+		invites: count(~invited_by)
+		blockers: count(~block)
+	}
+}`
+
 const userFollowsQuery = `
 query Query($user_uid: string, $offset: int) {
 	users(func: uid($user_uid)) {

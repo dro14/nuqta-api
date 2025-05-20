@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -110,6 +111,50 @@ func (d *Data) GetUidByUsername(ctx context.Context, username string) (string, e
 		return "", err
 	}
 	return userUid, nil
+}
+
+func (d *Data) GetUserRecommendations(ctx context.Context, uid string, offset int64) ([]string, error) {
+	vars := map[string]string{
+		"$uid": uid,
+	}
+	bytes, err := d.graphGet(ctx, userRecommendationsQuery, vars)
+	if err != nil {
+		return nil, err
+	}
+
+	var response map[string][]*models.User
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var users []*models.User
+	for _, user := range response["users"] {
+		user.Score = scoreUser(user)
+		users = append(users, user)
+	}
+
+	slices.SortFunc(
+		users,
+		func(a, b *models.User) int {
+			return b.Score - a.Score
+		},
+	)
+
+	if offset > 0 {
+		users = users[offset:]
+	}
+
+	if len(users) > 20 {
+		users = users[:20]
+	}
+
+	var userUids []string
+	for _, user := range users {
+		userUids = append(userUids, user.Uid)
+	}
+
+	return userUids, nil
 }
 
 func (d *Data) SearchUser(ctx context.Context, query string, offset int64) ([]string, error) {

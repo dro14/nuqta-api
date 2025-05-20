@@ -17,6 +17,8 @@ type User struct {
 	Avatars     []string `json:"avatars,omitempty"`
 	Thumbnails  []string `json:"thumbnails,omitempty"`
 	Followers   int      `json:"followers,omitempty"`
+	Invites     int      `json:"invites,omitempty"`
+	Blockers    int      `json:"blockers,omitempty"`
 	Following   int      `json:"following,omitempty"`
 	Posts       int      `json:"posts,omitempty"`
 	Replies     int      `json:"replies,omitempty"`
@@ -28,6 +30,7 @@ type User struct {
 	IsBlocking  bool     `json:"is_blocking,omitempty"`
 	IsBlocker   bool     `json:"is_blocker,omitempty"`
 	ChatUid     string   `json:"chat_uid,omitempty"`
+	Score       int      `json:"score,omitempty"`
 }
 
 type Post struct {
@@ -47,14 +50,13 @@ type Post struct {
 	Clicks           int      `json:"clicks,omitempty"`
 	Views            int      `json:"views,omitempty"`
 	Saves            int      `json:"saves,omitempty"`
-	Reports          int      `json:"reports,omitempty"`
 	IsReplied        bool     `json:"is_replied,omitempty"`
 	IsReposted       bool     `json:"is_reposted,omitempty"`
 	IsLiked          bool     `json:"is_liked,omitempty"`
 	IsClicked        bool     `json:"is_clicked,omitempty"`
 	IsViewed         bool     `json:"is_viewed,omitempty"`
 	IsSaved          bool     `json:"is_saved,omitempty"`
-	Score            float64  `json:"score,omitempty"`
+	Score            int      `json:"score,omitempty"`
 	RepostsTimestamp int64    `json:"reposts|timestamp,omitempty"`
 }
 

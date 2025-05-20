@@ -214,3 +214,17 @@ func decodeIds(rows *sql.Rows) []int64 {
 	}
 	return ids
 }
+
+func scoreUser(user *models.User) int {
+	return 2*user.Followers +
+		1*user.Invites -
+		2*user.Blockers
+}
+
+func scorePost(post *models.Post) int {
+	return 20*post.Replies +
+		15*post.Reposts +
+		10*post.Likes +
+		5*post.Clicks +
+		1*post.Views
+}

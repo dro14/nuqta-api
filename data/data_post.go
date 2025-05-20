@@ -328,43 +328,35 @@ func (d *Data) GetPopularReplies(ctx context.Context, postUid string, offset int
 		return nil, nil
 	}
 
-	replies := response["posts"][0]["replies"]
-	for i, reply := range replies {
-		replies[i].Score = 2.0*float64(reply.Replies) +
-			1.5*float64(reply.Reposts) +
-			1.0*float64(reply.Likes) +
-			0.5*float64(reply.Clicks) +
-			0.1*float64(reply.Views) -
-			1.0*float64(reply.Reports)
+	var posts []*models.Post
+	for _, post := range response["posts"] {
+		for _, reply := range post["replies"] {
+			reply.Score = scorePost(reply)
+			posts = append(posts, reply)
+		}
 	}
 
 	slices.SortFunc(
-		replies,
+		posts,
 		func(a, b *models.Post) int {
-			if a.Score < b.Score {
-				return 1
-			} else if a.Score > b.Score {
-				return -1
-			} else {
-				return 0
-			}
+			return b.Score - a.Score
 		},
 	)
 
 	if offset > 0 {
-		replies = replies[offset:]
+		posts = posts[offset:]
 	}
 
-	if len(replies) > 20 {
-		replies = replies[:20]
+	if len(posts) > 20 {
+		posts = posts[:20]
 	}
 
-	var replyUids []string
-	for _, reply := range replies {
-		replyUids = append(replyUids, reply.Uid)
+	var postUids []string
+	for _, post := range posts {
+		postUids = append(postUids, post.Uid)
 	}
 
-	return replyUids, nil
+	return postUids, nil
 }
 
 func (d *Data) GetLatestReplies(ctx context.Context, postUid string, before int64) ([]string, error) {
@@ -383,14 +375,14 @@ func (d *Data) GetLatestReplies(ctx context.Context, postUid string, before int6
 		return nil, err
 	}
 
-	var replyUids []string
+	var postUids []string
 	for _, post := range response["posts"] {
 		for _, reply := range post["replies"] {
-			replyUids = append(replyUids, reply.Uid)
+			postUids = append(postUids, reply.Uid)
 		}
 	}
 
-	return replyUids, nil
+	return postUids, nil
 }
 
 func (d *Data) GetPostReplies(ctx context.Context, postUid string) ([]string, error) {
