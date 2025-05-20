@@ -40,22 +40,30 @@ query Query($uid: string, $user_uid: string) {
 const userRecommendationsQuery = `
 query Query($uid: string) {
 	var(func: uid($uid)) {
-		invited_by as invited_by
+		invited_by {
+			inviter as uid
+			~invited_by @filter(not uid($uid)) {
+				inviter_invitees as uid
+				follow {
+					inviter_invitees_following as uid
+				}
+			}
+		}
 		follow {
 			following as uid
 			~follow @filter(not uid($uid)) {
 				follow {
-					collaborative as uid
+					following_followers_following as uid
 				}
 			}
 		}
 		followers as ~follow
-		invites as ~invited_by
+		invitees as ~invited_by
 		blocking as block
 		blockers as ~block
 	}
 
-	users(func: uid(invited_by, collaborative, followers, invites)) @filter(not uid($uid) AND not uid(following, blocking, blockers)) {
+	users(func: uid(inviter, inviter_invitees, inviter_invitees_following, following_followers_following, followers, invitees)) @filter(not uid($uid) AND not uid(following, blocking, blockers)) {
 		uid
 		followers: count(~follow)
 		invites: count(~invited_by)
