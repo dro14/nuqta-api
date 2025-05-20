@@ -11,8 +11,8 @@ import (
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/dgraph-io/dgo/v240/protos/api"
-	"github.com/dro14/nuqta-service/e"
 	"github.com/dro14/nuqta-service/models"
+	"github.com/dro14/nuqta-service/utils/e"
 	"github.com/lib/pq"
 )
 

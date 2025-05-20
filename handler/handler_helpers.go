@@ -1,7 +1,12 @@
 package handler
 
 import (
+	"log"
+	"net/http"
+	"runtime/debug"
+
 	"github.com/dro14/nuqta-service/models"
+	"github.com/dro14/nuqta-service/utils/info"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,4 +26,11 @@ func broadcast(uid string, name string, data any) {
 		channel <- &models.Event{Name: name, Data: data}
 	}
 	broadcastersMutex.RUnlock()
+}
+
+func notifyOnPanic(c *gin.Context, err any) {
+	log.Printf("%s\n%s", err, debug.Stack())
+	info.SendDocument("gin.log")
+	info.SendDocument("yordamchi.log")
+	c.AbortWithStatus(http.StatusInternalServerError)
 }

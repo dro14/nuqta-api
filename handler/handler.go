@@ -15,8 +15,12 @@ type Handler struct {
 }
 
 func New() *Handler {
+	engine := gin.New()
+	engine.Use(gin.Logger())
+	engine.Use(gin.CustomRecovery(notifyOnPanic))
+
 	return &Handler{
-		engine:    gin.Default(),
+		engine:    engine,
 		data:      data.New(),
 		firebase:  firebase.New(),
 		yordamchi: yordamchi.New(),

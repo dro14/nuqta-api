@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/dro14/nuqta-service/handler"
-	"github.com/gin-gonic/gin"
+	"github.com/dro14/nuqta-service/utils/info"
 	"github.com/joho/godotenv"
 )
 
@@ -14,25 +14,14 @@ func main() {
 	if err != nil {
 		log.Fatal("can't load .env file: ", err)
 	}
-
-	file, err := os.Create("gin.log")
-	if err != nil {
-		log.Fatal("can't open gin.log: ", err)
-	}
-	gin.DefaultWriter = file
-
-	file, err = os.Create("my.log")
-	if err != nil {
-		log.Fatal("can't open my.log: ", err)
-	}
-	log.SetOutput(file)
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	info.SetUp()
 
 	port, ok := os.LookupEnv("PORT")
 	if !ok {
 		port = "8000"
 	}
 
+	info.SendMessage("Nuqta service restarted")
 	h := handler.New()
 	err = h.Run(port)
 	if err != nil {

@@ -5,7 +5,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/dro14/nuqta-service/e"
+	"github.com/dro14/nuqta-service/utils/e"
 )
 
 var edges = []string{

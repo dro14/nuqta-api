@@ -6,7 +6,8 @@ require (
 	firebase.google.com/go/v4 v4.15.2
 	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf
 	github.com/dgraph-io/dgo/v240 v240.2.0
-	github.com/gin-gonic/gin v1.10.0
+	github.com/gin-gonic/gin v1.10.1
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	google.golang.org/api v0.233.0

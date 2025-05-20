@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dro14/nuqta-service/e"
+	"github.com/dro14/nuqta-service/utils/e"
 )
 
 func (d *Data) GetReferrer(ctx context.Context, ip, osVersion string) (string, error) {
