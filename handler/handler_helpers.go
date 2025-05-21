@@ -30,7 +30,7 @@ func broadcast(uid string, name string, data any) {
 
 func notifyOnPanic(c *gin.Context, err any) {
 	log.Printf("%s\n%s", err, debug.Stack())
+	info.SendDocument("my.log")
 	info.SendDocument("gin.log")
-	info.SendDocument("yordamchi.log")
 	c.AbortWithStatus(http.StatusInternalServerError)
 }

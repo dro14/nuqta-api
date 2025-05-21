@@ -57,11 +57,11 @@ func ReceiveUpdates() {
 		if message != nil && message.From.ID == adminUserID {
 			switch message.Command() {
 			case "logs":
-				SendDocument("gin.log")
 				SendDocument("my.log")
+				SendDocument("gin.log")
 			case "crashed_logs":
-				SendDocument("gin-crashed.log")
 				SendDocument("my-crashed.log")
+				SendDocument("gin-crashed.log")
 			}
 		}
 	}
@@ -72,8 +72,8 @@ func MonitorShutdown(sigChan chan os.Signal) {
 	log.Printf("Received %v, initiating shutdown...", sig)
 	log.SetOutput(os.Stdout)
 	gin.DefaultWriter = os.Stdout
+	SendDocument("my.log")
 	SendDocument("gin.log")
-	SendDocument("yordamchi.log")
 }
 
 func SendMessage(text string) {

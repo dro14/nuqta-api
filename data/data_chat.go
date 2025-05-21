@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/dro14/nuqta-service/models"
@@ -179,6 +180,10 @@ func (d *Data) RemovePrivate(ctx context.Context, message *models.Message, uid s
 }
 
 func (d *Data) DeletePrivate(ctx context.Context, message *models.Message, uid string) error {
+	err := d.deleteImages(ctx, message.Images)
+	if err != nil {
+		log.Printf("can't delete images: %s", err)
+	}
 	return d.dbExec(ctx,
 		"DELETE FROM private_messages WHERE id = $1 AND recipient_uid = $2",
 		message.Id, uid,

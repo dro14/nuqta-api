@@ -80,7 +80,7 @@ func (h *Handler) getPostList(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
 			return
 		}
-		postUids, err = h.data.GetViewedPosts(ctx, uid, request.Before)
+		postUids, err = h.data.GetHistory(ctx, uid, request.Before)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, failure(err))
 			return
@@ -175,13 +175,18 @@ func (h *Handler) deletePost(c *gin.Context) {
 
 	uid := c.GetString("uid")
 	ctx := c.Request.Context()
-	_, err = h.data.GetPost(ctx, uid, request["post_uid"])
+	post, err := h.data.GetPost(ctx, uid, request["post_uid"])
 	if err != nil {
 		c.JSON(http.StatusBadRequest, failure(err))
 		return
 	}
 
-	err = h.data.DeletePost(ctx, request["post_uid"])
+	if post.Author.Uid != uid {
+		c.JSON(http.StatusForbidden, failure(e.ErrForbidden))
+		return
+	}
+
+	err = h.data.DeletePost(ctx, uid, post.Uid, post.Images)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return

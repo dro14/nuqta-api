@@ -1,11 +1,14 @@
 package data
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -227,4 +230,42 @@ func scorePost(post *models.Post) int {
 		10*post.Likes +
 		5*post.Clicks +
 		1*post.Views
+}
+
+func (d *Data) deleteImages(ctx context.Context, images []string) error {
+	if len(images) == 0 {
+		return nil
+	}
+	for i, image := range images {
+		_, images[i], _ = strings.Cut(image, "/images/")
+	}
+	request := map[string][]string{"filenames": images}
+	var buffer bytes.Buffer
+	err := json.NewEncoder(&buffer).Encode(request)
+	if err != nil {
+		return err
+	}
+	url := "https://images.nuqtam.uz/hammasi"
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, &buffer)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(d.username, d.password)
+
+	var client http.Client
+	client.Timeout = 10 * time.Second
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		bts, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return errors.New(string(bts))
+	}
+	return nil
 }

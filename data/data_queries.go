@@ -240,6 +240,15 @@ query Query($user_uid: string, $before: int) {
 	}
 }`
 
+const userAllPostsQuery = `
+query Query($user_uid: string, $before: int) {
+	users(func: uid($user_uid)) {
+		posts: ~author @filter(lt(timestamp, $before)) (orderdesc: timestamp) {
+			uid
+		}
+	}
+}`
+
 const postRepliesQuery = `
 query Query($post_uid: string) {
 	posts(func: uid($post_uid)) {

@@ -13,9 +13,11 @@ import (
 )
 
 type Data struct {
-	db    *sql.DB
-	graph *dgo.Dgraph
-	cache *memcache.Client
+	db       *sql.DB
+	graph    *dgo.Dgraph
+	cache    *memcache.Client
+	username string
+	password string
 }
 
 func New() *Data {
@@ -46,10 +48,22 @@ func New() *Data {
 
 	cache := memcache.New(uri)
 
+	username, ok := os.LookupEnv("USERNAME")
+	if !ok {
+		log.Fatal("username is not specified")
+	}
+
+	password, ok := os.LookupEnv("PASSWORD")
+	if !ok {
+		log.Fatal("password is not specified")
+	}
+
 	return &Data{
-		db:    db,
-		graph: graph,
-		cache: cache,
+		db:       db,
+		graph:    graph,
+		cache:    cache,
+		username: username,
+		password: password,
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"slices"
 	"strconv"
 	"time"
@@ -243,7 +244,7 @@ func (d *Data) GetSavedPosts(ctx context.Context, uid string, before int64) ([]s
 	return postUids, nil
 }
 
-func (d *Data) GetViewedPosts(ctx context.Context, uid string, before int64) ([]string, error) {
+func (d *Data) GetHistory(ctx context.Context, uid string, before int64) ([]string, error) {
 	vars := map[string]string{
 		"$uid":    uid,
 		"$before": strconv.FormatInt(before, 10),
@@ -282,6 +283,8 @@ func (d *Data) GetUserPosts(ctx context.Context, tab, userUid string, before int
 		query = userRepostsQuery
 	case "likes":
 		query = userLikesQuery
+	case "all":
+		query = userAllPostsQuery
 	}
 
 	vars := map[string]string{
@@ -418,16 +421,21 @@ func (d *Data) EditPost(ctx context.Context, post *models.Post) error {
 	)
 }
 
-func (d *Data) DeletePost(ctx context.Context, postUid string) error {
+func (d *Data) DeletePost(ctx context.Context, uid, postUid string, images []string) error {
+	err := d.deleteImages(ctx, images)
+	if err != nil {
+		log.Printf("can't delete images: %s", err)
+	}
 	replyUids, err := d.GetPostReplies(ctx, postUid)
 	if err != nil {
 		return err
 	}
 	for _, replyUid := range replyUids {
-		err = d.DeletePost(ctx, replyUid)
+		reply, err := d.GetPost(ctx, uid, replyUid)
 		if err != nil {
-			return err
+			continue
 		}
+		_ = d.DeletePost(ctx, uid, replyUid, reply.Images)
 	}
 	object := map[string]any{"uid": postUid}
 	err = d.graphDelete(ctx, object)
