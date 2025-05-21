@@ -3,8 +3,6 @@ package info
 import (
 	"log"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/gin-gonic/gin"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -26,25 +24,7 @@ func SetUp() {
 		log.Fatal("can't initialize info bot: ", err)
 	}
 
-	file, err := os.Create("my.log")
-	if err != nil {
-		log.Fatal("can't open my.log: ", err)
-	}
-	log.SetOutput(file)
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
-	file, err = os.Create("gin.log")
-	if err != nil {
-		log.Fatal("can't open gin.log: ", err)
-	}
-	gin.DefaultWriter = file
-	gin.SetMode(gin.ReleaseMode)
-
 	go ReceiveUpdates()
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	go MonitorShutdown(sigChan)
 }
 
 func ReceiveUpdates() {
