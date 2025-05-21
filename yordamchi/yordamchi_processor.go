@@ -22,7 +22,7 @@ Retry:
 	var err error
 	switch provider {
 	case "google":
-		ctx = context.WithValue(ctx, "model", "gemini-2.5-flash-preview-04-17")
+		ctx = context.WithValue(ctx, "model", "gemini-2.5-flash-preview-05-20")
 		response, err = y.google.GenerateContent(ctx, conversation)
 	case "openai":
 		ctx = context.WithValue(ctx, "model", "gpt-4.1-mini-2025-04-14")
