@@ -104,7 +104,7 @@ func (d *Data) EditProfile(ctx context.Context, user *models.User) error {
 	)
 }
 
-func (d *Data) DeleteProfile(ctx context.Context, uid string) error {
+func (d *Data) DeleteProfile(ctx context.Context, uid, firebaseUid string) error {
 	postUids, err := d.GetUserPosts(ctx, "all", uid, time.Now().UnixMilli())
 	if err != nil {
 		return err
@@ -134,6 +134,11 @@ func (d *Data) DeleteProfile(ctx context.Context, uid string) error {
 	err = d.deleteImages(ctx, user.Thumbnails)
 	if err != nil {
 		log.Printf("can't delete thumbnails: %s", err)
+	}
+
+	err = d.cacheDelete("uid:" + firebaseUid)
+	if err != nil {
+		log.Printf("can't delete uid from cache: %s", err)
 	}
 
 	object := map[string]any{"uid": uid}

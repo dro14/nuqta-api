@@ -31,6 +31,7 @@ func (h *Handler) Run(port string) error {
 	group.POST("", h.createProfile)
 	group.GET("", h.getProfile)
 	group.PUT("", h.editProfile)
+	group.DELETE("", h.deleteProfile)
 	group.OPTIONS("", h.isAvailable)
 
 	group = authorized.Group("/user")

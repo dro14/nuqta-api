@@ -162,6 +162,14 @@ func (d *Data) cacheSet(key string, value []byte, ttl time.Duration) error {
 	})
 }
 
+func (d *Data) cacheDelete(key string) error {
+	err := d.cache.Delete(key)
+	if errors.Is(err, memcache.ErrCacheMiss) {
+		return nil
+	}
+	return err
+}
+
 func decodeMessages(rows *sql.Rows, type_ string) []*models.Message {
 	messages := make([]*models.Message, 0)
 	for rows.Next() {

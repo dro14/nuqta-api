@@ -90,8 +90,6 @@ func (h *Handler) getProfile(c *gin.Context) {
 }
 
 func (h *Handler) editProfile(c *gin.Context) {
-	firebaseUid := c.GetString("firebase_uid")
-
 	user := &models.User{}
 	err := c.ShouldBindJSON(user)
 	if err != nil {
@@ -99,7 +97,7 @@ func (h *Handler) editProfile(c *gin.Context) {
 		return
 	}
 
-	if user.FirebaseUid != firebaseUid {
+	if user.Uid != c.GetString("uid") || user.FirebaseUid != c.GetString("firebase_uid") {
 		c.JSON(http.StatusBadRequest, failure(e.ErrInvalidParams))
 		return
 	}
@@ -109,6 +107,21 @@ func (h *Handler) editProfile(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
+	}
+}
+
+func (h *Handler) deleteProfile(c *gin.Context) {
+	uid := c.GetString("uid")
+	firebaseUid := c.GetString("firebase_uid")
+
+	ctx := c.Request.Context()
+	err := h.data.DeleteProfile(ctx, uid, firebaseUid)
+	if err != nil {
+		log.Print("can't delete profile: ", err)
+	}
+	err = h.firebase.DeleteAccount(ctx, firebaseUid)
+	if err != nil {
+		log.Print("can't delete account: ", err)
 	}
 }
 

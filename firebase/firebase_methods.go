@@ -14,6 +14,10 @@ func (f *Firebase) VerifyIdToken(ctx context.Context, idToken string) (string, e
 	return token.UID, nil
 }
 
+func (f *Firebase) DeleteAccount(ctx context.Context, firebaseUid string) error {
+	return f.auth.DeleteUser(ctx, firebaseUid)
+}
+
 func (f *Firebase) SendNotification(ctx context.Context, token string, title, body string, data map[string]string) (string, error) {
 	message := &messaging.Message{
 		Notification: &messaging.Notification{
