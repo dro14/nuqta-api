@@ -251,12 +251,12 @@ func (h *Handler) reportPost(c *gin.Context) {
 REPORTER
 uid: %s
 name: %s
-username: %s
+username: @%s
 
 AUTHOR
 uid: %s
 name: %s
-username: %s
+username: @%s
 
 POST
 category: %s
@@ -265,7 +265,8 @@ timestamp: %s
 in reply to: %s
 who can reply: %s
 images: %d
-text: %s`,
+text:
+%s`,
 		reporter.Uid, reporter.Name, reporter.Username,
 		author.Uid, author.Name, author.Username,
 		request["category"], post.Uid, timestamp, inReplyTo, post.WhoCanReply, len(post.Images), post.Text,

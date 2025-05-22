@@ -43,7 +43,7 @@ func (h *Handler) Run(port string) error {
 	group.GET("", h.getPostList)
 	group.PUT("", h.editPost)
 	group.PATCH("", h.hidePost)
-	group.POST("/report", h.reportPost)
+	group.PATCH("/report", h.reportPost)
 	group.DELETE("", h.deletePost)
 
 	group = authorized.Group("/edge")
