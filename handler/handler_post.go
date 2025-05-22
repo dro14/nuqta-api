@@ -243,7 +243,7 @@ func (h *Handler) reportPost(c *gin.Context) {
 
 	timestamp := time.UnixMilli(post.Timestamp).Add(5 * time.Hour).Format(time.DateTime)
 	inReplyTo := ""
-	if post.InReplyTo.Uid != "" {
+	if post.InReplyTo != nil {
 		inReplyTo = post.InReplyTo.Uid
 	}
 
