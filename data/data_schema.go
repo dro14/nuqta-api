@@ -30,6 +30,7 @@ type <post> {
 	click
 	view
 	save
+    report
 }
 
 type <private_chat> {
@@ -42,7 +43,6 @@ type <user> {
 	follow
     chat
     block
-    report
 }
     
 type <yordamchi_chat> {

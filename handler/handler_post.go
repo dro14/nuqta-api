@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/dro14/nuqta-service/models"
 	"github.com/dro14/nuqta-service/utils/e"
+	"github.com/dro14/nuqta-service/utils/info"
 	"github.com/gin-gonic/gin"
 )
 
@@ -197,6 +200,74 @@ func (h *Handler) hidePost(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}
+}
+
+func (h *Handler) reportPost(c *gin.Context) {
+	var request map[string]string
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, failure(err))
+		return
+	}
+
+	if request["post_uid"] == "" || request["category"] == "" {
+		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
+		return
+	}
+
+	uid := c.GetString("uid")
+	ctx := c.Request.Context()
+	reporter, err := h.data.GetUser(ctx, uid, uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	post, err := h.data.GetPost(ctx, uid, request["post_uid"])
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	author, err := h.data.GetUser(ctx, post.Author.Uid, post.Author.Uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	err = h.data.ReportPost(ctx, uid, post.Uid, request["category"])
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, failure(err))
+		return
+	}
+
+	timestamp := time.UnixMilli(post.Timestamp).Add(5 * time.Hour).Format(time.DateTime)
+
+	message := fmt.Sprintf(`
+REPORTER
+uid: %s
+name: %s
+username: %s
+
+AUTHOR
+uid: %s
+name: %s
+username: %s
+
+POST
+category: %s
+uid: %s
+timestamp: %s
+in reply to: %s
+who can reply: %s
+images: %d
+text: %s`,
+		reporter.Uid, reporter.Name, reporter.Username,
+		author.Uid, author.Name, author.Username,
+		request["category"], post.Uid, timestamp, post.InReplyTo.Uid, post.WhoCanReply, len(post.Images), post.Text,
+	)
+
+	info.SendMessage(message)
 }
 
 func (h *Handler) deletePost(c *gin.Context) {

@@ -430,6 +430,19 @@ func (d *Data) HidePost(ctx context.Context, postUid string) error {
 	return err
 }
 
+func (d *Data) ReportPost(ctx context.Context, uid, postUid, category string) error {
+	object := map[string]any{
+		"uid": postUid,
+		"report": map[string]any{
+			"uid":              uid,
+			"report|timestamp": time.Now().UnixMilli(),
+			"report|category":  category,
+		},
+	}
+	_, err := d.graphSet(ctx, object)
+	return err
+}
+
 func (d *Data) DeletePost(ctx context.Context, uid, postUid string, images []string) error {
 	err := d.deleteImages(ctx, images)
 	if err != nil {
