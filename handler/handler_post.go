@@ -242,6 +242,10 @@ func (h *Handler) reportPost(c *gin.Context) {
 	}
 
 	timestamp := time.UnixMilli(post.Timestamp).Add(5 * time.Hour).Format(time.DateTime)
+	inReplyTo := ""
+	if post.InReplyTo.Uid != "" {
+		inReplyTo = post.InReplyTo.Uid
+	}
 
 	message := fmt.Sprintf(`
 REPORTER
@@ -264,7 +268,7 @@ images: %d
 text: %s`,
 		reporter.Uid, reporter.Name, reporter.Username,
 		author.Uid, author.Name, author.Username,
-		request["category"], post.Uid, timestamp, post.InReplyTo.Uid, post.WhoCanReply, len(post.Images), post.Text,
+		request["category"], post.Uid, timestamp, inReplyTo, post.WhoCanReply, len(post.Images), post.Text,
 	)
 
 	info.SendMessage(message)
