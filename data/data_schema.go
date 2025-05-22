@@ -7,11 +7,13 @@ const GraphSchema = `
 <click>: [uid] @count @reverse .
 <follow>: [uid] @count @reverse .
 <has_media>: bool .
+<hidden>: int .
 <in_reply_to>: uid @count @reverse .
 <invited_by>: uid @count @reverse .
 <like>: [uid] @count @reverse .
 <members>: [uid] .
 <registered>: int @index(int) .
+<report>: [uid] @count @reverse .
 <repost>: [uid] @count @reverse .
 <save>: [uid] @count @reverse .
 <timestamp>: int @index(int) .
@@ -22,6 +24,7 @@ type <post> {
     has_media
 	author
 	in_reply_to
+    hidden
 	repost
 	like
 	click
@@ -37,8 +40,13 @@ type <user> {
 	registered
 	invited_by
 	follow
+    chat
     block
-	chat
+    report
+}
+    
+type <yordamchi_chat> {
+    members
 }`
 
 const DdSchema = `

@@ -7,10 +7,10 @@ type Post struct {
 	Text             string   `json:"text,omitempty"`
 	Images           []string `json:"images,omitempty"`
 	Edited           int64    `json:"edited,omitempty"`
+	Hidden           int64    `json:"hidden,omitempty"`
 	Author           *User    `json:"author,omitempty"`
 	InReplyTo        *Post    `json:"in_reply_to,omitempty"`
 	RepostedBy       *User    `json:"reposted_by,omitempty"`
-	Reposted         []*User  `json:"reposted,omitempty"`
 	Replies          int      `json:"replies,omitempty"`
 	Reposts          int      `json:"reposts,omitempty"`
 	Likes            int      `json:"likes,omitempty"`

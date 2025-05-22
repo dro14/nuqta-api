@@ -392,7 +392,7 @@ func (d *Data) GetPostReplies(ctx context.Context, postUid string) ([]string, er
 	vars := map[string]string{
 		"$post_uid": postUid,
 	}
-	bytes, err := d.graphGet(ctx, postRepliesQuery, vars)
+	bytes, err := d.graphGet(ctx, postAllRepliesQuery, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -419,6 +419,15 @@ func (d *Data) EditPost(ctx context.Context, post *models.Post) error {
 		"UPDATE posts SET text = $1, who_can_reply = $2, images = $3, edited = $4 WHERE id = $5",
 		post.Text, post.WhoCanReply, pq.Array(post.Images), post.Edited, post.Uid,
 	)
+}
+
+func (d *Data) HidePost(ctx context.Context, postUid string) error {
+	object := map[string]any{
+		"uid":    postUid,
+		"hidden": time.Now().UnixMilli(),
+	}
+	_, err := d.graphSet(ctx, object)
+	return err
 }
 
 func (d *Data) DeletePost(ctx context.Context, uid, postUid string, images []string) error {

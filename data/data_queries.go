@@ -108,13 +108,14 @@ query Query($uid: string) {
 const postQuery = `
 query Query($post_uid: string) {
 	posts(func: uid($post_uid)) {
+		hidden
 		author {
 			uid
 		}
 		in_reply_to {
 			uid
 		}
-		replies: count(~in_reply_to)
+		replies: count(~in_reply_to @filter(not has(hidden)))
 		reposts: count(repost)
 		likes: count(like)
 		views: count(view)
@@ -166,7 +167,7 @@ const repliesQuery = `
 query Query($uid: string, $before: int) {
 	var(func: uid($uid)) {
 		~author {
-			~in_reply_to @filter(lt(timestamp, $before)) {
+			~in_reply_to @filter(lt(timestamp, $before) AND not has(hidden)) {
 				reply_uids as uid
 			}
 		}
@@ -252,7 +253,7 @@ query Query($user_uid: string, $before: int) {
 const postRepliesQuery = `
 query Query($post_uid: string) {
 	posts(func: uid($post_uid)) {
-		replies: ~in_reply_to {
+		replies: ~in_reply_to @filter(not has(hidden)) {
 			uid
 			replies: count(~in_reply_to)
 			reposts: count(repost)
@@ -266,7 +267,16 @@ query Query($post_uid: string) {
 const latestRepliesQuery = `
 query Query($post_uid: string, $before: int) {
 	posts(func: uid($post_uid)) {
-		replies: ~in_reply_to @filter(lt(timestamp, $before)) (orderdesc: timestamp, first: 20) {
+		replies: ~in_reply_to @filter(lt(timestamp, $before) AND not has(hidden)) (orderdesc: timestamp, first: 20) {
+			uid
+		}
+	}
+}`
+
+const postAllRepliesQuery = `
+query Query($post_uid: string) {
+	posts(func: uid($post_uid)) {
+		replies: ~in_reply_to {
 			uid
 		}
 	}
