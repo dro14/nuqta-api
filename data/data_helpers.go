@@ -253,7 +253,7 @@ func (d *Data) deleteImages(ctx context.Context, images []string) error {
 	if err != nil {
 		return err
 	}
-	url := "https://images.nuqtam.uz/hammasi"
+	url := "https://images.nuqtam.uz/v1/hammasi"
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, &buffer)
 	if err != nil {
 		return err
