@@ -12,7 +12,7 @@ const allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345
 func sanitizeBase(input string) string {
 	var sanitized strings.Builder
 	for _, r := range input {
-		if (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '_' {
+		if strings.ContainsRune(allowedChars, r) {
 			sanitized.WriteRune(r)
 		} else {
 			sanitized.WriteRune('_')
