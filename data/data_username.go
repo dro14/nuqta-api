@@ -57,14 +57,14 @@ func generateRandomUsername() (string, error) {
 	return generateRandomSuffix(length)
 }
 
-func generateUsername(email string, suffixMinLength int) (string, error) {
-	base := strings.Split(email, "@")[0]
-	if suffixMinLength == 0 {
-		return base, nil
-	}
+func generateUsername(base string, suffixMinLength int) (string, error) {
 	sanitized := sanitizeBase(base)
 	if sanitized == "" {
 		return generateRandomUsername()
+	}
+
+	if suffixMinLength == 0 {
+		return sanitized, nil
 	}
 
 	const maxTotalLength = 64

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -101,7 +102,10 @@ func (h *Handler) getUserByUsername(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	userUid, err := h.data.GetUidByUsername(ctx, request["username"])
-	if err != nil {
+	if errors.Is(err, e.ErrNotFound) {
+		c.JSON(http.StatusOK, &models.User{})
+		return
+	} else if err != nil {
 		c.JSON(http.StatusInternalServerError, failure(err))
 		return
 	}

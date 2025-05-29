@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/dro14/nuqta-service/models"
@@ -14,12 +15,13 @@ import (
 
 func (d *Data) CreateProfile(ctx context.Context, user *models.User) error {
 	suffixMinLength := 0
-	username, _ := generateUsername(user.Email, suffixMinLength)
+	base := strings.Split(user.Email, "@")[0]
+	username, _ := generateUsername(base, suffixMinLength)
 	for {
 		userUid, err := d.GetUidByUsername(ctx, username)
 		if userUid != "" {
 			suffixMinLength++
-			username, err = generateUsername(user.Email, suffixMinLength)
+			username, err = generateUsername(base, suffixMinLength)
 			if err != nil {
 				return err
 			}
