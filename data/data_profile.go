@@ -128,12 +128,12 @@ func (d *Data) DeleteProfile(ctx context.Context, uid, firebaseUid string) error
 		return err
 	}
 
-	err = d.deleteImages(ctx, user.Avatars)
+	err = deleteImages(user.Avatars)
 	if err != nil {
 		log.Printf("can't delete avatars: %s", err)
 	}
 
-	err = d.deleteImages(ctx, user.Thumbnails)
+	err = deleteImages(user.Thumbnails)
 	if err != nil {
 		log.Printf("can't delete thumbnails: %s", err)
 	}

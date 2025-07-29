@@ -444,7 +444,7 @@ func (d *Data) ReportPost(ctx context.Context, uid, postUid, category string) er
 }
 
 func (d *Data) DeletePost(ctx context.Context, uid, postUid string, images []string) error {
-	err := d.deleteImages(ctx, images)
+	err := deleteImages(images)
 	if err != nil {
 		log.Printf("can't delete images: %s", err)
 	}

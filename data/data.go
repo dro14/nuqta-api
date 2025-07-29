@@ -1,23 +1,19 @@
 package data
 
 import (
-	"context"
 	"database/sql"
 	"log"
 	"os"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/dgraph-io/dgo/v240"
-	"github.com/dgraph-io/dgo/v240/protos/api"
 	_ "github.com/lib/pq"
 )
 
 type Data struct {
-	db       *sql.DB
-	graph    *dgo.Dgraph
-	cache    *memcache.Client
-	username string
-	password string
+	db    *sql.DB
+	graph *dgo.Dgraph
+	cache *memcache.Client
 }
 
 func New() *Data {
@@ -48,29 +44,9 @@ func New() *Data {
 
 	cache := memcache.New(uri)
 
-	username, ok := os.LookupEnv("USERNAME")
-	if !ok {
-		log.Fatal("username is not specified")
-	}
-
-	password, ok := os.LookupEnv("PASSWORD")
-	if !ok {
-		log.Fatal("password is not specified")
-	}
-
 	return &Data{
-		db:       db,
-		graph:    graph,
-		cache:    cache,
-		username: username,
-		password: password,
+		db:    db,
+		graph: graph,
+		cache: cache,
 	}
-}
-
-func (d *Data) DeleteType(ctx context.Context, name string) error {
-	op := &api.Operation{
-		DropOp:    api.Operation_TYPE,
-		DropValue: name,
-	}
-	return d.graph.Alter(ctx, op)
 }

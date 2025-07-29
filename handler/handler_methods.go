@@ -15,11 +15,14 @@ func (h *Handler) Run(port string) error {
 
 	h.engine.GET("", h.root)
 
-	h.engine.DELETE("/type/:name", h.deleteType)
-
 	group := h.engine.Group("/download")
 	group.GET("", h.download)
 	group.GET("/:referrer", h.download)
+
+	group = h.engine.Group("/schema")
+	group.GET("", h.getSchema)
+	group.PUT("", h.updateSchema)
+	group.DELETE("", h.deleteSchema)
 
 	authorized := h.engine.Group("")
 	authorized.Use(h.authMiddleware)
@@ -63,6 +66,10 @@ func (h *Handler) Run(port string) error {
 	group.DELETE("/private/delete", h.deletePrivate)
 	group.POST("/yordamchi/:provider", h.createYordamchi)
 	group.PUT("/yordamchi/:provider", h.editYordamchi)
+
+	group = authorized.Group("/image")
+	group.POST("", h.upload)
+	group.DELETE("", h.delete)
 
 	return h.engine.Run(":" + port)
 }
@@ -126,18 +133,4 @@ func (h *Handler) download(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusFound, url)
-}
-
-func (h *Handler) deleteType(c *gin.Context) {
-	name := c.Param("name")
-	if name == "" {
-		c.JSON(http.StatusBadRequest, failure(e.ErrNoParams))
-		return
-	}
-
-	err := h.data.DeleteType(c.Request.Context(), name)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, failure(err))
-		return
-	}
 }

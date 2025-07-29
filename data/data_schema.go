@@ -1,5 +1,38 @@
 package data
 
+import (
+	"context"
+
+	"github.com/dgraph-io/dgo/v240/protos/api"
+)
+
+func (d *Data) GetSchema(ctx context.Context) (string, error) {
+	query := "schema {}"
+	bytes, err := d.graphGet(ctx, query, nil)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+func (d *Data) UpdateSchema(ctx context.Context) error {
+	operation := &api.Operation{Schema: GraphSchema}
+	err := d.graph.Alter(ctx, operation)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *Data) DeleteSchema(ctx context.Context) error {
+	operation := &api.Operation{DropAll: true}
+	err := d.graph.Alter(ctx, operation)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 const GraphSchema = `
 <author>: uid @count @reverse .
 <block>: [uid] @count @reverse .

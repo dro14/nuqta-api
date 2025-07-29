@@ -180,7 +180,7 @@ func (d *Data) RemovePrivate(ctx context.Context, message *models.Message, uid s
 }
 
 func (d *Data) DeletePrivate(ctx context.Context, message *models.Message, uid string) error {
-	err := d.deleteImages(ctx, message.Images)
+	err := deleteImages(message.Images)
 	if err != nil {
 		log.Printf("can't delete images: %s", err)
 	}

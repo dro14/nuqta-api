@@ -35,7 +35,7 @@ while true; do
         echo "Application crashed with exit code $?. Restarting..." >&2
 
         # Move log files after crash
-        mv gin.log gin-crashed.log
         mv my.log my-crashed.log
+        mv gin.log gin-crashed.log
         sleep 5
 done
