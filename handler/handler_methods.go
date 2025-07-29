@@ -27,6 +27,10 @@ func (h *Handler) Run(port string) error {
 	authorized := h.engine.Group("")
 	authorized.Use(h.authMiddleware)
 
+	group = authorized.Group("")
+	group.POST("", h.upload)
+	group.DELETE("", h.delete)
+
 	authorized.GET("/ping", h.ping)
 	authorized.GET("/update/:after", h.getUpdate)
 
@@ -66,10 +70,6 @@ func (h *Handler) Run(port string) error {
 	group.DELETE("/private/delete", h.deletePrivate)
 	group.POST("/yordamchi/:provider", h.createYordamchi)
 	group.PUT("/yordamchi/:provider", h.editYordamchi)
-
-	group = authorized.Group("/image")
-	group.POST("", h.upload)
-	group.DELETE("", h.delete)
 
 	return h.engine.Run(":" + port)
 }
