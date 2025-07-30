@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/dro14/nuqta-service/models"
-	"github.com/dro14/nuqta-service/utils/info"
+	"github.com/dro14/nuqta-api/models"
+	"github.com/dro14/nuqta-api/utils/info"
 	"github.com/gin-gonic/gin"
 )
 

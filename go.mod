@@ -1,4 +1,4 @@
-module github.com/dro14/nuqta-service
+module github.com/dro14/nuqta-api
 
 go 1.24
 

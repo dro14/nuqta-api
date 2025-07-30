@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dro14/nuqta-service/models"
+	"github.com/dro14/nuqta-api/models"
 	"github.com/gin-gonic/gin"
 )
 

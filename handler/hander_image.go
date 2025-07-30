@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dro14/nuqta-service/utils/e"
+	"github.com/dro14/nuqta-api/utils/e"
 	"github.com/gin-gonic/gin"
 )
 

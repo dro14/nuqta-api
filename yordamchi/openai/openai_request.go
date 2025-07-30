@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dro14/nuqta-service/utils/e"
+	"github.com/dro14/nuqta-api/utils/e"
 )
 
 func (o *OpenAI) send(ctx context.Context, request any) (*http.Response, error) {

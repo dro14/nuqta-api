@@ -34,7 +34,7 @@ jobs:
         env:
           VM_HOST: ${{ secrets.VM_HOST }}
           VM_USER: ${{ secrets.VM_USER }}
-        run: scp -P 49048 -o StrictHostKeyChecking=no ${{ github.sha }} $VM_USER@$VM_HOST:~/nuqta-service
+        run: scp -P 49048 -o StrictHostKeyChecking=no ${{ github.sha }} $VM_USER@$VM_HOST:~/nuqta-api
 
       - name: Start new application version on alternate port
         env:
@@ -42,7 +42,7 @@ jobs:
           VM_USER: ${{ secrets.VM_USER }}
         run: |
           ssh -p 49048 -o StrictHostKeyChecking=no $VM_USER@$VM_HOST '
-            cd ~/nuqta-service
+            cd ~/nuqta-api
           
             chmod +x ${{ github.sha }}
             echo ${{ github.sha }} > new_binary_name.txt
@@ -75,7 +75,7 @@ jobs:
           VM_USER: ${{ secrets.VM_USER }}
         run: |
           ssh -p 49048 -o StrictHostKeyChecking=no $VM_USER@$VM_HOST '
-            cd ~/nuqta-service
+            cd ~/nuqta-api
           
             PORT=$(cat port.txt 2>/dev/null || echo 8000)
             NEW_PORT=$(cat new_port.txt)

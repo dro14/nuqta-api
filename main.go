@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/dro14/nuqta-service/handler"
-	"github.com/dro14/nuqta-service/utils/info"
+	"github.com/dro14/nuqta-api/handler"
+	"github.com/dro14/nuqta-api/utils/info"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )

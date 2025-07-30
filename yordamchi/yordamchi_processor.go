@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dro14/nuqta-service/models"
-	"github.com/dro14/nuqta-service/utils/e"
+	"github.com/dro14/nuqta-api/models"
+	"github.com/dro14/nuqta-api/utils/e"
 )
 
 func (y *Yordamchi) Respond(ctx context.Context, provider string, conversation []string) (*models.Message, error) {

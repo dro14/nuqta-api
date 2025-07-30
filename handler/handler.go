@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/dro14/nuqta-service/data"
-	"github.com/dro14/nuqta-service/firebase"
-	"github.com/dro14/nuqta-service/yordamchi"
+	"github.com/dro14/nuqta-api/data"
+	"github.com/dro14/nuqta-api/firebase"
+	"github.com/dro14/nuqta-api/yordamchi"
 	"github.com/gin-gonic/gin"
 )
 

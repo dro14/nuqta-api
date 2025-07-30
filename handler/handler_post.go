@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dro14/nuqta-service/models"
-	"github.com/dro14/nuqta-service/utils/e"
-	"github.com/dro14/nuqta-service/utils/info"
+	"github.com/dro14/nuqta-api/models"
+	"github.com/dro14/nuqta-api/utils/e"
+	"github.com/dro14/nuqta-api/utils/info"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,8 +1,8 @@
 package yordamchi
 
 import (
-	"github.com/dro14/nuqta-service/yordamchi/google"
-	"github.com/dro14/nuqta-service/yordamchi/openai"
+	"github.com/dro14/nuqta-api/yordamchi/google"
+	"github.com/dro14/nuqta-api/yordamchi/openai"
 )
 
 type Yordamchi struct {
