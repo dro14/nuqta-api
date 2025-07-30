@@ -43,7 +43,7 @@ func main() {
 		port = "8000"
 	}
 
-	info.SendMessage("Nuqta service restarted")
+	info.SendMessage("Nuqta API restarted")
 	h := handler.New()
 	err = h.Run(port)
 	if err != nil {
